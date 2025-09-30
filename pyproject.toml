@@ -1,0 +1,13 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bardic"
+version = "0.1.0"
+description = "Python-first interactive fiction engine"
+requires-python = ">=3.12"
+dependencies = ["click>=8.0"]
+
+[project.scripts]
+bardic = "bardic.cli:cli"
