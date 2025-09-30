@@ -1,0 +1,73 @@
+{
+  "version": "0.1.0",
+  "initial_passage": "Start",
+  "passages": {
+    "Start": {
+      "id": "Start",
+      "content": "You wake up in a mysterious room. The walls are bare stone, and a single door stands before you.\nWhat do you do?",
+      "choices": [
+        {
+          "text": "Look around the room",
+          "target": "LookAround"
+        },
+        {
+          "text": "Try to open the door",
+          "target": "TryDoor"
+        }
+      ]
+    },
+    "LookAround": {
+      "id": "LookAround",
+      "content": "You examine the room carefully. There's a small window high on the wall, but it's too dark outside to see anything. On the floor, you notice scratches, as if something heavy was dragged across it.",
+      "choices": [
+        {
+          "text": "Examine the scratches",
+          "target": "ExamineScratches"
+        },
+        {
+          "text": "Try the door",
+          "target": "TryDoor"
+        }
+      ]
+    },
+    "ExamineScratches": {
+      "id": "ExamineScratches",
+      "content": "The scratches lead to the corner of the room. Following them, you find a loose stone in the wall. Behind it, there's a rusty key!",
+      "choices": [
+        {
+          "text": "Take the key",
+          "target": "TakeKey"
+        }
+      ]
+    },
+    "TakeKey": {
+      "id": "TakeKey",
+      "content": "You pocket the key. It feels cold and heavy in your hand.",
+      "choices": [
+        {
+          "text": "Try the door with the key",
+          "target": "UnlockDoor"
+        },
+        {
+          "text": "Look around more",
+          "target": "LookAround"
+        }
+      ]
+    },
+    "TryDoor": {
+      "id": "TryDoor",
+      "content": "You pull on the door handle. It's locked tight.",
+      "choices": [
+        {
+          "text": "Look around for a way out",
+          "target": "LookAround"
+        }
+      ]
+    },
+    "UnlockDoor": {
+      "id": "UnlockDoor",
+      "content": "The key fits! With a loud click, the door swings open. Beyond it, you see sunlight and freedom.\nYou've escaped!",
+      "choices": []
+    }
+  }
+}

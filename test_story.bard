@@ -1,0 +1,34 @@
+:: Start
+You wake up in a mysterious room. The walls are bare stone, and a single door stands before you.
+
+What do you do?
+
++ [Look around the room] -> LookAround
++ [Try to open the door] -> TryDoor
+
+:: LookAround
+You examine the room carefully. There's a small window high on the wall, but it's too dark outside to see anything. On the floor, you notice scratches, as if something heavy was dragged across it.
+
++ [Examine the scratches] -> ExamineScratches
++ [Try the door] -> TryDoor
+
+:: ExamineScratches
+The scratches lead to the corner of the room. Following them, you find a loose stone in the wall. Behind it, there's a rusty key!
+
++ [Take the key] -> TakeKey
+
+:: TakeKey
+You pocket the key. It feels cold and heavy in your hand.
+
++ [Try the door with the key] -> UnlockDoor
++ [Look around more] -> LookAround
+
+:: TryDoor
+You pull on the door handle. It's locked tight.
+
++ [Look around for a way out] -> LookAround
+
+:: UnlockDoor
+The key fits! With a loud click, the door swings open. Beyond it, you see sunlight and freedom.
+
+You've escaped!
