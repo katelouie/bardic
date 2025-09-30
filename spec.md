@@ -20,6 +20,29 @@ Bardic is a Python-first interactive fiction engine designed for narratives that
 
 **Built For:** A tarot reading game where players influence clients' lives through card interpretations.
 
+## Syntax Reference
+
+Quick reference for all Bardic syntax elements:
+
+| Symbol | Meaning | Example |
+|--------|---------|---------|
+| `::` | Passage definition | `:: PassageName` |
+| `@include` | Include external file | `@include shared/file.bard` |
+| `@section` / `@endsection` | Scoped section (future) | `@section Name` |
+| `@ render` | Render directive | `@ render_spread(cards)` |
+| `<<py>>` | Python code block | `<<py\ncode\n>>` |
+| `<<if>>` | Conditional | `<<if condition>>` |
+| `<<for>>` | Loop | `<<for item in list>>` |
+| `~` | Variable assignment | `~ health = 100` |
+| `{}` | Expression | `{variable}` or `{function()}` |
+| `+` | Sticky choice | `+ [Text] -> Target` |
+| `*` | One-time choice | `* [Text] -> Target` |
+| `->` | Immediate jump | `-> Target` |
+| `#` | Comment | `# This is a comment` |
+| `[!tag]` | Custom markup | `[!whisper]text[/!whisper]` |
+
+**Import statements** use standard Python syntax with no prefix.
+
 ---
 
 ## Design Principles
@@ -82,6 +105,48 @@ This is **bold** and _italic_.
 - Logic blocks produce no whitespace
 - Leading/trailing whitespace trimmed
 
+**Text Formatting**
+
+Bardic supports standard Markdown formatting (except headers).
+
+**Supported:**
+
+- `**bold**` → **bold**
+- `*italic*` → *italic*
+- `***bold italic***` → ***bold italic***
+- `~~strikethrough~~` → ~~strikethrough~~
+- `` `code` `` → `code`
+- `[link](url)` → [link](url)
+- Lists (bulleted and numbered)
+- Blockquotes (`>`)
+- Horizontal rules (`---`)
+- Code blocks (` ``` `)
+
+**Not Supported:**
+
+- `# Headers` - Conflicts with comment syntax
+- Use passage names for structure instead
+- Or use custom tags: `[!heading]Text[/!heading]`
+- Or HTML: `<h1>Text</h1>`
+
+**Comments:**
+
+This is a comment (Python-style)
+Not rendered in output.
+
+**Example:**
+
+```bard
+:: DramaticMoment
+# Comment: This is the climax
+She looks at the cards, her face **pale**.
+"Is this... *really* what you see?"
+You can sense her ~~fear~~ anxiety.
+
+* [Tell the truth] -> Truth
+* [Soften the blow] -> Gentle
+```
+
 **Status:**
 
 - Basic text: ✅ Implemented (Week 1)
@@ -110,19 +175,19 @@ Allow player navigation between passages.
 ```bard
 # Sticky choice (always available)
 
-- [Look around] -> Examine
++ [Look around] -> Examine
 
 # One-time choice (only show once)
 
-- [Pick up the key] -> GetKey
+* [Pick up the key] -> GetKey
 
 # Conditional choice
 
-- {health > 50} [Fight the dragon] -> Combat
++ {health > 50} [Fight the dragon] -> Combat
 
 # Choice with parameters (pass data to next passage)
 
-- [Draw cards] -> DrawCards(count=3, spread='celtic_cross')
++ [Draw cards] -> DrawCards(count=3, spread='celtic_cross')
 ```
 
 **Status:**
@@ -291,16 +356,46 @@ Text content. # Inline comment
 
 Import Python modules at the top of the file.
 
+**Syntax:** Standard Python import statements
+
 ```bard
-::import from models.card import Card from services.tarot import TarotService, draw_from_pool from utils.narrative import generate_greeting
+from models.card import Card
+from services.tarot import TarotService, draw_from_pool
+from utils.narrative import generate_greeting
+
+# Includes come after imports
+@include shared/card_mechanics.bard
+
+# Story starts after imports and includes
+:: Start
+You draw three cards...
 ```
 
 **Rules:**
 
-- Must be at the top of the file
-- Standard Python import syntax
+- Must be at the top of the file (before any passages or includes)
+- Standard Python import syntax (no special prefix needed)
 - Available to all passages in the file
 - Can import from your project's Python modules
+- Each import statement on its own line
+
+**Examples:**
+
+```bard
+# Import specific items
+from models.card import Card, Deck
+
+# Import entire module
+import random
+
+# Import with alias
+from services.tarot import TarotService as Tarot
+
+# Multiple imports
+from models.card import Card
+from models.client import Client
+from services.tarot import TarotService
+```
 
 **Status:** 📅 Week 5
 
@@ -338,16 +433,68 @@ Interpreting with {style} approach...
 Tell React to render custom components.
 
 ```bard
-@ render_spread(cards, layout='celtic_cross') @ render_client_reaction(client, intensity='high')
+@ render_spread(cards, layout='celtic_cross')
+@ render_client_reaction(client, intensity='high')
 ```
 
 **Rules:**
 
-- Start with `@`
+- Start with `@` followed by space
 - Function-call syntax
 - Arguments are Python expressions
 - Compiled to structured data for frontend
-- Not rendered as text
+- Not rendered as text (no output in story flow)
+- Can appear anywhere in passage content
+
+**Examples:**
+
+```bard
+:: DrawCards
+<<py
+cards = draw_cards(3)
+>>
+
+The cards are laid out before you...
+
+@ render_spread(cards, layout='three_card', animation='flip')
+
+The first card is {cards[0].name}.
+
+@ render_card_detail(cards[0], position='past')
+```
+
+**Compiled Output:**
+
+```json
+{
+  "render_directives": [
+    {
+      "component": "render_spread",
+      "props": {
+        "cards": [...],
+        "layout": "three_card",
+        "animation": "flip"
+      }
+    },
+    {
+      "component": "render_card_detail",
+      "props": {
+        "card": {...},
+        "position": "past"
+      }
+    }
+  ]
+}
+```
+
+**React Integration:**
+
+```jsx
+{passageData.render_directives.map((directive, i) => {
+  const Component = componentRegistry[directive.component];
+  return <Component key={i} {...directive.props} />;
+})}
+```
 
 **Status:** 📅 Week 4
 
@@ -402,35 +549,30 @@ The spirits speak to you...
 
 Split large stories across multiple files.
 
+**Syntax:** `@include path/to/file.bard`
+
 ```bard
-::include path/to/file.bard
+from models.card import Card
+
+@include shared/card_mechanics.bard
+@include clients/aria/session1.bard
+@include clients/marcus/session1.bard
+
+:: Start
+Welcome to your desk.
+
++ [See Aria] -> Aria.Session1.Start
++ [See Marcus] -> Marcus.Session1.Start
 ```
 
 **Rules:**
 
-- Must appear before any passages (in or after `::import` section)
+- Must appear after imports, before any passages
 - Paths are relative to the including file
 - Recursive: included files can include other files
 - All passages are merged into single compiled output
 - Duplicate passage names cause compilation error
 - Circular includes are detected and error
-
-**Example:**
-
-```bard
-# main.bard
-
-from services.tarot import TarotService
-
-::include shared/card_mechanics.bard
-::include clients/aria/session1.bard
-::include clients/marcus/session1.bard
-
-:: Start Welcome to your desk.
-
-- [See Aria] -> Aria.Session1.Start
-- [See Marcus] -> Marcus.Session1.Start
-```
 
 **Benefits:**
 
@@ -439,6 +581,22 @@ from services.tarot import TarotService
 - Enable parallel development
 - Better version control
 - Reusable components across stories
+
+**Example File Structure:**
+
+```sh
+stories/
+├── main.bard                 # Entry point with @include directives
+├── shared/
+│   ├── card_mechanics.bard
+│   └── reactions.bard
+└── clients/
+    ├── aria/
+    │   ├── session1.bard
+    │   └── session2.bard
+    └── marcus/
+        └── session1.bard
+```
 
 **Critical for:** Stories with multiple client paths, hub-and-spoke structures, or >1000 lines of content.
 
@@ -454,23 +612,54 @@ These are "nice to have" but not essential for first release.
 
 Group passages with shared state.
 
+**Syntax:** `@section Name` ... `@endsection`
+
 ```bard
-::section ClientAria.Session1 <<py
+@section ClientAria.Session1
 
-# Section-level setup
+# Section-level setup (runs once when entering section)
+<<py
+client = load_client('aria')
+session_state = {'trust': 50}
+>>
 
-client = load_client('aria') session_state = {'trust': 50}
-
-::end
-
-:: ClientAria.Session1.Start
-
+:: Start
 # Has access to client and session_state
+Hello, {client.name}.
 
-:: ClientAria.Session1.Reading
-
+:: Reading
 # Still has access
+Your trust level: {session_state['trust']}
+
+@endsection
+
+# Outside the section - no access to section-level variables
+:: MainMenu
+Back at the main menu.
 ```
+
+**Rules:**
+
+- Opens with `@section Name`
+- Closes with `@endsection`
+- Setup code runs once when first entering section
+- All passages between open/close share the section state
+- Section state doesn't persist outside the section
+- Can be nested (subsections)
+
+**Benefits:**
+
+- Group related passages with shared context
+- Reduce boilerplate (don't repeat setup in every passage)
+- Clear scope boundaries
+- Easier to reason about state
+
+**Use Cases:**
+
+- Client sessions with shared client object
+- Story chapters with chapter-specific state
+- Mini-games with temporary mechanics
+- Tutorial sections with special rules
 
 **Status:** 🤔 Consider after v1.0 if pain point emerges
 
@@ -662,6 +851,7 @@ function StoryView({ passageData }) {
 - [x] Compiler to JSON
 - [x] Runtime engine
 - [x] CLI compilation
+- [x] CLI player
 
 ### 📅 Week 2: State & Organization
 
@@ -669,7 +859,7 @@ function StoryView({ passageData }) {
 - [ ] Variable display (`{}`)
 - [ ] Expressions in assignments
 - [ ] Conditional choices
-- [ ] **File includes (`::include`)**
+- [ ] **File includes (`@include`)**
 
 ### 📅 Week 3: Python Integration
 
@@ -692,8 +882,8 @@ function StoryView({ passageData }) {
 
 - [ ] Markdown support
 - [ ] Custom tags `[!tag]`
-- [ ] Comments
-- [ ] Imports section
+- [ ] Comments (`#`)
+- [ ] Imports (plain Python)
 - [ ] Better error messages
 
 ### 📅 Week 6: Refinement
@@ -732,34 +922,31 @@ The door is locked.
 Through the window, you see freedom.
 ```
 
-### With Variables
+### With Imports and Includes
 
 ```bard
+# main.bard
+
+from models.card import Card
+from services.tarot import TarotService
+
+@include shared/card_mechanics.bard
+@include shared/reactions.bard
+@include clients/aria/session1.bard
+
 :: Start
-~ health = 100
-~ gold = 50
+Welcome to your reader's desk.
 
-You have {health} health and {gold} gold.
-
-+ [Enter dungeon] -> Dungeon
-
-:: Dungeon
-~ health = health - 20
-~ gold = gold + 10
-
-You fought a monster!
-Health: {health}, Gold: {gold}
-
-+ {health > 0} [Continue] -> Victory
-+ {health <= 0} [You died] -> Death
++ [See Aria] -> Aria.Session1.Start
 ```
 
 ### With Python Objects (Tarot Game)
 
 ```bard
-::import
 from services.tarot import TarotService
 from models.card import Card
+
+@include shared/card_mechanics.bard
 
 :: DrawCards
 <<py
@@ -845,6 +1032,6 @@ Until v1.0, this is a personal project. After v1.0 is released and battle-tested
 
 ---
 
-_This specification is a living document. It evolves based on actual usage in building the tarot game._
+*This specification is a living document. It evolves based on actual usage in building the tarot game.*
 
 Last updated: September 30, 2025
