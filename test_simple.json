@@ -1,0 +1,53 @@
+{
+  "version": "0.1.0",
+  "initial_passage": "Start",
+  "passages": {
+    "Start": {
+      "id": "Start",
+      "content": "Welcome to the test story!",
+      "choices": [
+        {
+          "text": "Go to A",
+          "target": "A"
+        },
+        {
+          "text": "Go to B",
+          "target": "B"
+        }
+      ]
+    },
+    "A": {
+      "id": "A",
+      "content": "You chose A.",
+      "choices": [
+        {
+          "text": "Go to C",
+          "target": "C"
+        },
+        {
+          "text": "Back to start",
+          "target": "Start"
+        }
+      ]
+    },
+    "B": {
+      "id": "B",
+      "content": "You chose B.",
+      "choices": [
+        {
+          "text": "Go to C",
+          "target": "C"
+        },
+        {
+          "text": "Back to start",
+          "target": "Start"
+        }
+      ]
+    },
+    "C": {
+      "id": "C",
+      "content": "You reached C. This is the end.",
+      "choices": []
+    }
+  }
+}

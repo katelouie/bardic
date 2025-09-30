@@ -1,0 +1,20 @@
+:: Start
+Welcome to the test story!
+
++ [Go to A] -> A
++ [Go to B] -> B
+
+:: A
+You chose A.
+
++ [Go to C] -> C
++ [Back to start] -> Start
+
+:: B
+You chose B.
+
++ [Go to C] -> C
++ [Back to start] -> Start
+
+:: C
+You reached C. This is the end.
