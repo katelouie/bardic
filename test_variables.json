@@ -1,0 +1,374 @@
+{
+  "version": "0.1.0",
+  "initial_passage": "Start",
+  "passages": {
+    "Start": {
+      "id": "Start",
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Welcome, "
+        },
+        {
+          "type": "expression",
+          "code": "name"
+        },
+        {
+          "type": "text",
+          "value": "!"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "You have "
+        },
+        {
+          "type": "expression",
+          "code": "health"
+        },
+        {
+          "type": "text",
+          "value": " health and "
+        },
+        {
+          "type": "expression",
+          "code": "gold"
+        },
+        {
+          "type": "text",
+          "value": " gold."
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Enter the dungeon",
+          "target": "Dungeon",
+          "condition": null
+        }
+      ],
+      "execute": [
+        {
+          "type": "set_var",
+          "var": "health",
+          "expression": "100"
+        },
+        {
+          "type": "set_var",
+          "var": "gold",
+          "expression": "50"
+        },
+        {
+          "type": "set_var",
+          "var": "name",
+          "expression": "\"Adventurer\""
+        }
+      ]
+    },
+    "Dungeon": {
+      "id": "Dungeon",
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "You fought a monster!"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Health: "
+        },
+        {
+          "type": "expression",
+          "code": "health"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Gold: "
+        },
+        {
+          "type": "expression",
+          "code": "gold"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Continue exploring",
+          "target": "DeepDungeon",
+          "condition": null
+        },
+        {
+          "text": "Return to town",
+          "target": "Town",
+          "condition": null
+        }
+      ],
+      "execute": [
+        {
+          "type": "set_var",
+          "var": "health",
+          "expression": "health - 30"
+        },
+        {
+          "type": "set_var",
+          "var": "gold",
+          "expression": "gold + 20"
+        }
+      ]
+    },
+    "DeepDungeon": {
+      "id": "DeepDungeon",
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "You defeated a boss!"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Health: "
+        },
+        {
+          "type": "expression",
+          "code": "health"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Gold: "
+        },
+        {
+          "type": "expression",
+          "code": "gold"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Victory!",
+          "target": "Victory",
+          "condition": "health > 0"
+        },
+        {
+          "text": "You died.",
+          "target": "Death",
+          "condition": "health <= 0"
+        }
+      ],
+      "execute": [
+        {
+          "type": "set_var",
+          "var": "health",
+          "expression": "health - 40"
+        },
+        {
+          "type": "set_var",
+          "var": "gold",
+          "expression": "gold + 50"
+        }
+      ]
+    },
+    "Town": {
+      "id": "Town",
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "You rest at the inn and recover."
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Health: "
+        },
+        {
+          "type": "expression",
+          "code": "health"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Gold: "
+        },
+        {
+          "type": "expression",
+          "code": "gold"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Back to dungeon",
+          "target": "Dungeon",
+          "condition": null
+        }
+      ],
+      "execute": [
+        {
+          "type": "set_var",
+          "var": "health",
+          "expression": "100"
+        }
+      ]
+    },
+    "Victory": {
+      "id": "Victory",
+      "content": [
+        {
+          "type": "text",
+          "value": "You emerge with "
+        },
+        {
+          "type": "expression",
+          "code": "gold"
+        },
+        {
+          "type": "text",
+          "value": " gold!"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [],
+      "execute": []
+    },
+    "Death": {
+      "id": "Death",
+      "content": [
+        {
+          "type": "text",
+          "value": "You died with "
+        },
+        {
+          "type": "expression",
+          "code": "gold"
+        },
+        {
+          "type": "text",
+          "value": " gold."
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Better luck next time."
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [],
+      "execute": []
+    }
+  }
+}

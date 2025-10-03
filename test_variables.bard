@@ -1,0 +1,52 @@
+:: Start
+~ health = 100
+~ gold = 50
+~ name = "Adventurer"
+
+Welcome, {name}!
+
+You have {health} health and {gold} gold.
+
++ [Enter the dungeon] -> Dungeon
+
+:: Dungeon
+~ health = health - 30
+~ gold = gold + 20
+
+You fought a monster!
+
+Health: {health}
+Gold: {gold}
+
++ [Continue exploring] -> DeepDungeon
++ [Return to town] -> Town
+
+:: DeepDungeon
+~ health = health - 40
+~ gold = gold + 50
+
+You defeated a boss!
+
+Health: {health}
+Gold: {gold}
+
++ {health > 0} [Victory!] -> Victory
++ {health <= 0} [You died.] -> Death
+
+:: Town
+~ health = 100
+
+You rest at the inn and recover.
+
+Health: {health}
+Gold: {gold}
+
++ [Back to dungeon] -> Dungeon
+
+:: Victory
+You emerge with {gold} gold!
+
+:: Death
+You died with {gold} gold.
+
+Better luck next time.

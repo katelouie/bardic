@@ -1,0 +1,31 @@
+:: Start
+~ x = 5
+~ y = 10
+~ result = x + y
+
+X is {x}.
+Y is {y}.
+Result is {result}.
+
+~ doubled = result * 2
+~ halved = result / 2
+
+Doubled: {doubled}
+Halved: {halved}
+
++ [Continue] -> Next
+
+:: Next
+~ message = "Hello"
+~ count = 3
+~ repeated = message
+
+The message is: {message}
+Count is: {count}
+
++ [Done] -> End
+
+:: End
+All done!
+
+Final result: {result}

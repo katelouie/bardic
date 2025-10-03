@@ -1,0 +1,233 @@
+{
+  "version": "0.1.0",
+  "initial_passage": "Start",
+  "passages": {
+    "Start": {
+      "id": "Start",
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "X is "
+        },
+        {
+          "type": "expression",
+          "code": "x"
+        },
+        {
+          "type": "text",
+          "value": "."
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Y is "
+        },
+        {
+          "type": "expression",
+          "code": "y"
+        },
+        {
+          "type": "text",
+          "value": "."
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Result is "
+        },
+        {
+          "type": "expression",
+          "code": "result"
+        },
+        {
+          "type": "text",
+          "value": "."
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Doubled: "
+        },
+        {
+          "type": "expression",
+          "code": "doubled"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Halved: "
+        },
+        {
+          "type": "expression",
+          "code": "halved"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Continue",
+          "target": "Next",
+          "condition": null
+        }
+      ],
+      "execute": [
+        {
+          "type": "set_var",
+          "var": "x",
+          "expression": "5"
+        },
+        {
+          "type": "set_var",
+          "var": "y",
+          "expression": "10"
+        },
+        {
+          "type": "set_var",
+          "var": "result",
+          "expression": "x + y"
+        },
+        {
+          "type": "set_var",
+          "var": "doubled",
+          "expression": "result * 2"
+        },
+        {
+          "type": "set_var",
+          "var": "halved",
+          "expression": "result / 2"
+        }
+      ]
+    },
+    "Next": {
+      "id": "Next",
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "The message is: "
+        },
+        {
+          "type": "expression",
+          "code": "message"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Count is: "
+        },
+        {
+          "type": "expression",
+          "code": "count"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Done",
+          "target": "End",
+          "condition": null
+        }
+      ],
+      "execute": [
+        {
+          "type": "set_var",
+          "var": "message",
+          "expression": "\"Hello\""
+        },
+        {
+          "type": "set_var",
+          "var": "count",
+          "expression": "3"
+        },
+        {
+          "type": "set_var",
+          "var": "repeated",
+          "expression": "message"
+        }
+      ]
+    },
+    "End": {
+      "id": "End",
+      "content": [
+        {
+          "type": "text",
+          "value": "All done!"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Final result: "
+        },
+        {
+          "type": "expression",
+          "code": "result"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [],
+      "execute": []
+    }
+  }
+}
