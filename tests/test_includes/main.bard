@@ -1,0 +1,8 @@
+@include shared.bard
+@include client.bard
+
+:: Start
+This is the main file.
+
++ [Go to shared] -> SharedPassage
++ [Go to client] -> ClientPassage

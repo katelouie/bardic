@@ -1,0 +1,6 @@
+@include nested/deep.bard
+
+:: SharedPassage
+This passage is from shared.bard
+
++ [Back] -> Start

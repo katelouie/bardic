@@ -1,0 +1,9 @@
+:: HeroStats
+~ health = 100
+~ attack = 15
+
+{hero_name}'s Stats:
+Health: {health}
+Attack: {attack}
+
++ [Back] -> Start

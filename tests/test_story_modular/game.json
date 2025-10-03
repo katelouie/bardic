@@ -1,0 +1,260 @@
+{
+  "version": "0.1.0",
+  "initial_passage": "Start",
+  "passages": {
+    "HeroStats": {
+      "id": "HeroStats",
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "expression",
+          "code": "hero_name"
+        },
+        {
+          "type": "text",
+          "value": "'s Stats:"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Health: "
+        },
+        {
+          "type": "expression",
+          "code": "health"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Attack: "
+        },
+        {
+          "type": "expression",
+          "code": "attack"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Back",
+          "target": "Start",
+          "condition": null
+        }
+      ],
+      "execute": [
+        {
+          "type": "set_var",
+          "var": "health",
+          "expression": "100"
+        },
+        {
+          "type": "set_var",
+          "var": "attack",
+          "expression": "15"
+        }
+      ]
+    },
+    "Town": {
+      "id": "Town",
+      "content": [
+        {
+          "type": "text",
+          "value": "You are in the town."
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Check stats",
+          "target": "HeroStats",
+          "condition": null
+        },
+        {
+          "text": "Leave town",
+          "target": "Start",
+          "condition": null
+        }
+      ],
+      "execute": []
+    },
+    "Dungeon": {
+      "id": "Dungeon",
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "You enter the dungeon and take damage!"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Health: "
+        },
+        {
+          "type": "expression",
+          "code": "health"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Continue",
+          "target": "DungeonDeep",
+          "condition": "health > 0"
+        },
+        {
+          "text": "Death",
+          "target": "Death",
+          "condition": "health <= 0"
+        }
+      ],
+      "execute": [
+        {
+          "type": "set_var",
+          "var": "health",
+          "expression": "health - 20"
+        }
+      ]
+    },
+    "DungeonDeep": {
+      "id": "DungeonDeep",
+      "content": [
+        {
+          "type": "text",
+          "value": "You go deeper into the dungeon."
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Return",
+          "target": "Start",
+          "condition": null
+        }
+      ],
+      "execute": []
+    },
+    "Death": {
+      "id": "Death",
+      "content": [
+        {
+          "type": "text",
+          "value": "You died in the dungeon."
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [],
+      "execute": []
+    },
+    "Start": {
+      "id": "Start",
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Welcome, "
+        },
+        {
+          "type": "expression",
+          "code": "hero_name"
+        },
+        {
+          "type": "text",
+          "value": "!"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Enter town",
+          "target": "Town",
+          "condition": null
+        },
+        {
+          "text": "Enter dungeon",
+          "target": "Dungeon",
+          "condition": null
+        }
+      ],
+      "execute": [
+        {
+          "type": "set_var",
+          "var": "hero_name",
+          "expression": "\"Adventurer\""
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,5 @@
+:: Town
+You are in the town.
+
++ [Check stats] -> HeroStats
++ [Leave town] -> Start

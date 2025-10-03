@@ -1,0 +1,13 @@
+@include characters/hero.bard
+@include locations/town.bard
+@include locations/dungeon.bard
+
+@start Start
+
+:: Start
+~ hero_name = "Adventurer"
+
+Welcome, {hero_name}!
+
++ [Enter town] -> Town
++ [Enter dungeon] -> Dungeon

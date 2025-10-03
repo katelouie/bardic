@@ -1,0 +1,16 @@
+:: Dungeon
+~ health = health - 20
+
+You enter the dungeon and take damage!
+Health: {health}
+
++ {health > 0} [Continue] -> DungeonDeep
++ {health <= 0} [Death] -> Death
+
+:: DungeonDeep
+You go deeper into the dungeon.
+
++ [Return] -> Start
+
+:: Death
+You died in the dungeon.

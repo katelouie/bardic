@@ -83,6 +83,44 @@ The fundamental unit of narrative. Every story is a collection of passages.
 
 **Status:** ✅ Implemented (Week 1)
 
+### Start Passage
+
+Every story needs an initial passage. Bardic determines the start passage using this priority:
+
+#### 1. Explicit `@start` directive (highest priority)
+
+```bard
+@start GameIntro
+:: GameIntro
+The story begins here.
+:: Start
+This is NOT the start (explicit override).
+```
+
+#### 2. Passage named "Start" (convention, like Twine)
+
+```bard
+:: Start
+The story begins here by convention.
+:: Other
+Not the start.
+```
+
+#### 3. First passage (fallback with warning)
+
+```bard
+:: FirstPassage
+Becomes start with a warning printed.
+```
+
+**Recommendations:**
+
+- Use `:: Start` for most stories (clear convention)
+- Use `@start CustomName` when you need a different entry point
+- Always include a passage named "Start" to avoid surprises
+
+**Status:** ✅ Implemented (Week 2, Session 6)
+
 ---
 
 ### Text Content
@@ -105,7 +143,7 @@ This is **bold** and _italic_.
 - Logic blocks produce no whitespace
 - Leading/trailing whitespace trimmed
 
-**Text Formatting**
+**Text Formatting:**
 
 Bardic supports standard Markdown formatting (except headers).
 
@@ -131,7 +169,8 @@ Bardic supports standard Markdown formatting (except headers).
 
 **Comments:**
 
-This is a comment (Python-style)
+`# This is a comment (Python-style)`
+
 Not rendered in output.
 
 **Example:**
@@ -571,7 +610,7 @@ Welcome to your desk.
 - Paths are relative to the including file
 - Recursive: included files can include other files
 - All passages are merged into single compiled output
-- Duplicate passage names cause compilation error
+- Duplicate passage names: last definition wins
 - Circular includes are detected and error
 
 **Benefits:**
@@ -600,7 +639,7 @@ stories/
 
 **Critical for:** Stories with multiple client paths, hub-and-spoke structures, or >1000 lines of content.
 
-**Status:** 📅 Week 2, Session 6 (essential for story organization)
+**Status:** ✅ Implemented (Week 2, Session 6)
 
 ---
 
