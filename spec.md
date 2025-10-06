@@ -34,7 +34,7 @@ Quick reference for all Bardic syntax elements:
 | `<<if>>` | Conditional | `<<if condition>>` |
 | `<<for>>` | Loop | `<<for item in list>>` |
 | `~` | Variable assignment | `~ health = 100` |
-| `{}` | Expression | `{variable}` or `{function()}` |
+| `{}` | Expression | `{variable}` or `{function()}` or `{var:.2f}` |
 | `+` | Sticky choice | `+ [Text] -> Target` |
 | `*` | One-time choice | `* [Text] -> Target` |
 | `->` | Immediate jump | `-> Target` |
@@ -260,41 +260,125 @@ Store and manipulate state.
 You have {health} health. Your name is {name}.
 ```
 
+**Format Specifiers:**
+
+Use Python's format specification mini-language to control how values are displayed:
+
+```bard
+Average: {average:.1f}        # Float with 1 decimal place
+Price: ${price:.2f}           # Float with 2 decimal places
+Count: {count:03d}            # Integer with leading zeros (007)
+Name: {name:>10}              # Right-aligned, 10 characters wide
+Percent: {ratio:.1%}          # Percentage (0.753 → 75.3%)
+```
+
+**Common Format Specs:**
+
+- `.Nf` - Float with N decimal places (`:.2f` → `3.14`)
+- `0Nd` - Integer with N digits, zero-padded (`03d` → `007`)
+- `>N` - Right-align in N spaces (`>10`)
+- `<N` - Left-align in N spaces (`<10`)
+- `^N` - Center in N spaces (`^10`)
+- `.N%` - Percentage with N decimals (`.1%` → `75.3%`)
+
 **Expressions:**
 
 ```bard
-~ health = health - 10 ~ total = (gold * 2) + bonus ~ description = f"You have {gold} gold"
+~ health = health - 10
+~ total = (gold * 2) + bonus
 ```
 
-**Status:** 📅 Week 2
+**Status:** ✅ Implemented (Week 2, Session 6)
 
 ---
 
 ### Python Code Blocks
 
-Execute arbitrary Python code.
+Execute multi-line Python code in passages.
+
+**Syntax:** `<<py>> ... >>`
 
 ```bard
+:: Example
 <<py
-
 # Multi-line Python code
 
-cards = deck.draw(3) for card in cards: if random.random() < 0.3: card.is_reversed = True
+import random
 
-difficulty = calculate_difficulty(cards, reader_stats)
+rolls = []
+for i in range(5):
+    roll = random.randint(1, 6)
+    rolls.append(roll)
+
+total = sum(rolls)
+average = total / len(rolls)
+
+if total > 20:
+    outcome = "great"
+else:
+    outcome = "okay"
 >>
-```
+Results: {total} (average: {average:.1f})
+Outcome: {outcome}
+````
 
 **Rules:**
 
 - Opens with `<<py`
 - Closes with `>>`
 - Can span multiple lines
-- Has access to all imported modules and functions
-- Can modify state
+- Preserves Python indentation
+- Executes in order with other commands
+- Has access to:
+  - All variables in `self.state`
+  - All functions in `context`
+  - Safe standard library imports
+  - Safe builtins (len, str, int, etc.)
+- Modifies state directly
 - Produces no output (use variables to display results)
 
-**Status:** 📅 Week 3
+**What's Available:**
+
+```python
+# Safe builtins
+len, str, int, float, bool, list, dict, tuple, set
+range, enumerate, zip, sum, min, max, abs, round
+sorted, any, all, print
+
+# Safe imports
+import random
+import math
+import datetime
+# ... other standard library modules
+````
+
+**Context Functions:** Functions can be provided via engine context:
+
+```python
+context = {
+    'roll_dice': lambda sides=6: random.randint(1, sides),
+    'greet': lambda name: f"Hello, {name}!",
+}
+
+engine = BardEngine(story, context=context)
+```
+
+Then in stories:
+
+```bard
+<<py
+result = roll_dice(20)
+greeting = greet("Hero")
+>>
+```
+
+**Error Handling:**
+
+- Syntax errors show the problematic line
+- Runtime errors show full traceback
+- Undefined variables list available variables
+
+**Status:** ✅ Implemented (Week 3, Session 7)
 
 ---
 
@@ -303,7 +387,9 @@ difficulty = calculate_difficulty(cards, reader_stats)
 Inline Python evaluation.
 
 ```bard
-You rolled a {roll_dice(20)}. The card is {card.get_display_name()}. {greet(player_name)}
+You rolled a {roll_dice(20)}.
+The card is {card.get_display_name()}.
+{greet(player_name)}
 ```
 
 **Rules:**
@@ -313,7 +399,43 @@ You rolled a {roll_dice(20)}. The card is {card.get_display_name()}. {greet(play
 - Evaluated at render time
 - Result is converted to string for display
 
-**Status:** 📅 Week 3
+**Format Specifiers:**
+
+Expressions support optional format specifications using Python's format spec syntax:
+
+```bard
+{expression:format_spec}
+```
+
+**How it works:**
+
+1. Engine splits at the `:` (rightmost occurrence)
+2. Evaluates the expression part
+3. Applies the format spec using `format(value, spec)`
+
+**Examples:**
+
+```bard
+Score: {total_score:05d}              # Zero-padded: 00123
+Accuracy: {hit_rate:.1%}              # Percentage: 87.5%
+Damage: {damage:.2f}                  # Float: 42.50
+Name: {player_name:^20}               # Centered: "    Alice    "
+```
+
+**Limitations:**
+
+- Comparison operators are excluded from format parsing to prevent conflicts:
+  - `{a == b}` - Evaluates as comparison (not format spec)
+  - `{a <= b}` - Evaluates as comparison
+  - `{a != b}` - Evaluates as comparison
+  - `{a >= b}` - Evaluates as comparison
+  - `{dict::key}` - Double colon preserved (Python dict syntax)
+
+- Format spec must be a valid Python format specification
+- Uses rightmost `:` to split expression from format spec
+- Invalid format specs will show an error in the output
+
+**Status:** ✅ Implemented (Week 2, Session 6)
 
 ---
 
@@ -892,19 +1014,20 @@ function StoryView({ passageData }) {
 - [x] CLI compilation
 - [x] CLI player
 
-### 📅 Week 2: State & Organization
+### ✅ Week 2: State & Organization (Complete)
 
-- [ ] Variable assignment (`~`)
-- [ ] Variable display (`{}`)
-- [ ] Expressions in assignments
-- [ ] Conditional choices
-- [ ] **File includes (`@include`)**
+- [x] Variable assignment (`~`)
+- [x] Variable display (`{}`)
+- [x] Variable display with format specifiers (`{var:.2f}`)
+- [x] Expressions in assignments
+- [x] Conditional choices (`+ {condition} [Text] -> Target`)
+- [x] **File includes (`@include`)**
 
 ### 📅 Week 3: Python Integration
 
-- [ ] `<<py>>` blocks
-- [ ] Function calls in expressions
-- [ ] Object attributes
+- [x] `<<py>>` blocks
+- [x] Function calls in expressions
+- [x] Object attributes (via Python blocks and expressions)
 - [ ] Conditionals (`<<if>>`)
 - [ ] Loops (`<<for>>`)
 

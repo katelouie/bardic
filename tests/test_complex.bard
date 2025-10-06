@@ -1,0 +1,84 @@
+:: Start
+~ player_name = "Adventurer"
+
+<<py
+import random
+
+# Character stats
+stats = {
+    'strength': random.randint(8, 18),
+    'dexterity': random.randint(8, 18),
+    'intelligence': random.randint(8, 18),
+}
+
+# Calculate modifiers
+def modifier(stat):
+    return (stat - 10) // 2
+
+modifiers = {
+    key: modifier(value)
+    for key, value in stats.items()
+}
+
+# Character class based on highest stat
+highest_stat = max(stats, key=stats.get)
+if highest_stat == 'strength':
+    character_class = 'Warrior'
+elif highest_stat == 'dexterity':
+    character_class = 'Rogue'
+else:
+    character_class = 'Wizard'
+
+# Starting equipment
+equipment = []
+if character_class == 'Warrior':
+    equipment = ['sword', 'shield', 'armor']
+elif character_class == 'Rogue':
+    equipment = ['dagger', 'lockpicks', 'cloak']
+else:
+    equipment = ['staff', 'spellbook', 'robe']
+>>
+
+Character Created: {player_name}
+Class: {character_class}
+
+Stats:
+- Strength: {stats['strength']} (modifier: {modifiers['strength']:+d})
+- Dexterity: {stats['dexterity']} (modifier: {modifiers['dexterity']:+d})
+- Intelligence: {stats['intelligence']} (modifier: {modifiers['intelligence']:+d})
+
+Starting Equipment:
+<<py
+equipment_list = '\n'.join(f'- {item}' for item in equipment)
+>>
+{equipment_list}
+
++ [Begin adventure] -> Adventure
+
+:: Adventure
+You begin your adventure as a {character_class}!
+
+<<py
+# Random encounter
+encounter_roll = random.randint(1, 20) + modifiers['dexterity']
+
+if encounter_roll >= 15:
+    outcome = "avoided"
+    description = "You nimbly avoid the trap!"
+elif encounter_roll >= 10:
+    outcome = "partial"
+    description = "You trigger the trap but dodge most of it."
+else:
+    outcome = "hit"
+    description = "The trap catches you!"
+>>
+
+{description}
+
+Result: {outcome}
+(Rolled {encounter_roll})
+
++ [Continue] -> End
+
+:: End
+Adventure complete!

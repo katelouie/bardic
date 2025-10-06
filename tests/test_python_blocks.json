@@ -1,0 +1,243 @@
+{
+  "version": "0.1.0",
+  "initial_passage": "Start",
+  "passages": {
+    "Start": {
+      "id": "Start",
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "You rolled "
+        },
+        {
+          "type": "expression",
+          "code": "count"
+        },
+        {
+          "type": "text",
+          "value": " dice: "
+        },
+        {
+          "type": "expression",
+          "code": "rolls"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Total: "
+        },
+        {
+          "type": "expression",
+          "code": "total"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Average: "
+        },
+        {
+          "type": "expression",
+          "code": "average:.1f"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Outcome: "
+        },
+        {
+          "type": "expression",
+          "code": "outcome"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "---"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "expression",
+          "code": "greeting"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "You rolled: "
+        },
+        {
+          "type": "expression",
+          "code": "dice_roll"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Roll again",
+          "target": "RollAgain",
+          "condition": null
+        },
+        {
+          "text": "Done",
+          "target": "End",
+          "condition": null
+        }
+      ],
+      "execute": [
+        {
+          "type": "set_var",
+          "var": "count",
+          "expression": "0"
+        },
+        {
+          "type": "python_block",
+          "code": "# Multi-line python\nimport random\n\nrolls = []\nfor i in range(5):\n    roll = random.randint(1, 6)\n    rolls.append(roll)\n\ntotal = sum(rolls)\naverage = total / len(rolls)\ncount = len(rolls)\n\nif total > 20:\n    outcome = \"excellent\"\nelif total > 15:\n    outcome = \"good\"\nelse:\n    outcome = \"poor\""
+        },
+        {
+          "type": "python_block",
+          "code": "name = \"Hero\"\ngreeting = greet(name)\ndice_roll = roll_dice(20)"
+        }
+      ]
+    },
+    "RollAgain": {
+      "id": "RollAgain",
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "You rolled another die: "
+        },
+        {
+          "type": "expression",
+          "code": "new_roll"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "New total: "
+        },
+        {
+          "type": "expression",
+          "code": "total"
+        },
+        {
+          "type": "text",
+          "value": " (from "
+        },
+        {
+          "type": "expression",
+          "code": "count"
+        },
+        {
+          "type": "text",
+          "value": " dice)"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Done",
+          "target": "End",
+          "condition": null
+        }
+      ],
+      "execute": [
+        {
+          "type": "python_block",
+          "code": "import random\nnew_roll = random.randint(1, 6)\ntotal = total + new_roll\ncount = count + 1"
+        }
+      ]
+    },
+    "End": {
+      "id": "End",
+      "content": [
+        {
+          "type": "text",
+          "value": "Final score: "
+        },
+        {
+          "type": "expression",
+          "code": "total"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [],
+      "execute": []
+    }
+  }
+}

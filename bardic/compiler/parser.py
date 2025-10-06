@@ -83,6 +83,61 @@ def resolve_includes(source: str, base_path: str, seen: Optional[set] = None) ->
     return "\n".join(result)
 
 
+def extract_python_block(lines: list[str], start_index: int) -> tuple[str, int]:
+    """
+    Extract a <<py...>> block from lines.
+
+    Args:
+        lines: List of all lines
+        start_index: Index of the <<py line
+
+    Returns:
+        Tuple of (python code, lines consumed)
+    """
+    # Skip the opening <<py line
+    i = start_index + 1
+    code_lines = []
+
+    # Find the base indentation (first non-empty line)
+    base_indent = None
+
+    while i < len(lines):
+        line = lines[i]
+
+        # Check for closing >>
+        if line.strip() == ">>":
+            break
+
+        # Determine base indentation from first real line
+        if base_indent is None and line.strip():
+            base_indent = len(line) - len(line.lstrip())
+
+        # Remove base indentation, preserve relative indentation
+        if base_indent is not None and line.strip():
+            # Remove only the base indentation
+            if len(line) >= base_indent and line[:base_indent].strip() == "":
+                adjusted_line = line[base_indent:]
+            else:
+                adjusted_line = line
+            code_lines.append(adjusted_line)
+        elif not line.strip():
+            # Preserve empty lines
+            code_lines.append("")
+        else:
+            # First line or line with no indent
+            code_lines.append(line)
+
+        i += 1
+
+    # Join code lines
+    code = "\n".join(code_lines)
+
+    # Return code and number of lines consumed (including opening and closing)
+    lines_consumed = i - start_index + 1
+
+    return code, lines_consumed
+
+
 def parse(source: str) -> Dict[str, Any]:
     """
     Parse a .bard source string into structured data.
@@ -125,6 +180,13 @@ def parse(source: str) -> Dict[str, Any]:
         # Skip if not in a passage
         if not current_passage:
             i += 1
+            continue
+
+        # Python block: <<py
+        if line.strip().startswith("<<py"):
+            code, lines_consumed = extract_python_block(lines, i)
+            current_passage["execute"].append({"type": "python_block", "code": code})
+            i += lines_consumed
             continue
 
         # Variable assignment: ~ var = value

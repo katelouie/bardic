@@ -3,8 +3,9 @@ Runtime engine for executing compiled Bardic stories.
 """
 
 import json
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from dataclasses import dataclass
+import traceback
 
 
 @dataclass
@@ -30,7 +31,9 @@ class BardEngine:
     Loads compiled story JSON and manages story state, nagivation and rendering.
     """
 
-    def __init__(self, story_data: Dict[str, Any]):
+    def __init__(
+        self, story_data: Dict[str, Any], context: Optional[dict[str, Any]] = None
+    ):
         """
         Initialize the engine with compiled story data.
 
@@ -41,6 +44,7 @@ class BardEngine:
         self.passages = story_data["passages"]
         self.current_passage_id = None  # Will be set by goto()
         self.state = {}  # Game state (variables)
+        self.context = context or {}
         self._current_output = None  # Cache for current passage output
 
         # Validate
@@ -218,10 +222,12 @@ class BardEngine:
         return self.goto(target)
 
     def _execute_commands(self, commands: list[dict]) -> None:
-        """Execute passage commands (variable assignments, etc)"""
+        """Execute passage commands (variable assignments, python blocks, etc)"""
         for cmd in commands:
             if cmd["type"] == "set_var":
                 self._execute_set_var(cmd)
+            elif cmd["type"] == "python_block":
+                self._execute_python_block(cmd)
 
     def _execute_set_var(self, cmd: dict) -> None:
         """Execute a variable assignment."""
@@ -262,6 +268,88 @@ class BardEngine:
                     f"  Expression could not be evaluated or parsed as literal"
                 )
 
+    def _execute_python_block(self, cmd: dict) -> None:
+        """
+        Execute a python code block.
+
+        The code block has access to:
+        - self.state (current game state)
+        - Any context provided at engine initialization
+
+        Args:
+            cmd: Command dictionary with 'code' key
+        """
+        code = cmd["code"]
+
+        try:
+            # Create execution context with safe builtins
+            safe_builtins = {
+                # Allow these builtins
+                "len": len,
+                "str": str,
+                "int": int,
+                "float": float,
+                "bool": bool,
+                "list": list,
+                "dict": dict,
+                "tuple": tuple,
+                "set": set,
+                "range": range,
+                "enumerate": enumerate,
+                "zip": zip,
+                "sum": sum,
+                "min": min,
+                "max": max,
+                "abs": abs,
+                "round": round,
+                "sorted": sorted,
+                "any": any,
+                "all": all,
+                "print": print,  # For debugging
+                # Allow safe imports
+                "__import__": __import__,
+            }
+            # Merge state and context for execution
+            exec_context = {**self.context, **self.state}
+
+            # Execute the python code
+            exec(code, {"__builtins__": safe_builtins}, exec_context)
+
+            # Update state with any new/modified variables
+            # Only update variables that were changed or added
+            # Update state but not context -- context is read-only!!
+            for key, value in exec_context.items():
+                if (
+                    not key.startswith("_") and key not in self.context
+                ):  # Skip internal variables
+                    self.state[key] = value
+
+        except SyntaxError as e:
+            # Syntax error - show the problematic line
+            raise RuntimeError(
+                "Syntax error in Python block:\n"
+                f"Line {e.lineno}: {e.text}\n"
+                f"  {e.msg}\n\n"
+                f"Full code:\n{code}"
+            )
+
+        except NameError as e:
+            # Undefined variable
+            raise RuntimeError(
+                f"Undefined variable in Python block: {e}\n"
+                "Available variables: {list(exec_context.keys())}\n\n"
+                f"Code:\n{code}"
+            )
+
+        except Exception as e:
+            # Other runtime error
+            raise RuntimeError(
+                f"Error executing Python block:\n"
+                f"  {type(e).__name__}: {e}\n\n"
+                f"Traceback:\n{traceback.format_exc()}\n"
+                f"Code:\n{code}"
+            )
+
     def _parse_literal(self, value_str: str) -> Any:
         """Parse a literal value."""
         value = value_str.strip()
@@ -289,18 +377,38 @@ class BardEngine:
         return value
 
     def _render_content(self, content_tokens: list[dict]) -> str:
-        """Render content with variable substitution."""
+        """Render content with variable substitution and format specifiers."""
         result = []
 
         for token in content_tokens:
             if token["type"] == "text":
                 result.append(token["value"])
             elif token["type"] == "expression":
-                # Evaluate the expression
+                # Evaluate the expression (with optional format spec)
                 try:
-                    eval_context = dict(self.state)
-                    value = eval(token["code"], {"__builtins__": {}}, eval_context)
-                    result.append(str(value))
+                    # Merge context and state for evaluation
+                    eval_context = {**self.context, **self.state}
+                    code = token["code"]
+
+                    # Check for format specifier (e.g., "average:.1f")
+                    if ":" in code and not any(
+                        op in code for op in ["==", "!=", "<=", ">=", "::"]
+                    ):
+                        # Split expression and format spec
+                        # Find the first : that's not part of an operator
+                        colon_idx = code.find(":")
+                        expr = code[:colon_idx].strip()
+                        format_spec = code[colon_idx + 1 :].strip()
+
+                        # Evaluate the expression
+                        value = eval(expr, {"__builtins__": {}}, eval_context)
+
+                        # Apply format spec
+                        result.append(format(value, format_spec))
+                    else:
+                        # No format spec, just evaluate and convert to string
+                        value = eval(code, {"__builtins__": {}}, eval_context)
+                        result.append(str(value))
                 except NameError:
                     result.append(f"{{ERROR: undefined variable '{token['code']}'}}")
                 except Exception as e:
@@ -310,6 +418,16 @@ class BardEngine:
                     )
 
         return "".join(result)
+
+    def _split_format_spec(self, code: str) -> tuple[str, str | None]:
+        """Split 'expression:format_spec' at the rightmost valid colon."""
+        # Your simple version for now
+        if ":" in code and not any(op in code for op in ["==", "!=", "<=", ">=", "::"]):
+            colon_idx = code.rfind(":")  # Use rfind for rightmost
+            expr = code[:colon_idx].strip()
+            spec = code[colon_idx + 1 :].strip()
+            return expr, spec
+        return code, None
 
     def get_story_info(self) -> Dict[str, Any]:
         """

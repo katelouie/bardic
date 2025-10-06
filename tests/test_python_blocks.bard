@@ -1,0 +1,59 @@
+:: Start
+~ count = 0
+
+<<py
+# Multi-line python
+import random
+
+rolls = []
+for i in range(5):
+    roll = random.randint(1, 6)
+    rolls.append(roll)
+
+total = sum(rolls)
+average = total / len(rolls)
+count = len(rolls)
+
+if total > 20:
+    outcome = "excellent"
+elif total > 15:
+    outcome = "good"
+else:
+    outcome = "poor"
+>>
+
+You rolled {count} dice: {rolls}
+
+Total: {total}
+Average: {average:.1f}
+Outcome: {outcome}
+
+---
+
+<<py
+name = "Hero"
+greeting = greet(name)
+dice_roll = roll_dice(20)
+>>
+
+{greeting}
+You rolled: {dice_roll}
+
++ [Roll again] -> RollAgain
++ [Done] -> End
+
+:: RollAgain
+<<py
+import random
+new_roll = random.randint(1, 6)
+total = total + new_roll
+count = count + 1
+>>
+
+You rolled another die: {new_roll}
+New total: {total} (from {count} dice)
+
++ [Done] -> End
+
+:: End
+Final score: {total}

@@ -1,0 +1,286 @@
+{
+  "version": "0.1.0",
+  "initial_passage": "Start",
+  "passages": {
+    "Start": {
+      "id": "Start",
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Character Created: "
+        },
+        {
+          "type": "expression",
+          "code": "player_name"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Class: "
+        },
+        {
+          "type": "expression",
+          "code": "character_class"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Stats:"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "- Strength: "
+        },
+        {
+          "type": "expression",
+          "code": "stats['strength']"
+        },
+        {
+          "type": "text",
+          "value": " (modifier: "
+        },
+        {
+          "type": "expression",
+          "code": "modifiers['strength']:+d"
+        },
+        {
+          "type": "text",
+          "value": ")"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "- Dexterity: "
+        },
+        {
+          "type": "expression",
+          "code": "stats['dexterity']"
+        },
+        {
+          "type": "text",
+          "value": " (modifier: "
+        },
+        {
+          "type": "expression",
+          "code": "modifiers['dexterity']:+d"
+        },
+        {
+          "type": "text",
+          "value": ")"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "- Intelligence: "
+        },
+        {
+          "type": "expression",
+          "code": "stats['intelligence']"
+        },
+        {
+          "type": "text",
+          "value": " (modifier: "
+        },
+        {
+          "type": "expression",
+          "code": "modifiers['intelligence']:+d"
+        },
+        {
+          "type": "text",
+          "value": ")"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Starting Equipment:"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "expression",
+          "code": "equipment_list"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Begin adventure",
+          "target": "Adventure",
+          "condition": null
+        }
+      ],
+      "execute": [
+        {
+          "type": "set_var",
+          "var": "player_name",
+          "expression": "\"Adventurer\""
+        },
+        {
+          "type": "python_block",
+          "code": "import random\n\n# Character stats\nstats = {\n    'strength': random.randint(8, 18),\n    'dexterity': random.randint(8, 18),\n    'intelligence': random.randint(8, 18),\n}\n\n# Calculate modifiers\ndef modifier(stat):\n    return (stat - 10) // 2\n\nmodifiers = {\n    key: modifier(value)\n    for key, value in stats.items()\n}\n\n# Character class based on highest stat\nhighest_stat = max(stats, key=stats.get)\nif highest_stat == 'strength':\n    character_class = 'Warrior'\nelif highest_stat == 'dexterity':\n    character_class = 'Rogue'\nelse:\n    character_class = 'Wizard'\n\n# Starting equipment\nequipment = []\nif character_class == 'Warrior':\n    equipment = ['sword', 'shield', 'armor']\nelif character_class == 'Rogue':\n    equipment = ['dagger', 'lockpicks', 'cloak']\nelse:\n    equipment = ['staff', 'spellbook', 'robe']"
+        },
+        {
+          "type": "python_block",
+          "code": "equipment_list = '\\n'.join(f'- {item}' for item in equipment)"
+        }
+      ]
+    },
+    "Adventure": {
+      "id": "Adventure",
+      "content": [
+        {
+          "type": "text",
+          "value": "You begin your adventure as a "
+        },
+        {
+          "type": "expression",
+          "code": "character_class"
+        },
+        {
+          "type": "text",
+          "value": "!"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "expression",
+          "code": "description"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Result: "
+        },
+        {
+          "type": "expression",
+          "code": "outcome"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "(Rolled "
+        },
+        {
+          "type": "expression",
+          "code": "encounter_roll"
+        },
+        {
+          "type": "text",
+          "value": ")"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Continue",
+          "target": "End",
+          "condition": null
+        }
+      ],
+      "execute": [
+        {
+          "type": "python_block",
+          "code": "# Random encounter\nencounter_roll = random.randint(1, 20) + modifiers['dexterity']\n\nif encounter_roll >= 15:\n    outcome = \"avoided\"\n    description = \"You nimbly avoid the trap!\"\nelif encounter_roll >= 10:\n    outcome = \"partial\"\n    description = \"You trigger the trap but dodge most of it.\"\nelse:\n    outcome = \"hit\"\n    description = \"The trap catches you!\""
+        }
+      ]
+    },
+    "End": {
+      "id": "End",
+      "content": [
+        {
+          "type": "text",
+          "value": "Adventure complete!"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [],
+      "execute": []
+    }
+  }
+}

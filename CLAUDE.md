@@ -113,6 +113,7 @@ Content goes here.
 ```bard
 ~ variable = value           # Assignment
 {variable}                   # Display in content
+{variable:.2f}               # Display with format specifier
 ~ health = health - 10       # Expressions
 ```
 
@@ -122,6 +123,15 @@ Content is tokenized into:
 - `{"type": "expression", "code": "..."}` - Variables/expressions in `{}`
 
 Variables are evaluated at render time using restricted `eval()` with `engine.state` as context.
+
+**Format Specifiers** (Python format spec mini-language):
+```bard
+{average:.1f}      # Float with 1 decimal place
+{price:.2f}        # Float with 2 decimal places
+{count:03d}        # Integer with leading zeros
+{name:>10}         # Right-aligned string (10 chars)
+```
+Supports standard Python format specifications after `:` in expressions.
 
 ## Important Implementation Details
 
@@ -157,10 +167,13 @@ See `docs/engine-api.md` for complete API documentation.
 - Filtered during rendering based on current state
 - `choose(index)` uses **filtered** choices, so indices always match what user sees
 
-### Content Rendering (engine.py:270-287)
+### Content Rendering (engine.py:352-390)
 
 - Content is a list of tokens (text + expressions)
 - Expressions are evaluated with current state
+- **Format specifiers** supported: `{var:spec}` splits into expression and format, then uses `format(value, spec)`
+- Automatically detects `:` and applies Python format specs (`.2f`, `03d`, `>10`, etc.)
+- Comparison operators (`==`, `<=`, `>=`, `!=`) are excluded from format parsing
 - Errors in expressions show as `{ERROR: code - message}` for debugging
 
 ### Parser Line Processing (parser.py:28-87)
