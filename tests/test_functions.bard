@@ -1,0 +1,17 @@
+:: Start
+~ player_name = "Adventurer"
+~ attack = 15
+~ defense = 8
+
+{greet(player_name)}
+
+You roll a d20: {roll_dice(20)}
+You roll a d6: {roll_dice(6)}
+You roll another d6: {roll_dice()}
+
+Combat damage: {calculate_damage(attack, defense)}
+
++ [Continue] -> End
+
+:: End
+Game over!

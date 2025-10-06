@@ -1,0 +1,27 @@
+:: Start
+<<py
+import random
+import math
+>>
+
+Random number (1-100): {random.randint(1, 100)}
+Square root of 16: {math.sqrt(16)}
+Pi: {math.pi:.4f}
+
+Sine of 45°: {math.sin(math.radians(45)):.4f}
+
++ [More math] -> MoreMath
+
+:: MoreMath
+<<py
+import datetime
+now = datetime.datetime.now()
+>>
+
+Current year: {now.year}
+Current month: {now.strftime("%B")}
+
++ [Done] -> End
+
+:: End
+All done!

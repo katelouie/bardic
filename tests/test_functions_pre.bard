@@ -1,0 +1,12 @@
+:: Start
+~ x = 5
+~ y = 10
+
+Simple addition: {x + y}
+String formatting: {"Hello".upper()}
+List length: {len([1, 2, 3, 4, 5])}
+
++ [Continue] -> Next
+
+:: Next
+All done!

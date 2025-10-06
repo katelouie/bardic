@@ -1,0 +1,288 @@
+{
+  "version": "0.1.0",
+  "initial_passage": "Start",
+  "passages": {
+    "Start": {
+      "id": "Start",
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Numbers: "
+        },
+        {
+          "type": "expression",
+          "code": "numbers"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Sum: "
+        },
+        {
+          "type": "expression",
+          "code": "sum(numbers)"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Max: "
+        },
+        {
+          "type": "expression",
+          "code": "max(numbers)"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Min: "
+        },
+        {
+          "type": "expression",
+          "code": "min(numbers)"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Average: "
+        },
+        {
+          "type": "expression",
+          "code": "sum(numbers) / len(numbers):.2f"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Sorted: "
+        },
+        {
+          "type": "expression",
+          "code": "sorted(numbers)"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Reversed: "
+        },
+        {
+          "type": "expression",
+          "code": "list(reversed(numbers))"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Test strings",
+          "target": "Strings",
+          "condition": null
+        },
+        {
+          "text": "Test nested",
+          "target": "Nested",
+          "condition": null
+        }
+      ],
+      "execute": [
+        {
+          "type": "set_var",
+          "var": "numbers",
+          "expression": "[5, 2, 8, 1, 9, 3]"
+        }
+      ]
+    },
+    "Strings": {
+      "id": "Strings",
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Words: "
+        },
+        {
+          "type": "expression",
+          "code": "words"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Joined: "
+        },
+        {
+          "type": "expression",
+          "code": "\", \".join(words)"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Uppercase: "
+        },
+        {
+          "type": "expression",
+          "code": "[w.upper() for w in words]"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Lengths: "
+        },
+        {
+          "type": "expression",
+          "code": "[len(w) for w in words]"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Back",
+          "target": "Start",
+          "condition": null
+        }
+      ],
+      "execute": [
+        {
+          "type": "set_var",
+          "var": "words",
+          "expression": "[\"hello\", \"world\", \"python\"]"
+        }
+      ]
+    },
+    "Nested": {
+      "id": "Nested",
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Name: "
+        },
+        {
+          "type": "expression",
+          "code": "data[\"name\"]"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Level: "
+        },
+        {
+          "type": "expression",
+          "code": "data[\"level\"]"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Items: "
+        },
+        {
+          "type": "expression",
+          "code": "\", \".join(data[\"items\"])"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Item count: "
+        },
+        {
+          "type": "expression",
+          "code": "len(data[\"items\"])"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Back",
+          "target": "Start",
+          "condition": null
+        }
+      ],
+      "execute": [
+        {
+          "type": "set_var",
+          "var": "data",
+          "expression": "{\"name\": \"Hero\", \"level\": 5, \"items\": [\"sword\", \"shield\"]}"
+        }
+      ]
+    }
+  }
+}

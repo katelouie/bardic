@@ -1,0 +1,313 @@
+{
+  "version": "0.1.0",
+  "initial_passage": "Start",
+  "passages": {
+    "Start": {
+      "id": "Start",
+      "content": [
+        {
+          "type": "text",
+          "value": "Welcome, "
+        },
+        {
+          "type": "expression",
+          "code": "player_name"
+        },
+        {
+          "type": "text",
+          "value": "!"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "You encounter a goblin!"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Your Health: "
+        },
+        {
+          "type": "expression",
+          "code": "player_health"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Enemy Health: "
+        },
+        {
+          "type": "expression",
+          "code": "enemy_health"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Attack",
+          "target": "PlayerAttack",
+          "condition": null
+        },
+        {
+          "text": "Run",
+          "target": "Run",
+          "condition": null
+        }
+      ],
+      "execute": [
+        {
+          "type": "set_var",
+          "var": "player_name",
+          "expression": "\"Hero\""
+        },
+        {
+          "type": "set_var",
+          "var": "player_health",
+          "expression": "100"
+        },
+        {
+          "type": "set_var",
+          "var": "player_attack",
+          "expression": "15"
+        },
+        {
+          "type": "set_var",
+          "var": "enemy_health",
+          "expression": "50"
+        },
+        {
+          "type": "set_var",
+          "var": "enemy_attack",
+          "expression": "10"
+        }
+      ]
+    },
+    "PlayerAttack": {
+      "id": "PlayerAttack",
+      "content": [
+        {
+          "type": "text",
+          "value": "You attack for "
+        },
+        {
+          "type": "expression",
+          "code": "damage"
+        },
+        {
+          "type": "text",
+          "value": " damage!"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Enemy Health: "
+        },
+        {
+          "type": "expression",
+          "code": "enemy_health"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Enemy's turn",
+          "target": "EnemyAttack",
+          "condition": "enemy_health > 0"
+        },
+        {
+          "text": "Victory!",
+          "target": "Victory",
+          "condition": "enemy_health <= 10"
+        }
+      ],
+      "execute": [
+        {
+          "type": "python_block",
+          "code": "import random\n\n# Player attacks\ndamage = random.randint(1, player_attack)\nenemy_health = enemy_health - damage"
+        }
+      ]
+    },
+    "EnemyAttack": {
+      "id": "EnemyAttack",
+      "content": [
+        {
+          "type": "text",
+          "value": "The goblin attacks for "
+        },
+        {
+          "type": "expression",
+          "code": "damage"
+        },
+        {
+          "type": "text",
+          "value": " damage!"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Your Health: "
+        },
+        {
+          "type": "expression",
+          "code": "player_health"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Continue fighting",
+          "target": "PlayerAttack",
+          "condition": "player_health > 0"
+        },
+        {
+          "text": "Defeat...",
+          "target": "Defeat",
+          "condition": "player_health <= 0"
+        }
+      ],
+      "execute": [
+        {
+          "type": "python_block",
+          "code": "import random\n\n# Enemy attacks\ndamage = random.randint(1, enemy_attack)\nplayer_health = player_health - damage"
+        }
+      ]
+    },
+    "Run": {
+      "id": "Run",
+      "content": [
+        {
+          "type": "text",
+          "value": "You flee from battle!"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Final Health: "
+        },
+        {
+          "type": "expression",
+          "code": "player_health"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [],
+      "execute": []
+    },
+    "Victory": {
+      "id": "Victory",
+      "content": [
+        {
+          "type": "text",
+          "value": "You defeated the goblin!"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Final Health: "
+        },
+        {
+          "type": "expression",
+          "code": "player_health"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [],
+      "execute": []
+    },
+    "Defeat": {
+      "id": "Defeat",
+      "content": [
+        {
+          "type": "text",
+          "value": "You were defeated by the goblin!"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [],
+      "execute": []
+    }
+  }
+}

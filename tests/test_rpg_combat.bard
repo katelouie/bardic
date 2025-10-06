@@ -1,0 +1,55 @@
+:: Start
+~ player_name = "Hero"
+~ player_health = 100
+~ player_attack = 15
+~ enemy_health = 50
+~ enemy_attack = 10
+Welcome, {player_name}!
+
+You encounter a goblin!
+
+Your Health: {player_health}
+Enemy Health: {enemy_health}
+
++ [Attack] -> PlayerAttack
++ [Run] -> Run
+
+:: PlayerAttack
+<<py
+import random
+
+# Player attacks
+damage = random.randint(1, player_attack)
+enemy_health = enemy_health - damage
+>>
+You attack for {damage} damage!
+Enemy Health: {enemy_health}
+
++ {enemy_health > 0} [Enemy's turn] -> EnemyAttack
++ {enemy_health <= 0} [Victory!] -> Victory
+
+:: EnemyAttack
+<<py
+import random
+
+# Enemy attacks
+damage = random.randint(1, enemy_attack)
+player_health = player_health - damage
+>>
+The goblin attacks for {damage} damage!
+Your Health: {player_health}
+
++ {player_health > 0} [Continue fighting] -> PlayerAttack
++ {player_health <= 0} [Defeat...] -> Defeat
+:: Run
+You flee from battle!
+
+Final Health: {player_health}
+
+:: Victory
+You defeated the goblin!
+
+Final Health: {player_health}
+
+:: Defeat
+You were defeated by the goblin!

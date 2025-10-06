@@ -268,6 +268,46 @@ class BardEngine:
                     f"  Expression could not be evaluated or parsed as literal"
                 )
 
+    def _get_safe_builtins(self) -> dict[str, Any]:
+        """
+        Get safe builtins for code execution.
+
+        Returns a dictionary of safe built-in functions that can be
+        used in both Python blocks and expressions.
+        """
+        return {
+            # Type constructors
+            "len": len,
+            "str": str,
+            "int": int,
+            "float": float,
+            "bool": bool,
+            "list": list,
+            "dict": dict,
+            "tuple": tuple,
+            "set": set,
+            # Iteration
+            "range": range,
+            "enumerate": enumerate,
+            "zip": zip,
+            # Math operations
+            "sum": sum,
+            "min": min,
+            "max": max,
+            "abs": abs,
+            "round": round,
+            # Sequence operations
+            "sorted": sorted,
+            "reversed": reversed,
+            # Logic
+            "any": any,
+            "all": all,
+            # Debugging
+            "print": print,
+            # Allow imports
+            "__import__": __import__,
+        }
+
     def _execute_python_block(self, cmd: dict) -> None:
         """
         Execute a python code block.
@@ -283,32 +323,7 @@ class BardEngine:
 
         try:
             # Create execution context with safe builtins
-            safe_builtins = {
-                # Allow these builtins
-                "len": len,
-                "str": str,
-                "int": int,
-                "float": float,
-                "bool": bool,
-                "list": list,
-                "dict": dict,
-                "tuple": tuple,
-                "set": set,
-                "range": range,
-                "enumerate": enumerate,
-                "zip": zip,
-                "sum": sum,
-                "min": min,
-                "max": max,
-                "abs": abs,
-                "round": round,
-                "sorted": sorted,
-                "any": any,
-                "all": all,
-                "print": print,  # For debugging
-                # Allow safe imports
-                "__import__": __import__,
-            }
+            safe_builtins = self._get_safe_builtins()
             # Merge state and context for execution
             exec_context = {**self.context, **self.state}
 
@@ -379,6 +394,7 @@ class BardEngine:
     def _render_content(self, content_tokens: list[dict]) -> str:
         """Render content with variable substitution and format specifiers."""
         result = []
+        safe_builtins = self._get_safe_builtins()
 
         for token in content_tokens:
             if token["type"] == "text":
@@ -401,17 +417,28 @@ class BardEngine:
                         format_spec = code[colon_idx + 1 :].strip()
 
                         # Evaluate the expression
-                        value = eval(expr, {"__builtins__": {}}, eval_context)
+                        value = eval(
+                            expr, {"__builtins__": safe_builtins}, eval_context
+                        )
 
                         # Apply format spec
                         result.append(format(value, format_spec))
                     else:
                         # No format spec, just evaluate and convert to string
-                        value = eval(code, {"__builtins__": {}}, eval_context)
+                        value = eval(
+                            code, {"__builtins__": safe_builtins}, eval_context
+                        )
                         result.append(str(value))
                 except NameError:
                     result.append(f"{{ERROR: undefined variable '{token['code']}'}}")
+                except TypeError as e:
+                    # Wrong number of arguments, etc.
+                    result.append(f"{{ERROR: {token['code']} - {e}}}")
+                except AttributeError as e:
+                    # Attribute doesn't exist
+                    result.append(f"{{ERROR: {token['code']} - {e}}}")
                 except Exception as e:
+                    # Other errors
                     # Show error in output for debugging
                     result.append(
                         f"{{ERROR: {token['code']} - {type(e).__name__}: {e}}}"

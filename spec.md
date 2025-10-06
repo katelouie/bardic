@@ -384,7 +384,7 @@ greeting = greet("Hero")
 
 ### Python Expressions
 
-Inline Python evaluation.
+Inline Python evaluation in content.
 
 ```bard
 You rolled a {roll_dice(20)}.
@@ -396,8 +396,54 @@ The card is {card.get_display_name()}.
 
 - Wrapped in `{}`
 - Can be variable names, function calls, or expressions
-- Evaluated at render time
+- Evaluated at render time with full Python syntax
 - Result is converted to string for display
+- Has access to:
+  - All variables in `self.state`
+  - All functions in `context`
+  - Safe builtins (len, str, int, sum, max, etc.)
+  - Imported modules (from `<<py>>` blocks)
+
+**Safe Builtins Available:**
+
+```python
+len, str, int, float, bool, list, dict, tuple, set
+range, enumerate, zip, sum, min, max, abs, round
+sorted, reversed, any, all, print
+__import__  # For import statements
+```
+
+**Examples:**
+
+```bard
+# Simple expressions
+Health: {health}
+Total: {x + y}
+Percentage: {score / max_score * 100:.1f}%
+
+# Function calls
+You rolled: {roll_dice(20)}
+Greeting: {greet(player.name)}
+Damage: {calculate_damage(attack, defense)}
+
+# Built-in functions
+Count: {len(inventory)}
+Total: {sum(scores)}
+Best: {max(results)}
+
+# String methods
+Uppercase: {name.upper()}
+First word: {text.split()[0]}
+
+# List comprehensions
+Doubled: {[x * 2 for x in numbers]}
+
+# Complex expressions
+Average: {sum(values) / len(values):.2f}
+Status: {"alive" if health > 0 else "dead"}
+```
+
+**Status:** ✅ Implemented (Week 3, Session 8)
 
 **Format Specifiers:**
 

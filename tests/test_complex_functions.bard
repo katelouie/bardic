@@ -1,0 +1,35 @@
+:: Start
+~ numbers = [5, 2, 8, 1, 9, 3]
+
+Numbers: {numbers}
+
+Sum: {sum(numbers)}
+Max: {max(numbers)}
+Min: {min(numbers)}
+Average: {sum(numbers) / len(numbers):.2f}
+
+Sorted: {sorted(numbers)}
+Reversed: {list(reversed(numbers))}
+
++ [Test strings] -> Strings
++ [Test nested] -> Nested
+
+:: Strings
+~ words = ["hello", "world", "python"]
+
+Words: {words}
+Joined: {", ".join(words)}
+Uppercase: {[w.upper() for w in words]}
+Lengths: {[len(w) for w in words]}
+
++ [Back] -> Start
+
+:: Nested
+~ data = {"name": "Hero", "level": 5, "items": ["sword", "shield"]}
+
+Name: {data["name"]}
+Level: {data["level"]}
+Items: {", ".join(data["items"])}
+Item count: {len(data["items"])}
+
++ [Back] -> Start

@@ -1,0 +1,93 @@
+{
+  "version": "0.1.0",
+  "initial_passage": "Start",
+  "passages": {
+    "Start": {
+      "id": "Start",
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Simple addition: "
+        },
+        {
+          "type": "expression",
+          "code": "x + y"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "String formatting: "
+        },
+        {
+          "type": "expression",
+          "code": "\"Hello\".upper()"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "List length: "
+        },
+        {
+          "type": "expression",
+          "code": "len([1, 2, 3, 4, 5])"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Continue",
+          "target": "Next",
+          "condition": null
+        }
+      ],
+      "execute": [
+        {
+          "type": "set_var",
+          "var": "x",
+          "expression": "5"
+        },
+        {
+          "type": "set_var",
+          "var": "y",
+          "expression": "10"
+        }
+      ]
+    },
+    "Next": {
+      "id": "Next",
+      "content": [
+        {
+          "type": "text",
+          "value": "All done!"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [],
+      "execute": []
+    }
+  }
+}

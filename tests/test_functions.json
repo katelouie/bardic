@@ -1,0 +1,126 @@
+{
+  "version": "0.1.0",
+  "initial_passage": "Start",
+  "passages": {
+    "Start": {
+      "id": "Start",
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "expression",
+          "code": "greet(player_name)"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "You roll a d20: "
+        },
+        {
+          "type": "expression",
+          "code": "roll_dice(20)"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "You roll a d6: "
+        },
+        {
+          "type": "expression",
+          "code": "roll_dice(6)"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "You roll another d6: "
+        },
+        {
+          "type": "expression",
+          "code": "roll_dice()"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Combat damage: "
+        },
+        {
+          "type": "expression",
+          "code": "calculate_damage(attack, defense)"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Continue",
+          "target": "End",
+          "condition": null
+        }
+      ],
+      "execute": [
+        {
+          "type": "set_var",
+          "var": "player_name",
+          "expression": "\"Adventurer\""
+        },
+        {
+          "type": "set_var",
+          "var": "attack",
+          "expression": "15"
+        },
+        {
+          "type": "set_var",
+          "var": "defense",
+          "expression": "8"
+        }
+      ]
+    },
+    "End": {
+      "id": "End",
+      "content": [
+        {
+          "type": "text",
+          "value": "Game over!"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [],
+      "execute": []
+    }
+  }
+}
