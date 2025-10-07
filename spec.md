@@ -483,6 +483,46 @@ Name: {player_name:^20}               # Centered: "    Alice    "
 
 **Status:** ✅ Implemented (Week 2, Session 6)
 
+**Object Attributes and Methods:**
+
+```bard
+# Accessing attributes
+Card: {card.name}
+Health: {player.stats.health}
+Position: {card.position}
+
+# Calling methods
+Display: {card.get_display_name()}
+Status: {player.get_status()}
+Trust: {client.get_trust_description()}
+
+# Nested attributes
+Health: {character.stats.health}
+Weapon: {character.equipped["weapon"]}
+
+# Method chaining
+Result: {card.set_reversed(True).in_position("past")}
+
+# List operations with objects
+Names: {[card.name for card in cards]}
+Major: {[c for c in cards if c.is_major_arcana()]}
+
+# Dictionary operations
+Client: {clients["aria"].name}
+Best: {max(clients.values(), key=lambda c: c.trust).name}
+```
+
+**Full Python Object Support:**
+
+- Access attributes of any Python object
+- Call methods with arguments
+- Navigate nested attributes
+- Use objects in comprehensions
+- Method chaining supported
+- Dictionary and list operations work naturally
+
+**Status:** ✅ Implemented (Week 3, Session 9)
+
 ---
 
 ### Conditionals
