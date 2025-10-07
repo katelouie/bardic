@@ -185,6 +185,105 @@ def extract_python_block(lines: list[str], start_index: int) -> tuple[str, int]:
     return code, lines_consumed
 
 
+def extract_conditional_block(lines: list[str], start_index: int) -> tuple[dict, int]:
+    """
+    Extract a <<if>>...<<endif>> block from lines.
+
+    Args:
+        lines: list of all lines
+        start_index: index of the <<if line
+
+    Returns:
+        Tuple of (conditional_structure, lines_consumed)
+    """
+    conditional = {"type": "conditional", "branches": []}
+
+    current_branch = None
+    i = start_index
+    nesting_level = 0  # Track nested <<if>> blocks
+
+    while i < len(lines):
+        line = lines[i].strip()
+
+        # Check for nested <<if>> (not the opening one)
+        if line.startswith("<<if ") and i != start_index:
+            # This is a nested conditional - add it to the current branch content
+            if current_branch is not None:
+                # Recursively extract the nested conditional
+                nested_conditional, nested_lines = extract_conditional_block(lines, i)
+                current_branch["content"].append(nested_conditional)
+                i += nested_lines
+                continue
+
+        # Check for opening <<if>> (only at start_index)
+        if line.startswith("<<if ") and i == start_index:
+            match = re.match(r"<<if\s+(.+?)>>", line)
+            if match:
+                condition = match.group(1).strip()
+                current_branch = {"condition": condition, "content": []}
+            i += 1
+            continue
+
+        # Check for <<endif>> - might be closing nested or *this* conditional
+        if line.startswith("<<endif>>"):
+            if nesting_level > 0:
+                # This closes a nested conditional, not ours
+                nesting_level -= 1
+                # Add the endif as text to the current branch
+                if current_branch is not None:
+                    current_branch["content"].append(
+                        {"type": "text", "value": "<<endif>>"}
+                    )
+                i += 1
+                continue
+            else:
+                # This closes OUR conditional
+                # Save final branch
+                if current_branch:
+                    conditional["branches"].append(current_branch)
+                i += 1
+                break
+
+        # Check for <<elif condition>> at our level
+        if line.startswith("<<elif ") and nesting_level == 0:
+            # Save previous branch
+            if current_branch:
+                conditional["branches"].append(current_branch)
+
+            match = re.match(r"<<elif\s+(.+?)>>", line)
+            if match:
+                condition = match.group(1).strip()
+                current_branch = {"condition": condition, "content": []}
+            i += 1
+            continue
+
+        # Check for <<else>> at our level
+        if line.startswith("<<else>>") and nesting_level == 0:
+            # Save previous branch
+            if current_branch:
+                conditional["branches"].append(current_branch)
+
+            # Else branch always has condition True
+            current_branch = {"condition": "True", "content": []}
+            i += 1
+            continue
+
+        # Regular content line -- add to current branch
+        if current_branch is not None:
+            # Parse the line for expressions
+            content_tokens = parse_content_line(lines[i])
+            current_branch["content"].extend(content_tokens)
+            # Add newline after content line (same as main parser)
+            current_branch["content"].append({"type": "text", "value": "\n"})
+
+        i += 1
+
+    # Calculate lines consumed
+    lines_consumed = i - start_index
+
+    return conditional, lines_consumed
+
+
 def parse(source: str) -> Dict[str, Any]:
     """
     Parse a .bard source string into structured data.
@@ -239,6 +338,13 @@ def parse(source: str) -> Dict[str, Any]:
             i += lines_consumed
             continue
 
+        # Conditional block: <<if
+        if line.strip().startswith("<<if "):
+            conditional, lines_consumed = extract_conditional_block(lines, i)
+            current_passage["content"].append(conditional)
+            i += lines_consumed
+            continue
+
         # Variable assignment: ~ var = value
         if line.startswith("~ ") and current_passage:
             assignment = line[2:].strip()
@@ -271,13 +377,18 @@ def parse(source: str) -> Dict[str, Any]:
             i += 1
             continue
 
-        # Empty line
+        # Empty line - just add a newline
         if not line.strip() and current_passage:
             current_passage["content"].append({"type": "text", "value": "\n"})
             i += 1
             continue
 
         i += 1
+
+    # Clean up whitespace in all passages
+    for passage in passages.values():
+        _cleanup_whitespace(passage)
+        _trim_trailing_newlines(passage)
 
     # Determine initial passage (priority order)
     initial_passage = _determine_initial_passage(passages, explicit_start)
@@ -295,6 +406,82 @@ def parse(source: str) -> Dict[str, Any]:
         "imports": import_statements,
         "passages": passages,
     }
+
+
+def _cleanup_whitespace(passage: dict[str, Any]) -> None:
+    """
+    Clean up excessive whitespace around conditionals.
+
+    Removes extra newlines before and after conditional blocks to prevent
+    unwanted blank lines in output.
+
+    Args:
+        passage: Passage dictionary with 'content' list
+    """
+    content = passage.get("content", [])
+    if not content:
+        return
+
+    cleaned = []
+    i = 0
+
+    while i < len(content):
+        token = content[i]
+
+        # Check if this is a newline token before a conditional
+        if (token.get("type") == "text" and
+            token.get("value") == "\n" and
+            i + 1 < len(content) and
+            content[i + 1].get("type") == "conditional"):
+
+            # Skip this newline if there's already a newline before it
+            if cleaned and cleaned[-1].get("type") == "text" and cleaned[-1].get("value") == "\n":
+                i += 1
+                continue
+
+        # Check if this is a newline after a conditional
+        if (token.get("type") == "text" and
+            token.get("value") == "\n" and
+            cleaned and
+            cleaned[-1].get("type") == "conditional"):
+
+            # Skip if next token is also a newline (avoid double spacing after conditional)
+            if i + 1 < len(content) and content[i + 1].get("type") == "text" and content[i + 1].get("value") == "\n":
+                i += 1
+                continue
+
+        cleaned.append(token)
+        i += 1
+
+    passage["content"] = cleaned
+
+
+def _trim_trailing_newlines(passage: dict[str, Any]) -> None:
+    """
+    Remove excessive trailing newlines from passage content.
+
+    Keeps at most one trailing newline for clean formatting.
+
+    Args:
+        passage: Passage dictionary with 'content' list
+    """
+    content = passage.get("content", [])
+    if not content:
+        return
+
+    # Count trailing newline tokens
+    trailing_newlines = 0
+    for token in reversed(content):
+        if token.get("type") == "text" and token.get("value") == "\n":
+            trailing_newlines += 1
+        else:
+            break
+
+    # Keep at most 1 trailing newline, remove the rest
+    if trailing_newlines > 1:
+        # Remove extra newlines
+        for _ in range(trailing_newlines - 1):
+            content.pop()
 
 
 def _determine_initial_passage(

@@ -1,0 +1,441 @@
+{
+  "version": "0.1.0",
+  "initial_passage": "Start",
+  "imports": [],
+  "passages": {
+    "Start": {
+      "id": "Start",
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Start game",
+          "target": "Main",
+          "condition": null
+        }
+      ],
+      "execute": [
+        {
+          "type": "set_var",
+          "var": "gold",
+          "expression": "50"
+        },
+        {
+          "type": "set_var",
+          "var": "has_key",
+          "expression": "False"
+        },
+        {
+          "type": "set_var",
+          "var": "trust",
+          "expression": "60"
+        }
+      ]
+    },
+    "Main": {
+      "id": "Main",
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Status:"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "- Gold: "
+        },
+        {
+          "type": "expression",
+          "code": "gold"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "- Has key: "
+        },
+        {
+          "type": "expression",
+          "code": "has_key"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "- Trust: "
+        },
+        {
+          "type": "expression",
+          "code": "trust"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "conditional",
+          "branches": [
+            {
+              "condition": "gold > 100 and trust > 50",
+              "content": [
+                {
+                  "type": "text",
+                  "value": "You're wealthy and trusted!"
+                }
+              ]
+            },
+            {
+              "condition": "gold > 50 or has_key",
+              "content": [
+                {
+                  "type": "text",
+                  "value": "You have some resources."
+                }
+              ]
+            },
+            {
+              "condition": "not has_key and gold < 20",
+              "content": [
+                {
+                  "type": "text",
+                  "value": "You're poor and locked out."
+                }
+              ]
+            },
+            {
+              "condition": "True",
+              "content": [
+                {
+                  "type": "text",
+                  "value": "You're getting by."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Get gold",
+          "target": "GetGold",
+          "condition": null
+        },
+        {
+          "text": "Lose gold",
+          "target": "LoseGold",
+          "condition": null
+        },
+        {
+          "text": "Get key",
+          "target": "GetKey",
+          "condition": "not has_key"
+        },
+        {
+          "text": "Lose key",
+          "target": "LoseKey",
+          "condition": "has_key"
+        },
+        {
+          "text": "Lose trust",
+          "target": "LoseTrust",
+          "condition": null
+        }
+      ],
+      "execute": []
+    },
+    "GetGold": {
+      "id": "GetGold",
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Found gold!"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Back",
+          "target": "Main",
+          "condition": null
+        }
+      ],
+      "execute": [
+        {
+          "type": "set_var",
+          "var": "gold",
+          "expression": "gold + 60"
+        }
+      ]
+    },
+    "GetKey": {
+      "id": "GetKey",
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Found the key!"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Back",
+          "target": "Main",
+          "condition": null
+        }
+      ],
+      "execute": [
+        {
+          "type": "set_var",
+          "var": "has_key",
+          "expression": "True"
+        }
+      ]
+    },
+    "LoseTrust": {
+      "id": "LoseTrust",
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Lost some trust."
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Back",
+          "target": "Main",
+          "condition": null
+        }
+      ],
+      "execute": [
+        {
+          "type": "set_var",
+          "var": "trust",
+          "expression": "trust - 30"
+        }
+      ]
+    },
+    "LoseGold": {
+      "id": "LoseGold",
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Lost gold!"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Back",
+          "target": "Main",
+          "condition": null
+        }
+      ],
+      "execute": [
+        {
+          "type": "set_var",
+          "var": "gold",
+          "expression": "gold - 60"
+        }
+      ]
+    },
+    "LoseKey": {
+      "id": "LoseKey",
+      "content": [
+        {
+          "type": "text",
+          "value": "Lost the key!"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Back",
+          "target": "Main",
+          "condition": null
+        }
+      ],
+      "execute": [
+        {
+          "type": "set_var",
+          "var": "has_key",
+          "expression": "False"
+        }
+      ]
+    }
+  }
+}

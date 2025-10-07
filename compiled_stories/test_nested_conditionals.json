@@ -1,0 +1,263 @@
+{
+  "version": "0.1.0",
+  "initial_passage": "Start",
+  "imports": [],
+  "passages": {
+    "Start": {
+      "id": "Start",
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "You are a "
+        },
+        {
+          "type": "expression",
+          "code": "player_class"
+        },
+        {
+          "type": "text",
+          "value": "."
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Health: "
+        },
+        {
+          "type": "expression",
+          "code": "health"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "conditional",
+          "branches": [
+            {
+              "condition": "player_class == \"warrior\"",
+              "content": [
+                {
+                  "type": "conditional",
+                  "branches": [
+                    {
+                      "condition": "health > 75",
+                      "content": [
+                        {
+                          "type": "text",
+                          "value": "  You're a strong warrior!"
+                        },
+                        {
+                          "type": "text",
+                          "value": "\n"
+                        }
+                      ]
+                    },
+                    {
+                      "condition": "True",
+                      "content": [
+                        {
+                          "type": "text",
+                          "value": "  You're a wounded warrior."
+                        },
+                        {
+                          "type": "text",
+                          "value": "\n"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "condition": "player_class == \"mage\"",
+              "content": [
+                {
+                  "type": "conditional",
+                  "branches": [
+                    {
+                      "condition": "health > 75",
+                      "content": [
+                        {
+                          "type": "text",
+                          "value": "  Your magic is powerful!"
+                        },
+                        {
+                          "type": "text",
+                          "value": "\n"
+                        }
+                      ]
+                    },
+                    {
+                      "condition": "True",
+                      "content": [
+                        {
+                          "type": "text",
+                          "value": "  Your magic is weakening."
+                        },
+                        {
+                          "type": "text",
+                          "value": "\n"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "condition": "True",
+              "content": [
+                {
+                  "type": "conditional",
+                  "branches": [
+                    {
+                      "condition": "health > 75",
+                      "content": [
+                        {
+                          "type": "text",
+                          "value": "  You're in good shape!"
+                        },
+                        {
+                          "type": "text",
+                          "value": "\n"
+                        }
+                      ]
+                    },
+                    {
+                      "condition": "True",
+                      "content": [
+                        {
+                          "type": "text",
+                          "value": "  You need help!"
+                        },
+                        {
+                          "type": "text",
+                          "value": "\n"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Become mage",
+          "target": "BecomeMage",
+          "condition": null
+        },
+        {
+          "text": "Take damage",
+          "target": "Damage",
+          "condition": null
+        }
+      ],
+      "execute": [
+        {
+          "type": "set_var",
+          "var": "player_class",
+          "expression": "\"warrior\""
+        },
+        {
+          "type": "set_var",
+          "var": "health",
+          "expression": "80"
+        }
+      ]
+    },
+    "BecomeMage": {
+      "id": "BecomeMage",
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "You are now a mage!"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Back",
+          "target": "Start",
+          "condition": null
+        }
+      ],
+      "execute": [
+        {
+          "type": "set_var",
+          "var": "player_class",
+          "expression": "\"mage\""
+        }
+      ]
+    },
+    "Damage": {
+      "id": "Damage",
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "You took damage!"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Back",
+          "target": "Start",
+          "condition": null
+        }
+      ],
+      "execute": [
+        {
+          "type": "set_var",
+          "var": "health",
+          "expression": "health - 40"
+        }
+      ]
+    }
+  }
+}

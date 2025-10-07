@@ -52,6 +52,7 @@ body {
   margin-bottom: 30px;
   line-height: 1.8;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  white-space: pre-wrap; /* Preserve newlines and spaces */
 }
 
 .passage p {

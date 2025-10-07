@@ -530,13 +530,25 @@ Best: {max(clients.values(), key=lambda c: c.trust).name}
 Branch content based on conditions.
 
 ```bard
-<<if condition>> Content if true. <<elif other_condition>> Content if other is true. <<else>> Default content. <<endif>>
+<<if condition>>
+Content if true.
+<<elif other_condition>>
+Content if other is true.
+<<else>>
+Default content.
+<<endif>>
 ```
 
 **Examples:**
 
 ```bard
-<<if health > 75>> You feel strong. <<elif health > 25>> You're wounded but standing. <<else>> You're barely conscious. <<endif>>
+<<if health > 75>>
+You feel strong and healthy.
+<<elif health > 25>>
+You're wounded but standing.
+<<else>>
+You're barely conscious.
+<<endif>>
 ```
 
 **Rules:**
@@ -545,8 +557,59 @@ Branch content based on conditions.
 - Can access all variables and functions
 - Can be nested
 - Produces no whitespace itself (only renders chosen branch)
+- Must close with `<<endif>>`
+- Multiple `<<elif>>` branches allowed
+- `<<else>>` is optional
+- First true condition wins (like Python if/elif/else)
 
-**Status:** 📅 Week 3
+**Complex Conditions:**
+
+```bard
+<<if gold > 100 and trust > 50>>
+Wealthy and trusted!
+<<elif gold > 50 or has_key>>
+Have resources.
+<<elif not has_key and gold < 20>>
+Poor and locked out.
+<<else>>
+Getting by.
+<<endif>>
+```
+
+**With Objects:**
+
+```bard
+<<if client.trust_level > 75>>
+Deeply trusted.
+<<elif any(card.is_major_arcana() for card in cards)>>
+Major arcana drawn!
+<<else>>
+Standard reading.
+<<endif>>
+```
+
+**Nested Conditionals:**
+
+```bard
+<<if player_class == "warrior">>
+  <<if health > 75>>
+  Strong warrior!
+  <<else>>
+  Wounded warrior.
+  <<endif>>
+<<else>>
+  Not a warrior.
+<<endif>>
+```
+
+**Error Handling:**
+
+- Failed conditions skip that branch
+- Warnings printed to console
+- Story continues with next branch
+- Missing `<<endif>>` causes parse error
+
+**Status:** ✅ Implemented (Week 3, Session 10)
 
 ---
 

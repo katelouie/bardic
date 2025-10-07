@@ -1,0 +1,43 @@
+:: Start
+~ player_class = "warrior"
+~ health = 80
+
+You are a {player_class}.
+Health: {health}
+
+<<if player_class == "warrior">>
+  <<if health > 75>>
+  You're a strong warrior!
+  <<else>>
+  You're a wounded warrior.
+  <<endif>>
+<<elif player_class == "mage">>
+  <<if health > 75>>
+  Your magic is powerful!
+  <<else>>
+  Your magic is weakening.
+  <<endif>>
+<<else>>
+  <<if health > 75>>
+  You're in good shape!
+  <<else>>
+  You need help!
+  <<endif>>
+<<endif>>
+
++ [Become mage] -> BecomeMage
++ [Take damage] -> Damage
+
+:: BecomeMage
+~ player_class = "mage"
+
+You are now a mage!
+
++ [Back] -> Start
+
+:: Damage
+~ health = health - 40
+
+You took damage!
+
++ [Back] -> Start

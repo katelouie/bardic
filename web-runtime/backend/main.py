@@ -142,6 +142,13 @@ async def start_story(request: StartStoryRequest):
         # Get the first passage
         output = engine.current()
 
+        # DEBUG: Print what we're sending
+        print(f"\n=== START STORY DEBUG ===")
+        print(f"Passage ID: {output.passage_id}")
+        print(f"Content length: {len(output.content)}")
+        print(f"Content:\n{repr(output.content)}\n")
+        print(f"=== END DEBUG ===\n")
+
         # Return it to the frontend
         return {
             "content": output.content,
@@ -175,6 +182,13 @@ async def make_choice(request: MakeChoiceRequest):
     try:
         # Make the choice
         output = engine.choose(request.choice_index)
+
+        # DEBUG: Print what we're sending
+        print(f"\n=== CHOOSE DEBUG ===")
+        print(f"Passage ID: {output.passage_id}")
+        print(f"Content length: {len(output.content)}")
+        print(f"Content:\n{repr(output.content)}\n")
+        print(f"=== END DEBUG ===\n")
 
         # Return the new passage
         return {

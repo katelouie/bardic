@@ -1,0 +1,306 @@
+{
+  "version": "0.1.0",
+  "initial_passage": "Start",
+  "imports": [
+    "from game_logic.test_tarot_objects import Card, Client, draw_cards",
+    ""
+  ],
+  "passages": {
+    "Start": {
+      "id": "Start",
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Main story",
+          "target": "Main",
+          "condition": null
+        }
+      ],
+      "execute": [
+        {
+          "type": "python_block",
+          "code": "client = Client(\"Aria\", 28)\nclient.trust_level = 65\n\n\ncards = draw_cards(3)"
+        }
+      ]
+    },
+    "Main": {
+      "id": "Main",
+      "content": [
+        {
+          "type": "text",
+          "value": "Client: "
+        },
+        {
+          "type": "expression",
+          "code": "client.name"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Trust: "
+        },
+        {
+          "type": "expression",
+          "code": "client.trust_level"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "conditional",
+          "branches": [
+            {
+              "condition": "client.trust_level > 75",
+              "content": [
+                {
+                  "type": "expression",
+                  "code": "client.name"
+                },
+                {
+                  "type": "text",
+                  "value": " deeply trusts you. She's open and honest."
+                },
+                {
+                  "type": "text",
+                  "value": "\n"
+                }
+              ]
+            },
+            {
+              "condition": "client.trust_level > 50",
+              "content": [
+                {
+                  "type": "expression",
+                  "code": "client.name"
+                },
+                {
+                  "type": "text",
+                  "value": " trusts you. She's comfortable talking."
+                },
+                {
+                  "type": "text",
+                  "value": "\n"
+                }
+              ]
+            },
+            {
+              "condition": "client.trust_level > 25",
+              "content": [
+                {
+                  "type": "expression",
+                  "code": "client.name"
+                },
+                {
+                  "type": "text",
+                  "value": " is uncertain about you. She's guarded"
+                },
+                {
+                  "type": "text",
+                  "value": "\n"
+                }
+              ]
+            },
+            {
+              "condition": "True",
+              "content": [
+                {
+                  "type": "expression",
+                  "code": "client.name"
+                },
+                {
+                  "type": "text",
+                  "value": " is skeptical. She's defensive."
+                },
+                {
+                  "type": "text",
+                  "value": "\n"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Cards drawn: "
+        },
+        {
+          "type": "expression",
+          "code": "len(cards)"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "conditional",
+          "branches": [
+            {
+              "condition": "any(card.is_major_arcana() for card in cards)",
+              "content": [
+                {
+                  "type": "text",
+                  "value": "You drew major arcana! This is a significant reading."
+                },
+                {
+                  "type": "text",
+                  "value": "\n"
+                }
+              ]
+            },
+            {
+              "condition": "True",
+              "content": [
+                {
+                  "type": "text",
+                  "value": "Only minor arcana today."
+                },
+                {
+                  "type": "text",
+                  "value": "\n"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "conditional",
+          "branches": [
+            {
+              "condition": "sum(1 for c in cards if c.reversed) > 1",
+              "content": [
+                {
+                  "type": "text",
+                  "value": "Many reversed cards...challenging energy."
+                },
+                {
+                  "type": "text",
+                  "value": "\n"
+                }
+              ]
+            },
+            {
+              "condition": "sum(1 for c in cards if c.reversed) == 1",
+              "content": [
+                {
+                  "type": "text",
+                  "value": "One reversed card. Some obstacles."
+                },
+                {
+                  "type": "text",
+                  "value": "\n"
+                }
+              ]
+            },
+            {
+              "condition": "True",
+              "content": [
+                {
+                  "type": "text",
+                  "value": "All upright! Clear energy."
+                },
+                {
+                  "type": "text",
+                  "value": "\n"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Increase trust",
+          "target": "IncreaseTrust",
+          "condition": null
+        },
+        {
+          "text": "Decrease trust",
+          "target": "DecreaseTrust",
+          "condition": null
+        }
+      ],
+      "execute": []
+    },
+    "IncreaseTrust": {
+      "id": "IncreaseTrust",
+      "content": [
+        {
+          "type": "text",
+          "value": "Trust increased!"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Back",
+          "target": "Main",
+          "condition": null
+        }
+      ],
+      "execute": [
+        {
+          "type": "python_block",
+          "code": "client.modify_trust(20)"
+        }
+      ]
+    },
+    "DecreaseTrust": {
+      "id": "DecreaseTrust",
+      "content": [
+        {
+          "type": "text",
+          "value": "Trust decreased."
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Back",
+          "target": "Main",
+          "condition": null
+        }
+      ],
+      "execute": [
+        {
+          "type": "python_block",
+          "code": "client.modify_trust(-20)"
+        }
+      ]
+    }
+  }
+}

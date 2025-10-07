@@ -1,0 +1,60 @@
+from game_logic.test_tarot_objects import Card, Client, draw_cards
+
+:: Start
+<<py
+client = Client("Aria", 28)
+client.trust_level = 65
+
+cards = draw_cards(3)
+>>
++ [Main story] -> Main
+
+:: Main
+Client: {client.name}
+Trust: {client.trust_level}
+
+<<if client.trust_level > 75>>
+{client.name} deeply trusts you. She's open and honest.
+<<elif client.trust_level > 50>>
+{client.name} trusts you. She's comfortable talking.
+<<elif client.trust_level > 25>>
+{client.name} is uncertain about you. She's guarded
+<<else>>
+{client.name} is skeptical. She's defensive.
+<<endif>>
+
+Cards drawn: {len(cards)}
+
+<<if any(card.is_major_arcana() for card in cards)>>
+You drew major arcana! This is a significant reading.
+<<else>>
+Only minor arcana today.
+<<endif>>
+
+<<if sum(1 for c in cards if c.reversed) > 1>>
+Many reversed cards...challenging energy.
+<<elif sum(1 for c in cards if c.reversed) == 1>>
+One reversed card. Some obstacles.
+<<else>>
+All upright! Clear energy.
+<<endif>>
+
++ [Increase trust] -> IncreaseTrust
++ [Decrease trust] -> DecreaseTrust
+
+:: IncreaseTrust
+<<py
+client.modify_trust(20)
+>>
+Trust increased!
+
++ [Back] -> Main
+
+:: DecreaseTrust
+<<py
+client.modify_trust(-20)
+>>
+Trust decreased.
+
++ [Back] -> Main
+

@@ -58,6 +58,12 @@ function App() {
       }
 
       const data = await response.json()
+      console.log('=== START STORY RECEIVED ===')
+      console.log('Passage ID:', data.passage_id)
+      console.log('Content length:', data.content.length)
+      console.log('Content:', data.content)
+      console.log('Content (repr):', JSON.stringify(data.content))
+      console.log('=== END ===')
       setPassage(data)
     } catch (err) {
       setError(err.message)
@@ -88,6 +94,12 @@ function App() {
       }
 
       const data = await response.json()
+      console.log('=== CHOICE RECEIVED ===')
+      console.log('Passage ID:', data.passage_id)
+      console.log('Content length:', data.content.length)
+      console.log('Content:', data.content)
+      console.log('Content (repr):', JSON.stringify(data.content))
+      console.log('=== END ===')
       setPassage(data)
     } catch (err) {
       setError(err.message)
@@ -174,10 +186,8 @@ function App() {
       </header>
       <main className='story-content'>
         <div className='passage'>
-          {/* Split content by newlines and render as paragraphs */}
-          {passage.content.split('\n\n').map((paragraph, i) => (
-            <p key={i}>{paragraph}</p>
-          ))}
+          {/* Render content as-is, preserving all whitespace and newlines */}
+          {passage.content}
         </div>
         {passage.is_end ? (
           <div className="ending">

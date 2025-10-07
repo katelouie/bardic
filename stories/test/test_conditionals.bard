@@ -1,0 +1,47 @@
+:: Start
+~ health = 100
+
+Your health: {health}
+
+<<if health > 75>>
+You feel strong and healthy!
+<<elif health > 50>>
+You're doing okay.
+<<elif health > 25>>
+You're injured.
+<<else>>
+You're barely alive!
+<<endif>>
+
++ [Take damage] -> TakeDamage
++ [Heal] -> Heal
+
+:: TakeDamage
+~ health = health - 30
+
+You took damage!
+
+Health: {health}
+
+<<if health > 0>>
+You're still standing.
+<<else>>
+You collapsed!
+<<endif>>
+
++ [Continue] -> Start
+
+:: Heal
+~ health = min(100, health + 40)
+
+You healed!
+
+Health: {health}
+
+<<if health == 100>>
+You're at full health!
+<<else>>
+You still need more healing.
+<<endif>>
+
++ [Continue] -> Start

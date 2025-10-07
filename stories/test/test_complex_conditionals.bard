@@ -1,0 +1,63 @@
+:: Start
+~ gold = 50
+~ has_key = False
+~ trust = 60
+
++ [Start game] -> Main
+
+:: Main
+
+Status:
+- Gold: {gold}
+- Has key: {has_key}
+- Trust: {trust}
+
+<<if gold > 100 and trust > 50>>
+You're wealthy and trusted!
+<<elif gold > 50 or has_key>>
+You have some resources.
+<<elif not has_key and gold < 20>>
+You're poor and locked out.
+<<else>>
+You're getting by.
+<<endif>>
+
++ [Get gold] -> GetGold
++ [Lose gold] -> LoseGold
++ {not has_key} [Get key] -> GetKey
++ {has_key} [Lose key] -> LoseKey
++ [Lose trust] -> LoseTrust
+
+:: GetGold
+~ gold = gold + 60
+
+Found gold!
+
++ [Back] -> Main
+
+:: GetKey
+~ has_key = True
+
+Found the key!
+
++ [Back] -> Main
+
+:: LoseTrust
+~ trust = trust - 30
+
+Lost some trust.
+
++ [Back] -> Main
+
+:: LoseGold
+~ gold = gold - 60
+
+Lost gold!
+
++ [Back] -> Main
+
+:: LoseKey
+~ has_key = False
+Lost the key!
+
++ [Back] -> Main

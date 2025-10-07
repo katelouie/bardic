@@ -283,12 +283,12 @@ class BardEngine:
 
         # Try to evaluate the expression
         try:
-            # Create evaluation context with current state
-            eval_context = dict(self.state)
+            # Create evaluation context with context and state
+            eval_context = {**self.context, **self.state}
+            safe_builtins = self._get_safe_builtins()
 
             # Evaluate the expression
-            # Use a restricted eval for safety (no __builtins__)
-            value = eval(expression, {"__builtins__": {}}, eval_context)
+            value = eval(expression, {"__builtins__": safe_builtins}, eval_context)
 
             # Store in state
             self.state[var_name] = value
@@ -490,8 +490,44 @@ class BardEngine:
                     result.append(
                         f"{{ERROR: {token['code']} - {type(e).__name__}: {e}}}"
                     )
+            elif token["type"] == "conditional":
+                # Render conditional blocks
+                branch_content = self._render_conditional(token)
+                result.append(branch_content)
 
         return "".join(result)
+
+    def _render_conditional(self, conditional: dict) -> str:
+        """
+        Render a conditional block by evaluating conditions and rendering the first true branch.
+
+        Args:
+            conditional: Conditional structure with branches
+        Returns:
+            Rendered content from the first true branch
+        """
+        eval_context = {**self.context, **self.state}
+        safe_builtins = self._get_safe_builtins()
+
+        # Evaluate each branch until we find a true condition
+        for branch in conditional.get("branches", []):
+            condition = branch.get("condition", "False")
+
+            try:
+                # Evaluate the condition
+                result = eval(condition, {"__builtins__": safe_builtins}, eval_context)
+
+                if result:
+                    # This branch is true -- render its content
+                    return self._render_content(branch["content"])
+
+            except Exception as e:
+                # If condition fails, skip this branch
+                print(f"Warning: Conditional condition failed: {condition} - {e}")
+                continue
+
+        # No branch was true - return empty string
+        return ""
 
     def _split_format_spec(self, code: str) -> tuple[str, str | None]:
         """Split 'expression:format_spec' at the rightmost valid colon."""
