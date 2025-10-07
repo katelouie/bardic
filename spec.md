@@ -625,6 +625,9 @@ You draw three cards...
 - Available to all passages in the file
 - Can import from your project's Python modules
 - Each import statement on its own line
+- Empty lines and comments allowed in import section
+- Imports execute once when engine initializes
+- Imported modules/objects available in state
 
 **Examples:**
 
@@ -644,7 +647,13 @@ from models.client import Client
 from services.tarot import TarotService
 ```
 
-**Status:** 📅 Week 5
+**Error Handling:**
+
+- Import errors show clear messages
+- Missing modules are caught at engine initialization
+- Imports after other content raise parse errors
+
+**Status:** ✅ Implemented (Week 3, Session 9.5)
 
 ---
 

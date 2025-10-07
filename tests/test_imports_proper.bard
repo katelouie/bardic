@@ -1,0 +1,37 @@
+import random
+import math
+from datetime import datetime
+
+:: Start
+Testing imports from the top of the file...
+
+Random number: {random.randint(1, 100)}
+Pi: {math.pi:.4f}
+Square root of 25: {math.sqrt(25)}
+
+<<py
+now = datetime.now()
+>>
+
+Current year: {now.year}
+
++ [Continue] -> Math
+
+:: Math
+More math tests...
+
+Sine of 45°: {math.sin(math.radians(45)):.4f}
+Random choice: {random.choice(["A", "B", "C"])}
+
+<<py
+numbers = [random.randint(1, 10) for _ in range(5)]
+>>
+
+Random numbers: {numbers}
+Sum: {sum(numbers)}
+Max: {max(numbers)}
+
++ [Done] -> End
+
+:: End
+Import test complete!

@@ -1,0 +1,241 @@
+{
+  "version": "0.1.0",
+  "initial_passage": "Start",
+  "imports": [
+    "from test_tarot_objects import Card, Client, Reader, draw_cards",
+    ""
+  ],
+  "passages": {
+    "Start": {
+      "id": "Start",
+      "content": [
+        {
+          "type": "text",
+          "value": "Testing imports with custom objects..."
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Reader: "
+        },
+        {
+          "type": "expression",
+          "code": "reader.name"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Level: "
+        },
+        {
+          "type": "expression",
+          "code": "reader.get_level()"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Client: "
+        },
+        {
+          "type": "expression",
+          "code": "client.name"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Trust: "
+        },
+        {
+          "type": "expression",
+          "code": "client.get_trust_description()"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Cards drawn: "
+        },
+        {
+          "type": "expression",
+          "code": "len(cards)"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "First card: "
+        },
+        {
+          "type": "expression",
+          "code": "cards[0].get_display_name()"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Continue",
+          "target": "Details",
+          "condition": null
+        }
+      ],
+      "execute": [
+        {
+          "type": "python_block",
+          "code": "reader = Reader(\"You\")\nclient = Client(\"Aria\", 28)\ncards = draw_cards(3)"
+        }
+      ]
+    },
+    "Details": {
+      "id": "Details",
+      "content": [
+        {
+          "type": "text",
+          "value": "Card details:"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Major arcana count: "
+        },
+        {
+          "type": "expression",
+          "code": "sum(1 for c in cards if c.is_major_arcana())"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Done",
+          "target": "End",
+          "condition": null
+        }
+      ],
+      "execute": [
+        {
+          "type": "python_block",
+          "code": "for i, card in enumerate(cards):\n    card.in_position([\"past\", \"present\", \"future\"][i])\n\n\nprint(\"\\n\".join([f\"{i+1}. {card.get_display_name()} - {card.get_position_meaning()}\" for i, card in enumerate(cards)]))"
+        }
+      ]
+    },
+    "End": {
+      "id": "End",
+      "content": [
+        {
+          "type": "text",
+          "value": "Import test complete!"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [],
+      "execute": []
+    }
+  }
+}

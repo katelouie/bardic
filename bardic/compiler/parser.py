@@ -13,6 +13,53 @@ from typing import Dict, Optional, Any
 import sys
 
 
+def extract_imports(source: str) -> tuple[list[str], str]:
+    """
+    Extract Python import statements from the beginning of the file.
+
+    Import statemeneets must appear at the *very top* of the file, before any
+    passages, includes, or other content.
+
+    Args:
+        source: The source text
+
+    Returns:
+        Tuple of (import_statements, remaining_source)
+    """
+    lines = source.split("\n")
+    imports = []
+    remaining_lines = []
+
+    in_imports_section = True
+
+    for line in lines:
+        stripped = line.strip()
+
+        # Empty lines and comments are allow in import section:
+        if not stripped or stripped.startswith("#"):
+            if in_imports_section:
+                imports.append(line)
+            else:
+                remaining_lines.append(line)
+
+        # Check if this is an import statement
+        if stripped.startswith(("import ", "from ")):
+            if in_imports_section:
+                imports.append(line)
+            else:
+                # Import after non-import content -- error
+                raise ValueError(
+                    "Import statements must appear at the top of the file\n"
+                    f"Found import after other content: {stripped}"
+                )
+        else:
+            # First non-import, non-empty, non-comment line
+            in_imports_section = False
+            remaining_lines.append(line)
+
+    return imports, "\n".join(remaining_lines)
+
+
 def resolve_includes(source: str, base_path: str, seen: Optional[set] = None) -> str:
     """
     Resolve @include directives recursively.
@@ -148,11 +195,14 @@ def parse(source: str) -> Dict[str, Any]:
     Returns:
         Dict containing version, initial_passage, and passages
     """
+    # Extract imports first
+    import_statements, remaining_source = extract_imports(source)
+
     passages = {}
     current_passage = None
     explicit_start = None
 
-    lines = source.split("\n")
+    lines = remaining_source.split("\n")
     i = 0
 
     while i < len(lines):
@@ -242,6 +292,7 @@ def parse(source: str) -> Dict[str, Any]:
     return {
         "version": "0.1.0",
         "initial_passage": initial_passage,
+        "imports": import_statements,
         "passages": passages,
     }
 

@@ -1,0 +1,38 @@
+from test_tarot_objects import Card, Client, Reader, draw_cards
+
+:: Start
+Testing imports with custom objects...
+
+<<py
+reader = Reader("You")
+client = Client("Aria", 28)
+cards = draw_cards(3)
+>>
+
+Reader: {reader.name}
+Level: {reader.get_level()}
+
+Client: {client.name}
+Trust: {client.get_trust_description()}
+
+Cards drawn: {len(cards)}
+First card: {cards[0].get_display_name()}
+
++ [Continue] -> Details
+
+:: Details
+Card details:
+
+<<py
+for i, card in enumerate(cards):
+    card.in_position(["past", "present", "future"][i])
+
+print("\n".join([f"{i+1}. {card.get_display_name()} - {card.get_position_meaning()}" for i, card in enumerate(cards)]))
+>>
+
+Major arcana count: {sum(1 for c in cards if c.is_major_arcana())}
+
++ [Done] -> End
+
+:: End
+Import test complete!

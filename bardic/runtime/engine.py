@@ -2,6 +2,7 @@
 Runtime engine for executing compiled Bardic stories.
 """
 
+import sys
 import json
 from typing import Dict, Any, List, Optional
 from dataclasses import dataclass
@@ -47,6 +48,9 @@ class BardEngine:
         self.context = context or {}
         self._current_output = None  # Cache for current passage output
 
+        # Execute Imports first
+        self._execute_imports()
+
         # Validate
         initial_passage = story_data["initial_passage"]
         if not initial_passage:
@@ -57,6 +61,48 @@ class BardEngine:
 
         # Navigate to initial passage (executes and caches)
         self.goto(initial_passage)
+
+    def _execute_imports(self) -> None:
+        """
+        Execute import statements from the story.
+
+        Imports are executed in a temporary namespace and then added to the state,
+        making them available to all passages.
+        """
+        import_statements = self.story.get("imports", [])
+
+        if not import_statements:
+            return
+
+        # Join all import statemenets
+        import_code = "\n".join(import_statements)
+
+        if not import_code.strip():
+            return
+
+        try:
+            # Add current directory to path for imports
+            if "." not in sys.path:
+                sys.path.insert(0, ".")
+            # Execute imports with safe builtins
+            safe_builtins = self._get_safe_builtins()
+            import_namespace = {}
+
+            exec(import_code, {"__builtins__": safe_builtins}, import_namespace)
+
+            # Add imported modules/objects to state
+            for key, value in import_namespace.items():
+                if not key.startswith("_"):
+                    self.state[key] = value
+        except ImportError as e:
+            raise RuntimeError(
+                "Failed to import modules:\n"
+                f"{import_code}\n\n"
+                f"Error: {e}\n\n"
+                "Make sure the modules are installed and accessible"
+            )
+        except Exception as e:
+            raise RuntimeError(f"Error executing imports:\n{import_code}\n\nError: {e}")
 
     def _execute_passage(self, passage_id: str) -> None:
         """

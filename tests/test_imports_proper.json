@@ -1,0 +1,267 @@
+{
+  "version": "0.1.0",
+  "initial_passage": "Start",
+  "imports": [
+    "import random",
+    "import math",
+    "from datetime import datetime",
+    ""
+  ],
+  "passages": {
+    "Start": {
+      "id": "Start",
+      "content": [
+        {
+          "type": "text",
+          "value": "Testing imports from the top of the file..."
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Random number: "
+        },
+        {
+          "type": "expression",
+          "code": "random.randint(1, 100)"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Pi: "
+        },
+        {
+          "type": "expression",
+          "code": "math.pi:.4f"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Square root of 25: "
+        },
+        {
+          "type": "expression",
+          "code": "math.sqrt(25)"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Current year: "
+        },
+        {
+          "type": "expression",
+          "code": "now.year"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Continue",
+          "target": "Math",
+          "condition": null
+        }
+      ],
+      "execute": [
+        {
+          "type": "python_block",
+          "code": "now = datetime.now()"
+        }
+      ]
+    },
+    "Math": {
+      "id": "Math",
+      "content": [
+        {
+          "type": "text",
+          "value": "More math tests..."
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Sine of 45\u00b0: "
+        },
+        {
+          "type": "expression",
+          "code": "math.sin(math.radians(45)):.4f"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Random choice: "
+        },
+        {
+          "type": "expression",
+          "code": "random.choice([\"A\", \"B\", \"C\"])"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Random numbers: "
+        },
+        {
+          "type": "expression",
+          "code": "numbers"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Sum: "
+        },
+        {
+          "type": "expression",
+          "code": "sum(numbers)"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Max: "
+        },
+        {
+          "type": "expression",
+          "code": "max(numbers)"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Done",
+          "target": "End",
+          "condition": null
+        }
+      ],
+      "execute": [
+        {
+          "type": "python_block",
+          "code": "numbers = [random.randint(1, 10) for _ in range(5)]"
+        }
+      ]
+    },
+    "End": {
+      "id": "End",
+      "content": [
+        {
+          "type": "text",
+          "value": "Import test complete!"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [],
+      "execute": []
+    }
+  }
+}
