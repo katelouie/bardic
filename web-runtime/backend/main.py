@@ -4,6 +4,7 @@ Generic Bardic web runtime - FastAPI backend.
 This is a minimal server that can run ANY Bardic story.
 """
 
+import random
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -47,6 +48,20 @@ for dir_path in [PROJECT_ROOT, GAME_LOGIC_DIR]:
     dir_str = str(dir_path)
     if dir_str not in sys.path:
         sys.path.insert(0, dir_str)
+
+
+def get_default_context() -> dict[str, Any]:
+    """
+    Get default context functions available to all stories.
+
+    This is where you'd add your game-specific functions.
+    For now, we'll add some useful utilities.
+    """
+    return {
+        "random_int": lambda min_val, max_val: random.randint(min_val, max_val),
+        "random_choice": lambda items: random.choice(items),
+        "chance": lambda probability: random.random() < probability,
+    }
 
 
 # This is an "endpoint" - a URL that does something
@@ -117,8 +132,9 @@ async def start_story(request: StartStoryRequest):
             story_data = json.load(f)
 
         # Create a Bardic Engine for this story
-        # For now no custom context, just the story itself
-        engine = BardEngine(story_data, context={})
+        # For now just default custom context (see above)
+        context = get_default_context()
+        engine = BardEngine(story_data, context=context)
 
         # Store the engine in our sessions dict
         sessions[request.session_id] = engine

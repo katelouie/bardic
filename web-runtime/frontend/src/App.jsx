@@ -11,15 +11,34 @@ function App() {
   // In a real app, this would be smarter
   const [sessionId] = useState(() => 'session_' + Math.random().toString(36).substring(7))
 
+  // Add state for story selection
+  const [stories, setStories] = useState([])
+  const [selectedStory, setSelectedStory] = useState(null)
+  const [showStorySelect, setShowStorySelect] = useState(true)
+
   // This runs when the component first loads
   useEffect(() => {
-    startStory()
+    loadStories()
   }, [])
+
+  // Function to load available stories
+  const loadStories = async () => {
+    try {
+      const response = await fetch('http://127.0.0.1:8000/api/stories')
+      const data = await response.json()
+      setStories(data.stories)
+    } catch (err) {
+      console.error('Failed to load stories', err)
+    }
+  }
 
   // Function to start the story
   const startStory = async () => {
+    if (!selectedStory) return
+
     setLoading(true)
     setError(null)
+    setShowStorySelect(false) // Hide story selection
 
     try {
       // Make a POST request to your API
@@ -29,7 +48,7 @@ function App() {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          story_id: 'test_adventure', // We will make this dynamic later
+          story_id: selectedStory,
           session_id: sessionId
         })
       })
@@ -42,6 +61,7 @@ function App() {
       setPassage(data)
     } catch (err) {
       setError(err.message)
+      setShowStorySelect(true) // Show selection again on error
     } finally {
       setLoading(false)
     }
@@ -95,6 +115,45 @@ function App() {
           <button onClick={startStory}>Try Again</button>
         </div>
       </div>
+    )
+  }
+
+  // Show story selection screen
+  if (showStorySelect) {
+    return (
+      <div className='app'>
+        <header className='app-header'>
+          <h1>Bardic Story Player</h1>
+          <p>Choose a story to begin</p>
+        </header>
+        <main className='story-content'>
+          <div className='story-select'>
+            <h2>Available Stories</h2>
+            {stories.length === 0 ? (
+              <p>Loading stories...</p>
+            ) : (
+              <div className='story-list'>
+                {
+                  stories.map((story) => (
+                    <button
+                      key={story.id}
+                      onClick={() => setSelectedStory(story.id)}
+                      className='story-button'>
+                      {story.name}
+                    </button>
+                  ))
+                }
+              </div>
+            )
+            }
+            {selectedStory && (
+              <button onClick={startStory} className='start-button'>
+                Start Story
+              </button>
+            )}
+          </div>
+        </main >
+      </div >
     )
   }
 

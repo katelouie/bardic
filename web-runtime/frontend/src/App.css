@@ -170,3 +170,65 @@ body {
 .error button {
   margin-top: 20px;
 }
+
+.story-select {
+  background: #252525;
+  padding: 40px;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.story-select h2 {
+  color: #4a9eff;
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.story-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.story-button {
+  padding: 20px;
+  background: #333;
+  color: #e0e0e0;
+  border: 2px solid #444;
+  border-radius: 6px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.story-button:hover {
+  background: #3a3a3a;
+  border-color: #4a9eff;
+}
+
+.story-button.selected {
+  background: #2a4a6a;
+  border-color: #4a9eff;
+  color: #fff;
+}
+
+.start-button {
+  display: block;
+  width: 100%;
+  padding: 15px;
+  background: #4a9eff;
+  color: #1a1a1a;
+  border: none;
+  border-radius: 6px;
+  font-size: 1.2rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.start-button:hover {
+  background: #3a8eef;
+  transform: scale(1.02);
+}

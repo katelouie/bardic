@@ -1,0 +1,200 @@
+{
+  "version": "0.1.0",
+  "initial_passage": "Start",
+  "imports": [],
+  "passages": {
+    "Start": {
+      "id": "Start",
+      "content": [
+        {
+          "type": "text",
+          "value": "Testing context functions from the web!"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Random number (1-100): "
+        },
+        {
+          "type": "expression",
+          "code": "random_int(1, 100)"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Random choice: "
+        },
+        {
+          "type": "expression",
+          "code": "random_choice([\"A\", \"B\", \"C\", \"D\"])"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Are you lucky? "
+        },
+        {
+          "type": "expression",
+          "code": "lucky"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "You're lucky!",
+          "target": "Lucky",
+          "condition": "lucky"
+        },
+        {
+          "text": "Bad luck...",
+          "target": "Unlucky",
+          "condition": "not lucky"
+        }
+      ],
+      "execute": [
+        {
+          "type": "python_block",
+          "code": "lucky = chance(0.7)"
+        }
+      ]
+    },
+    "Lucky": {
+      "id": "Lucky",
+      "content": [
+        {
+          "type": "text",
+          "value": "Great! You got lucky!"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Random treasure: "
+        },
+        {
+          "type": "expression",
+          "code": "random_choice([\"gold\", \"gems\", \"sword\"])"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Try again",
+          "target": "Start",
+          "condition": null
+        }
+      ],
+      "execute": []
+    },
+    "Unlucky": {
+      "id": "Unlucky",
+      "content": [
+        {
+          "type": "text",
+          "value": "Too bad, try again!"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Try again",
+          "target": "Start",
+          "condition": null
+        }
+      ],
+      "execute": []
+    }
+  }
+}
