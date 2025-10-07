@@ -1,0 +1,281 @@
+{
+  "version": "0.1.0",
+  "initial_passage": "Start",
+  "passages": {
+    "Start": {
+      "id": "Start",
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "You drew "
+        },
+        {
+          "type": "expression",
+          "code": "len(cards)"
+        },
+        {
+          "type": "text",
+          "value": " cards:"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Card names: "
+        },
+        {
+          "type": "expression",
+          "code": "[card.name for card in cards]"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Major arcana: "
+        },
+        {
+          "type": "expression",
+          "code": "[card.name for card in cards if card.is_major_arcana()]"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Reversed cards: "
+        },
+        {
+          "type": "expression",
+          "code": "[card.name for card in cards if card.reversed]"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Display names: "
+        },
+        {
+          "type": "expression",
+          "code": "\", \".join([card.get_display_name() for card in cards])"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "First card: "
+        },
+        {
+          "type": "expression",
+          "code": "cards[0].name"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Last card: "
+        },
+        {
+          "type": "expression",
+          "code": "cards[-1].name"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Continue",
+          "target": "Analysis",
+          "condition": null
+        }
+      ],
+      "execute": [
+        {
+          "type": "python_block",
+          "code": "import sys\nsys.path.insert(0, '.')\nfrom test_tarot_objects import draw_cards\n\ncards = draw_cards(5)"
+        }
+      ]
+    },
+    "Analysis": {
+      "id": "Analysis",
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Analysis:"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "- Total cards: "
+        },
+        {
+          "type": "expression",
+          "code": "len(cards)"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "- Major arcana: "
+        },
+        {
+          "type": "expression",
+          "code": "major_count"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "- Reversed: "
+        },
+        {
+          "type": "expression",
+          "code": "reversed_count"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "- Upright: "
+        },
+        {
+          "type": "expression",
+          "code": "len(cards) - reversed_count"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Percentage major: "
+        },
+        {
+          "type": "expression",
+          "code": "major_count / len(cards) * 100:.1f"
+        },
+        {
+          "type": "text",
+          "value": "%"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Percentage reversed: "
+        },
+        {
+          "type": "expression",
+          "code": "reversed_count / len(cards) * 100:.1f"
+        },
+        {
+          "type": "text",
+          "value": "%"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Done",
+          "target": "End",
+          "condition": null
+        }
+      ],
+      "execute": [
+        {
+          "type": "python_block",
+          "code": "major_count = sum(1 for card in cards if card.is_major_arcana())\nreversed_count = sum(1 for card in cards if card.reversed)"
+        }
+      ]
+    },
+    "End": {
+      "id": "End",
+      "content": [
+        {
+          "type": "text",
+          "value": "Analysis complete!"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [],
+      "execute": []
+    }
+  }
+}

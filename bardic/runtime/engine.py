@@ -131,8 +131,9 @@ class BardEngine:
 
         # Else, evaluate the condition
         try:
-            eval_context = dict(self.state)
-            result = eval(condition, {"__builtins__": {}}, eval_context)
+            eval_context = {**self.context, **self.state}
+            safe_builtins = self._get_safe_builtins()
+            result = eval(condition, {"__builtins__": safe_builtins}, eval_context)
             return bool(result)
         except Exception as e:
             # If condition fails to evaluate, hide the choice

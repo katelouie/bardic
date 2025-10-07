@@ -1,0 +1,45 @@
+:: Start
+<<py
+import sys
+sys.path.insert(0, '.')
+from test_tarot_objects import Client
+
+clients = {
+    "aria": Client("Aria", 28),
+    "marcus": Client("Marcus", 35),
+    "elena": Client("Elena", 42)
+}
+
+# Set some values
+clients["aria"].trust_level = 75
+clients["marcus"].trust_level = 45
+clients["elena"].trust_level = 90
+>>
+
+Available clients: {", ".join(clients.keys())}
+
+Client details:
+<<py
+for name, client in clients.items():
+    print(f"- {client.name}: {client.trust_level} trust")
+>>
+
+Highest trust: {max(clients.values(), key=lambda c: c.trust_level).name}
+Lowest trust: {min(clients.values(), key=lambda c: c.trust_level).name}
+
+Average trust: {sum(c.trust_level for c in clients.values()) / len(clients):.1f}
+
++ [Access Aria] -> Aria
++ [Access Marcus] -> Marcus
+
+:: Aria
+Aria's trust: {clients["aria"].trust_level}
+Aria's status: {clients["aria"].get_trust_description()}
+
++ [Back] -> Start
+
+:: Marcus
+Marcus's trust: {clients["marcus"].trust_level}
+Marcus's status: {clients["marcus"].get_trust_description()}
+
++ [Back] -> Start

@@ -1,0 +1,45 @@
+:: Start
+<<py
+import sys
+sys.path.insert(0, '.')
+from test_objects import Character
+
+hero = Character("Aldric")
+hero.stats.health = 85
+hero.stats.mana = 60
+hero.inventory = ["potion", "scroll", "key"]
+hero.equip_weapon("Excalibur")
+>>
+
+Character: {hero.name}
+
+Stats:
+- Health: {hero.stats.health}
+- Mana: {hero.stats.mana}
+- Stamina: {hero.stats.stamina}
+- Total: {hero.stats.get_total()}
+
+Inventory: {", ".join(hero.inventory)}
+Items: {len(hero.inventory)}
+
+Weapon: {hero.equipped["weapon"]}
+
++ [Continue] -> Modify
+
+:: Modify
+<<py
+hero.stats.health -= 20
+hero.inventory.append("gem")
+>>
+
+After battle:
+
+Health: {hero.stats.health}
+Inventory: {hero.inventory}
+
+Character info: {hero.get_info()}
+
++ [Done] -> End
+
+:: End
+Game over!

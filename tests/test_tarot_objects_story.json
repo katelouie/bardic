@@ -1,0 +1,546 @@
+{
+  "version": "0.1.0",
+  "initial_passage": "Start",
+  "passages": {
+    "Start": {
+      "id": "Start",
+      "content": [
+        {
+          "type": "text",
+          "value": "Session "
+        },
+        {
+          "type": "expression",
+          "code": "client.session_count"
+        },
+        {
+          "type": "text",
+          "value": " with "
+        },
+        {
+          "type": "expression",
+          "code": "client.name"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Reader: "
+        },
+        {
+          "type": "expression",
+          "code": "reader.name"
+        },
+        {
+          "type": "text",
+          "value": " ("
+        },
+        {
+          "type": "expression",
+          "code": "reader.get_level()"
+        },
+        {
+          "type": "text",
+          "value": ")"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Style: "
+        },
+        {
+          "type": "expression",
+          "code": "reader.style"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Client: "
+        },
+        {
+          "type": "expression",
+          "code": "client.name"
+        },
+        {
+          "type": "text",
+          "value": ", age "
+        },
+        {
+          "type": "expression",
+          "code": "client.age"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Trust: "
+        },
+        {
+          "type": "expression",
+          "code": "client.trust_level"
+        },
+        {
+          "type": "text",
+          "value": "/100 - "
+        },
+        {
+          "type": "expression",
+          "code": "client.get_trust_description()"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Draw cards",
+          "target": "DrawCards",
+          "condition": null
+        }
+      ],
+      "execute": [
+        {
+          "type": "python_block",
+          "code": "import sys\nsys.path.insert(0, '.')\n\nfrom test_tarot_objects import Card, Client, Reader, draw_cards\n\n# Initialize\nreader = Reader(\"You\")\nreader.style = \"intuitive\"\n\nclient = Client(\"Aria\", 28)\nclient.trust_level = 65\n\n# Start session\nclient.start_session()"
+        }
+      ]
+    },
+    "DrawCards": {
+      "id": "DrawCards",
+      "content": [
+        {
+          "type": "text",
+          "value": "You draw three cards..."
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "**Past:** "
+        },
+        {
+          "type": "expression",
+          "code": "cards[0].get_display_name()"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "expression",
+          "code": "cards[0].get_position_meaning().title()"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "**Present:** "
+        },
+        {
+          "type": "expression",
+          "code": "cards[1].get_display_name()"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "expression",
+          "code": "cards[1].get_position_meaning().title()"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "**Future:** "
+        },
+        {
+          "type": "expression",
+          "code": "cards[2].get_display_name()"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "expression",
+          "code": "cards[2].get_position_meaning().title()"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Traditional reading",
+          "target": "TraditionalReading",
+          "condition": null
+        },
+        {
+          "text": "Intuitive reading",
+          "target": "IntuitiveReading",
+          "condition": null
+        }
+      ],
+      "execute": [
+        {
+          "type": "python_block",
+          "code": "# Draw three cards\ncards = draw_cards(3)\n\n# Assign positions\ncards[0].in_position(\"past\")\ncards[1].in_position(\"present\")\ncards[2].in_position(\"future\")"
+        }
+      ]
+    },
+    "TraditionalReading": {
+      "id": "TraditionalReading",
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "You provide a traditional interpretation..."
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "expression",
+          "code": "interpretation"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "expression",
+          "code": "client.name"
+        },
+        {
+          "type": "text",
+          "value": " "
+        },
+        {
+          "type": "expression",
+          "code": "client.get_trust_description()"
+        },
+        {
+          "type": "text",
+          "value": " (Trust: "
+        },
+        {
+          "type": "expression",
+          "code": "client.trust_level"
+        },
+        {
+          "type": "text",
+          "value": ")"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Experience gained: "
+        },
+        {
+          "type": "expression",
+          "code": "reader.experience"
+        },
+        {
+          "type": "text",
+          "value": " XP"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Level: "
+        },
+        {
+          "type": "expression",
+          "code": "reader.get_level()"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Cards seen this session: "
+        },
+        {
+          "type": "expression",
+          "code": "len(cards)"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Total cards seen: "
+        },
+        {
+          "type": "expression",
+          "code": "len(client.cards_seen)"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Continue",
+          "target": "End",
+          "condition": null
+        }
+      ],
+      "execute": [
+        {
+          "type": "python_block",
+          "code": "# Add experience\nreader.add_experience(10)\n\n# Modify trust based on style match\nif reader.style == \"traditional\":\n    client.modify_trust(5)\nelse:\n    client.modify_trust(-2)\n\n# Record cards\nfor card in cards:\n    client.add_card_seen(card)\n\ninterpretation = f\"The {cards[1].name} in your present suggests significant changes.\""
+        }
+      ]
+    },
+    "IntuitiveReading": {
+      "id": "IntuitiveReading",
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "You provide an intuitive interpretation..."
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "expression",
+          "code": "interpretation"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "expression",
+          "code": "client.name"
+        },
+        {
+          "type": "text",
+          "value": " "
+        },
+        {
+          "type": "expression",
+          "code": "client.get_trust_description()"
+        },
+        {
+          "type": "text",
+          "value": " (Trust: "
+        },
+        {
+          "type": "expression",
+          "code": "client.trust_level"
+        },
+        {
+          "type": "text",
+          "value": ")"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Experience gained: "
+        },
+        {
+          "type": "expression",
+          "code": "reader.experience"
+        },
+        {
+          "type": "text",
+          "value": " XP"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Level: "
+        },
+        {
+          "type": "expression",
+          "code": "reader.get_level()"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Continue",
+          "target": "End",
+          "condition": null
+        }
+      ],
+      "execute": [
+        {
+          "type": "python_block",
+          "code": "reader.add_experience(15)\n\nif reader.style == \"intuitive\":\n    client.modify_trust(10)\nelse:\n    client.modify_trust(3)\n\nfor card in cards:\n    client.add_card_seen(card)\n\ninterpretation = f\"I sense that {cards[1].name} speaks to your inner journey.\""
+        }
+      ]
+    },
+    "End": {
+      "id": "End",
+      "content": [
+        {
+          "type": "text",
+          "value": "Session complete!"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Final trust: "
+        },
+        {
+          "type": "expression",
+          "code": "client.trust_level"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Your level: "
+        },
+        {
+          "type": "expression",
+          "code": "reader.get_level()"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [],
+      "execute": []
+    }
+  }
+}

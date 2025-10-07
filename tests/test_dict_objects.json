@@ -1,0 +1,199 @@
+{
+  "version": "0.1.0",
+  "initial_passage": "Start",
+  "passages": {
+    "Start": {
+      "id": "Start",
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Available clients: "
+        },
+        {
+          "type": "expression",
+          "code": "\", \".join(clients.keys())"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Client details:"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Highest trust: "
+        },
+        {
+          "type": "expression",
+          "code": "max(clients.values(), key=lambda c: c.trust_level).name"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Lowest trust: "
+        },
+        {
+          "type": "expression",
+          "code": "min(clients.values(), key=lambda c: c.trust_level).name"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Average trust: "
+        },
+        {
+          "type": "expression",
+          "code": "sum(c.trust_level for c in clients.values()) / len(clients):.1f"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Access Aria",
+          "target": "Aria",
+          "condition": null
+        },
+        {
+          "text": "Access Marcus",
+          "target": "Marcus",
+          "condition": null
+        }
+      ],
+      "execute": [
+        {
+          "type": "python_block",
+          "code": "import sys\nsys.path.insert(0, '.')\nfrom test_tarot_objects import Client\n\nclients = {\n    \"aria\": Client(\"Aria\", 28),\n    \"marcus\": Client(\"Marcus\", 35),\n    \"elena\": Client(\"Elena\", 42)\n}\n\n# Set some values\nclients[\"aria\"].trust_level = 75\nclients[\"marcus\"].trust_level = 45\nclients[\"elena\"].trust_level = 90"
+        },
+        {
+          "type": "python_block",
+          "code": "for name, client in clients.items():\n    print(f\"- {client.name}: {client.trust_level} trust\")"
+        }
+      ]
+    },
+    "Aria": {
+      "id": "Aria",
+      "content": [
+        {
+          "type": "text",
+          "value": "Aria's trust: "
+        },
+        {
+          "type": "expression",
+          "code": "clients[\"aria\"].trust_level"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Aria's status: "
+        },
+        {
+          "type": "expression",
+          "code": "clients[\"aria\"].get_trust_description()"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Back",
+          "target": "Start",
+          "condition": null
+        }
+      ],
+      "execute": []
+    },
+    "Marcus": {
+      "id": "Marcus",
+      "content": [
+        {
+          "type": "text",
+          "value": "Marcus's trust: "
+        },
+        {
+          "type": "expression",
+          "code": "clients[\"marcus\"].trust_level"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Marcus's status: "
+        },
+        {
+          "type": "expression",
+          "code": "clients[\"marcus\"].get_trust_description()"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Back",
+          "target": "Start",
+          "condition": null
+        }
+      ],
+      "execute": []
+    }
+  }
+}

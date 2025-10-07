@@ -1,0 +1,111 @@
+{
+  "version": "0.1.0",
+  "initial_passage": "Start",
+  "passages": {
+    "Start": {
+      "id": "Start",
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Original: "
+        },
+        {
+          "type": "expression",
+          "code": "card.get_display_name()"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "After chaining: "
+        },
+        {
+          "type": "expression",
+          "code": "card.get_display_name()"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Position: "
+        },
+        {
+          "type": "expression",
+          "code": "card.position"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Position meaning: "
+        },
+        {
+          "type": "expression",
+          "code": "card.get_position_meaning()"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Done",
+          "target": "End",
+          "condition": null
+        }
+      ],
+      "execute": [
+        {
+          "type": "python_block",
+          "code": "import sys\nsys.path.insert(0, '.')\nfrom test_tarot_objects import Card\n\ncard = Card(\"The Fool\", \"major\", 0)"
+        },
+        {
+          "type": "python_block",
+          "code": "# Chain methods\ncard.in_position(\"present\").set_reversed(True)"
+        }
+      ]
+    },
+    "End": {
+      "id": "End",
+      "content": [
+        {
+          "type": "text",
+          "value": "Done!"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [],
+      "execute": []
+    }
+  }
+}

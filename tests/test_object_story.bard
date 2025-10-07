@@ -1,0 +1,37 @@
+:: Start
+<<py
+# import test classes
+import sys
+sys.path.insert(0, '.')
+from test_objects import Card, Player
+
+# Create objects
+card = Card("The Fool", "major")
+player = Player("Hero")
+player.add_item("sword")
+player.add_item("shield")
+>>
+
+Testing object attributes...
+
+Card name: {card.name}
+Card suit: {card.suit}
+
+Player name: {player.name}
+Player health: {player.health}
+Inventory size: {len(player.inventory)}
+
++ [Continue] -> Methods
+
+:: Methods
+Testing methods...
+
+Card display: {card.get_display_name()}
+Is major: {card.is_major_arcana()}
+
+Player status: {player.get_status()}
+
++ [Done] -> End
+
+:: End
+All tests complete!

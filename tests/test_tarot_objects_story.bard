@@ -1,0 +1,114 @@
+:: Start
+<<py
+import sys
+sys.path.insert(0, '.')
+
+from test_tarot_objects import Card, Client, Reader, draw_cards
+
+# Initialize
+reader = Reader("You")
+reader.style = "intuitive"
+
+client = Client("Aria", 28)
+client.trust_level = 65
+
+# Start session
+client.start_session()
+>>
+Session {client.session_count} with {client.name}
+
+Reader: {reader.name} ({reader.get_level()})
+Style: {reader.style}
+
+Client: {client.name}, age {client.age}
+Trust: {client.trust_level}/100 - {client.get_trust_description()}
+
++ [Draw cards] -> DrawCards
+
+:: DrawCards
+<<py
+# Draw three cards
+cards = draw_cards(3)
+
+# Assign positions
+cards[0].in_position("past")
+cards[1].in_position("present")
+cards[2].in_position("future")
+>>
+You draw three cards...
+
+**Past:** {cards[0].get_display_name()}
+{cards[0].get_position_meaning().title()}
+
+**Present:** {cards[1].get_display_name()}
+{cards[1].get_position_meaning().title()}
+
+**Future:** {cards[2].get_display_name()}
+{cards[2].get_position_meaning().title()}
+
++ [Traditional reading] -> TraditionalReading
++ [Intuitive reading] -> IntuitiveReading
+
+:: TraditionalReading
+<<py
+# Add experience
+reader.add_experience(10)
+
+# Modify trust based on style match
+if reader.style == "traditional":
+    client.modify_trust(5)
+else:
+    client.modify_trust(-2)
+
+# Record cards
+for card in cards:
+    client.add_card_seen(card)
+
+interpretation = f"The {cards[1].name} in your present suggests significant changes."
+>>
+
+You provide a traditional interpretation...
+
+{interpretation}
+
+{client.name} {client.get_trust_description()} (Trust: {client.trust_level})
+
+Experience gained: {reader.experience} XP
+Level: {reader.get_level()}
+
+Cards seen this session: {len(cards)}
+Total cards seen: {len(client.cards_seen)}
+
++ [Continue] -> End
+
+:: IntuitiveReading
+<<py
+reader.add_experience(15)
+
+if reader.style == "intuitive":
+    client.modify_trust(10)
+else:
+    client.modify_trust(3)
+
+for card in cards:
+    client.add_card_seen(card)
+
+interpretation = f"I sense that {cards[1].name} speaks to your inner journey."
+>>
+
+You provide an intuitive interpretation...
+
+{interpretation}
+
+{client.name} {client.get_trust_description()} (Trust: {client.trust_level})
+
+Experience gained: {reader.experience} XP
+Level: {reader.get_level()}
+
++ [Continue] -> End
+
+:: End
+Session complete!
+
+Final trust: {client.trust_level}
+Your level: {reader.get_level()}

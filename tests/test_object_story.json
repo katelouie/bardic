@@ -1,0 +1,200 @@
+{
+  "version": "0.1.0",
+  "initial_passage": "Start",
+  "passages": {
+    "Start": {
+      "id": "Start",
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Testing object attributes..."
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Card name: "
+        },
+        {
+          "type": "expression",
+          "code": "card.name"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Card suit: "
+        },
+        {
+          "type": "expression",
+          "code": "card.suit"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Player name: "
+        },
+        {
+          "type": "expression",
+          "code": "player.name"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Player health: "
+        },
+        {
+          "type": "expression",
+          "code": "player.health"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Inventory size: "
+        },
+        {
+          "type": "expression",
+          "code": "len(player.inventory)"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Continue",
+          "target": "Methods",
+          "condition": null
+        }
+      ],
+      "execute": [
+        {
+          "type": "python_block",
+          "code": "# import test classes\nimport sys\nsys.path.insert(0, '.')\nfrom test_objects import Card, Player\n\n# Create objects\ncard = Card(\"The Fool\", \"major\")\nplayer = Player(\"Hero\")\nplayer.add_item(\"sword\")\nplayer.add_item(\"shield\")"
+        }
+      ]
+    },
+    "Methods": {
+      "id": "Methods",
+      "content": [
+        {
+          "type": "text",
+          "value": "Testing methods..."
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Card display: "
+        },
+        {
+          "type": "expression",
+          "code": "card.get_display_name()"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Is major: "
+        },
+        {
+          "type": "expression",
+          "code": "card.is_major_arcana()"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Player status: "
+        },
+        {
+          "type": "expression",
+          "code": "player.get_status()"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Done",
+          "target": "End",
+          "condition": null
+        }
+      ],
+      "execute": []
+    },
+    "End": {
+      "id": "End",
+      "content": [
+        {
+          "type": "text",
+          "value": "All tests complete!"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [],
+      "execute": []
+    }
+  }
+}

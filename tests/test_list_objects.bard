@@ -1,0 +1,43 @@
+:: Start
+<<py
+import sys
+sys.path.insert(0, '.')
+from test_tarot_objects import draw_cards
+
+cards = draw_cards(5)
+>>
+
+You drew {len(cards)} cards:
+
+Card names: {[card.name for card in cards]}
+
+Major arcana: {[card.name for card in cards if card.is_major_arcana()]}
+
+Reversed cards: {[card.name for card in cards if card.reversed]}
+
+Display names: {", ".join([card.get_display_name() for card in cards])}
+
+First card: {cards[0].name}
+Last card: {cards[-1].name}
+
++ [Continue] -> Analysis
+
+:: Analysis
+<<py
+major_count = sum(1 for card in cards if card.is_major_arcana())
+reversed_count = sum(1 for card in cards if card.reversed)
+>>
+
+Analysis:
+- Total cards: {len(cards)}
+- Major arcana: {major_count}
+- Reversed: {reversed_count}
+- Upright: {len(cards) - reversed_count}
+
+Percentage major: {major_count / len(cards) * 100:.1f}%
+Percentage reversed: {reversed_count / len(cards) * 100:.1f}%
+
++ [Done] -> End
+
+:: End
+Analysis complete!

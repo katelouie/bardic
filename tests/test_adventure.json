@@ -1,0 +1,621 @@
+{
+  "version": "0.1.0",
+  "initial_passage": "Start",
+  "passages": {
+    "Start": {
+      "id": "Start",
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Your party:"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "expression",
+          "code": "hero.name"
+        },
+        {
+          "type": "text",
+          "value": ":"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "- Health: "
+        },
+        {
+          "type": "expression",
+          "code": "hero.stats.health"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "- Mana: "
+        },
+        {
+          "type": "expression",
+          "code": "hero.stats.mana"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "- Items: "
+        },
+        {
+          "type": "expression",
+          "code": "\", \".join(hero.inventory)"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "expression",
+          "code": "companion.name"
+        },
+        {
+          "type": "text",
+          "value": ":"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "- Health: "
+        },
+        {
+          "type": "expression",
+          "code": "companion.stats.health"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "- Mana: "
+        },
+        {
+          "type": "expression",
+          "code": "companion.stats.mana"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "- Items: "
+        },
+        {
+          "type": "expression",
+          "code": "\", \".join(companion.inventory)"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Party total health: "
+        },
+        {
+          "type": "expression",
+          "code": "sum(char.stats.health for char in party)"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Party total mana: "
+        },
+        {
+          "type": "expression",
+          "code": "sum(char.stats.mana for char in party)"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Enter dungeon",
+          "target": "Dungeon",
+          "condition": null
+        }
+      ],
+      "execute": [
+        {
+          "type": "python_block",
+          "code": "import sys\nsys.path.insert(0, '.')\nfrom test_objects import Character\n\n# Create party\nhero = Character(\"Aldric\")\nhero.stats.health = 100\nhero.stats.mana = 50\nhero.inventory = [\"sword\", \"potion\"]\n\ncompanion = Character(\"Lyra\")\ncompanion.stats.health = 80\ncompanion.stats.mana = 70\ncompanion.inventory = [\"staff\", \"scroll\"]\n\nparty = [hero, companion]"
+        }
+      ]
+    },
+    "Dungeon": {
+      "id": "Dungeon",
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "A monster attacks!"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "expression",
+          "code": "target.name"
+        },
+        {
+          "type": "text",
+          "value": " takes "
+        },
+        {
+          "type": "expression",
+          "code": "damage"
+        },
+        {
+          "type": "text",
+          "value": " damage!"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Health: "
+        },
+        {
+          "type": "expression",
+          "code": "target.stats.health"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "You found: "
+        },
+        {
+          "type": "expression",
+          "code": "loot"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Party status:"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "- "
+        },
+        {
+          "type": "expression",
+          "code": "party[0].name"
+        },
+        {
+          "type": "text",
+          "value": ": "
+        },
+        {
+          "type": "expression",
+          "code": "party[0].stats.health"
+        },
+        {
+          "type": "text",
+          "value": " HP"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "- "
+        },
+        {
+          "type": "expression",
+          "code": "party[1].name"
+        },
+        {
+          "type": "text",
+          "value": ": "
+        },
+        {
+          "type": "expression",
+          "code": "party[1].stats.health"
+        },
+        {
+          "type": "text",
+          "value": " HP"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Continue exploring",
+          "target": "Dungeon",
+          "condition": "all(c.stats.health > 0 for c in party)"
+        },
+        {
+          "text": "Party defeated",
+          "target": "Defeat",
+          "condition": "any(c.stats.health <= 0 for c in party)"
+        },
+        {
+          "text": "Return to camp",
+          "target": "Camp",
+          "condition": null
+        }
+      ],
+      "execute": [
+        {
+          "type": "python_block",
+          "code": "import random\n\n# Random encounter\ndamage = random.randint(10, 30)\ntarget = random.choice(party)\ntarget.stats.health -= damage\n\n# Loot\nloot = random.choice([\"gem\", \"potion\", \"gold\"])\nhero.inventory.append(loot)"
+        }
+      ]
+    },
+    "Camp": {
+      "id": "Camp",
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "You rest at camp..."
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Everyone recovers health and mana."
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Party status:"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "- "
+        },
+        {
+          "type": "expression",
+          "code": "party[0].name"
+        },
+        {
+          "type": "text",
+          "value": ": "
+        },
+        {
+          "type": "expression",
+          "code": "party[0].stats.health"
+        },
+        {
+          "type": "text",
+          "value": " HP, "
+        },
+        {
+          "type": "expression",
+          "code": "party[0].stats.mana"
+        },
+        {
+          "type": "text",
+          "value": " MP"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "- "
+        },
+        {
+          "type": "expression",
+          "code": "party[1].name"
+        },
+        {
+          "type": "text",
+          "value": ": "
+        },
+        {
+          "type": "expression",
+          "code": "party[1].stats.health"
+        },
+        {
+          "type": "text",
+          "value": " HP, "
+        },
+        {
+          "type": "expression",
+          "code": "party[1].stats.mana"
+        },
+        {
+          "type": "text",
+          "value": " MP"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Total items collected: "
+        },
+        {
+          "type": "expression",
+          "code": "len(hero.inventory)"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Items: "
+        },
+        {
+          "type": "expression",
+          "code": "\", \".join(hero.inventory)"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Back to dungeon",
+          "target": "Dungeon",
+          "condition": null
+        },
+        {
+          "text": "End adventure",
+          "target": "End",
+          "condition": null
+        }
+      ],
+      "execute": [
+        {
+          "type": "python_block",
+          "code": "# Rest and recover\nfor char in party:\n    char.stats.health = min(100, char.stats.health + 20)\n    char.stats.mana = min(100, char.stats.mana + 15)"
+        }
+      ]
+    },
+    "Defeat": {
+      "id": "Defeat",
+      "content": [
+        {
+          "type": "text",
+          "value": "Your party was defeated!"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Final stats:"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "- "
+        },
+        {
+          "type": "expression",
+          "code": "party[0].name"
+        },
+        {
+          "type": "text",
+          "value": ": "
+        },
+        {
+          "type": "expression",
+          "code": "party[0].stats.health"
+        },
+        {
+          "type": "text",
+          "value": " HP"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "- "
+        },
+        {
+          "type": "expression",
+          "code": "party[1].name"
+        },
+        {
+          "type": "text",
+          "value": ": "
+        },
+        {
+          "type": "expression",
+          "code": "party[1].stats.health"
+        },
+        {
+          "type": "text",
+          "value": " HP"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Items collected: "
+        },
+        {
+          "type": "expression",
+          "code": "len(hero.inventory)"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [],
+      "execute": []
+    },
+    "End": {
+      "id": "End",
+      "content": [
+        {
+          "type": "text",
+          "value": "Adventure complete!"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Final inventory: "
+        },
+        {
+          "type": "expression",
+          "code": "\", \".join(hero.inventory)"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [],
+      "execute": []
+    }
+  }
+}

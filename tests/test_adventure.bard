@@ -1,0 +1,101 @@
+:: Start
+<<py
+import sys
+sys.path.insert(0, '.')
+from test_objects import Character
+
+# Create party
+hero = Character("Aldric")
+hero.stats.health = 100
+hero.stats.mana = 50
+hero.inventory = ["sword", "potion"]
+
+companion = Character("Lyra")
+companion.stats.health = 80
+companion.stats.mana = 70
+companion.inventory = ["staff", "scroll"]
+
+party = [hero, companion]
+>>
+
+Your party:
+
+{hero.name}:
+- Health: {hero.stats.health}
+- Mana: {hero.stats.mana}
+- Items: {", ".join(hero.inventory)}
+
+{companion.name}:
+- Health: {companion.stats.health}
+- Mana: {companion.stats.mana}
+- Items: {", ".join(companion.inventory)}
+
+Party total health: {sum(char.stats.health for char in party)}
+Party total mana: {sum(char.stats.mana for char in party)}
+
++ [Enter dungeon] -> Dungeon
+
+:: Dungeon
+<<py
+import random
+
+# Random encounter
+damage = random.randint(10, 30)
+target = random.choice(party)
+target.stats.health -= damage
+
+# Loot
+loot = random.choice(["gem", "potion", "gold"])
+hero.inventory.append(loot)
+>>
+
+A monster attacks!
+
+{target.name} takes {damage} damage!
+Health: {target.stats.health}
+
+You found: {loot}
+
+Party status:
+- {party[0].name}: {party[0].stats.health} HP
+- {party[1].name}: {party[1].stats.health} HP
+
++ {all(c.stats.health > 0 for c in party)} [Continue exploring] -> Dungeon
++ {any(c.stats.health <= 0 for c in party)} [Party defeated] -> Defeat
++ [Return to camp] -> Camp
+
+:: Camp
+<<py
+# Rest and recover
+for char in party:
+    char.stats.health = min(100, char.stats.health + 20)
+    char.stats.mana = min(100, char.stats.mana + 15)
+>>
+
+You rest at camp...
+
+Everyone recovers health and mana.
+
+Party status:
+- {party[0].name}: {party[0].stats.health} HP, {party[0].stats.mana} MP
+- {party[1].name}: {party[1].stats.health} HP, {party[1].stats.mana} MP
+
+Total items collected: {len(hero.inventory)}
+Items: {", ".join(hero.inventory)}
+
++ [Back to dungeon] -> Dungeon
++ [End adventure] -> End
+
+:: Defeat
+Your party was defeated!
+
+Final stats:
+- {party[0].name}: {party[0].stats.health} HP
+- {party[1].name}: {party[1].stats.health} HP
+
+Items collected: {len(hero.inventory)}
+
+:: End
+Adventure complete!
+
+Final inventory: {", ".join(hero.inventory)}

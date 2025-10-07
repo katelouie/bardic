@@ -1,0 +1,24 @@
+:: Start
+<<py
+import sys
+sys.path.insert(0, '.')
+from test_tarot_objects import Card
+
+card = Card("The Fool", "major", 0)
+>>
+
+Original: {card.get_display_name()}
+
+<<py
+# Chain methods
+card.in_position("present").set_reversed(True)
+>>
+
+After chaining: {card.get_display_name()}
+Position: {card.position}
+Position meaning: {card.get_position_meaning()}
+
++ [Done] -> End
+
+:: End
+Done!
