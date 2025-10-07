@@ -1,6 +1,11 @@
 {
   "version": "0.1.0",
   "initial_passage": "Start",
+  "imports": [
+    "import random",
+    "from test_objects import Character",
+    ""
+  ],
   "passages": {
     "Start": {
       "id": "Start",
@@ -11,7 +16,15 @@
         },
         {
           "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
           "value": "Your party:"
+        },
+        {
+          "type": "text",
+          "value": "\n"
         },
         {
           "type": "text",
@@ -64,6 +77,10 @@
         {
           "type": "expression",
           "code": "\", \".join(hero.inventory)"
+        },
+        {
+          "type": "text",
+          "value": "\n"
         },
         {
           "type": "text",
@@ -127,6 +144,10 @@
         },
         {
           "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
           "value": "Party total health: "
         },
         {
@@ -156,6 +177,14 @@
         {
           "type": "text",
           "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
         }
       ],
       "choices": [
@@ -168,7 +197,7 @@
       "execute": [
         {
           "type": "python_block",
-          "code": "import sys\nsys.path.insert(0, '.')\nfrom test_objects import Character\n\n# Create party\nhero = Character(\"Aldric\")\nhero.stats.health = 100\nhero.stats.mana = 50\nhero.inventory = [\"sword\", \"potion\"]\n\ncompanion = Character(\"Lyra\")\ncompanion.stats.health = 80\ncompanion.stats.mana = 70\ncompanion.inventory = [\"staff\", \"scroll\"]\n\nparty = [hero, companion]"
+          "code": "# Create party\n# Create party\nhero = Character(\"Aldric\")\nhero.stats.health = 100\nhero.stats.mana = 50\nhero.inventory = [\"sword\", \"potion\"]\n\n\ncompanion = Character(\"Lyra\")\ncompanion.stats.health = 80\ncompanion.stats.mana = 70\ncompanion.inventory = [\"staff\", \"scroll\"]\n\n\nparty = [hero, companion]"
         }
       ]
     },
@@ -181,7 +210,15 @@
         },
         {
           "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
           "value": "A monster attacks!"
+        },
+        {
+          "type": "text",
+          "value": "\n"
         },
         {
           "type": "text",
@@ -229,11 +266,19 @@
         },
         {
           "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
           "value": "You found: "
         },
         {
           "type": "expression",
           "code": "loot"
+        },
+        {
+          "type": "text",
+          "value": "\n"
         },
         {
           "type": "text",
@@ -306,6 +351,14 @@
         {
           "type": "text",
           "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
         }
       ],
       "choices": [
@@ -328,13 +381,17 @@
       "execute": [
         {
           "type": "python_block",
-          "code": "import random\n\n# Random encounter\ndamage = random.randint(10, 30)\ntarget = random.choice(party)\ntarget.stats.health -= damage\n\n# Loot\nloot = random.choice([\"gem\", \"potion\", \"gold\"])\nhero.inventory.append(loot)"
+          "code": "# Random encounter\n# Random encounter\ndamage = random.randint(10, 30)\ntarget = random.choice(party)\ntarget.stats.health -= damage\n\n\n# Loot\n# Loot\nloot = random.choice([\"gem\", \"potion\", \"gold\"])\nhero.inventory.append(loot)"
         }
       ]
     },
     "Camp": {
       "id": "Camp",
       "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
         {
           "type": "text",
           "value": "\n"
@@ -353,7 +410,15 @@
         },
         {
           "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
           "value": "Everyone recovers health and mana."
+        },
+        {
+          "type": "text",
+          "value": "\n"
         },
         {
           "type": "text",
@@ -441,6 +506,10 @@
         },
         {
           "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
           "value": "Total items collected: "
         },
         {
@@ -470,6 +539,14 @@
         {
           "type": "text",
           "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
         }
       ],
       "choices": [
@@ -487,7 +564,7 @@
       "execute": [
         {
           "type": "python_block",
-          "code": "# Rest and recover\nfor char in party:\n    char.stats.health = min(100, char.stats.health + 20)\n    char.stats.mana = min(100, char.stats.mana + 15)"
+          "code": "# Rest and recover\n# Rest and recover\nfor char in party:\n    char.stats.health = min(100, char.stats.health + 20)\n    char.stats.mana = min(100, char.stats.mana + 15)"
         }
       ]
     },
@@ -497,6 +574,10 @@
         {
           "type": "text",
           "value": "Your party was defeated!"
+        },
+        {
+          "type": "text",
+          "value": "\n"
         },
         {
           "type": "text",
@@ -568,11 +649,19 @@
         },
         {
           "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
           "value": "Items collected: "
         },
         {
           "type": "expression",
           "code": "len(hero.inventory)"
+        },
+        {
+          "type": "text",
+          "value": "\n"
         },
         {
           "type": "text",
@@ -592,6 +681,10 @@
         {
           "type": "text",
           "value": "Adventure complete!"
+        },
+        {
+          "type": "text",
+          "value": "\n"
         },
         {
           "type": "text",

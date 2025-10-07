@@ -1,0 +1,172 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #1a1a1a;
+  color: #e0e0e0;
+}
+
+.app {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-header {
+  text-align: center;
+  padding: 20px 0;
+  border-bottom: 2px solid #333;
+  margin-bottom: 30px;
+}
+
+.app-header h1 {
+  font-size: 2.5rem;
+  color: #4a9eff;
+  margin-bottom: 10px;
+}
+
+.passage-id {
+  color: #888;
+  font-size: 0.9rem;
+}
+
+.story-content {
+  flex: 1;
+}
+
+.passage {
+  background: #252525;
+  padding: 30px;
+  border-radius: 8px;
+  margin-bottom: 30px;
+  line-height: 1.8;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.passage p {
+  margin-bottom: 15px;
+}
+
+.passage p:last-child {
+  margin-bottom: 0;
+}
+
+.choices {
+  background: #252525;
+  padding: 30px;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.choices h3 {
+  margin-bottom: 20px;
+  color: #4a9eff;
+  font-size: 1.3rem;
+}
+
+.choice-button {
+  display: block;
+  width: 100%;
+  padding: 15px 20px;
+  margin-bottom: 12px;
+  background: #333;
+  color: #e0e0e0;
+  border: 2px solid #4a9eff;
+  border-radius: 6px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.choice-button:hover:not(:disabled) {
+  background: #4a9eff;
+  color: #1a1a1a;
+  transform: translateX(5px);
+}
+
+.choice-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.choice-button:last-child {
+  margin-bottom: 0;
+}
+
+.ending {
+  text-align: center;
+  padding: 40px;
+  background: #252525;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.ending h2 {
+  color: #4a9eff;
+  margin-bottom: 20px;
+  font-size: 2rem;
+}
+
+.restart-button,
+.small-button {
+  padding: 12px 24px;
+  background: #4a9eff;
+  color: #1a1a1a;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.restart-button:hover,
+.small-button:hover {
+  background: #3a8eef;
+  transform: scale(1.05);
+}
+
+.app-footer {
+  text-align: center;
+  padding: 20px 0;
+  margin-top: 30px;
+  border-top: 2px solid #333;
+}
+
+.loading,
+.error {
+  text-align: center;
+  padding: 40px;
+  background: #252525;
+  border-radius: 8px;
+  margin-top: 40px;
+}
+
+.loading {
+  color: #4a9eff;
+  font-size: 1.3rem;
+}
+
+.error {
+  color: #ff4a4a;
+}
+
+.error h2 {
+  margin-bottom: 15px;
+}
+
+.error button {
+  margin-top: 20px;
+}

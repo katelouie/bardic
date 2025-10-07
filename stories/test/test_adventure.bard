@@ -1,9 +1,8 @@
-:: Start
-<<py
-import sys
-sys.path.insert(0, '.')
+import random
 from test_objects import Character
 
+:: Start
+<<py
 # Create party
 hero = Character("Aldric")
 hero.stats.health = 100
@@ -37,8 +36,6 @@ Party total mana: {sum(char.stats.mana for char in party)}
 
 :: Dungeon
 <<py
-import random
-
 # Random encounter
 damage = random.randint(10, 30)
 target = random.choice(party)
