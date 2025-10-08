@@ -1,0 +1,474 @@
+{
+  "version": "0.1.0",
+  "initial_passage": "Start",
+  "imports": [],
+  "passages": {
+    "Start": {
+      "id": "Start",
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "<h1>Welcome, "
+        },
+        {
+          "type": "expression",
+          "code": "player_name"
+        },
+        {
+          "type": "text",
+          "value": "!</h1>"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Your current health: **"
+        },
+        {
+          "type": "expression",
+          "code": "health"
+        },
+        {
+          "type": "text",
+          "value": "/100**"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "<h2>Inventory</h2>"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "You have "
+        },
+        {
+          "type": "expression",
+          "code": "len(items)"
+        },
+        {
+          "type": "text",
+          "value": " items:"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "for_loop",
+          "variable": "item",
+          "collection": "items",
+          "content": [
+            {
+              "type": "text",
+              "value": "- "
+            },
+            {
+              "type": "expression",
+              "code": "item"
+            },
+            {
+              "type": "text",
+              "value": "\n"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "---"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "conditional",
+          "branches": [
+            {
+              "condition": "health > 80",
+              "content": [
+                {
+                  "type": "text",
+                  "value": "> You feel **strong** and ready for adventure!"
+                },
+                {
+                  "type": "text",
+                  "value": "\n"
+                }
+              ]
+            },
+            {
+              "condition": "health > 50",
+              "content": [
+                {
+                  "type": "text",
+                  "value": "> You're in *decent* shape, but could use some rest."
+                },
+                {
+                  "type": "text",
+                  "value": "\n"
+                }
+              ]
+            },
+            {
+              "condition": "True",
+              "content": [
+                {
+                  "type": "text",
+                  "value": "> You're **badly wounded**. Seek help immediately!"
+                },
+                {
+                  "type": "text",
+                  "value": "\n"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Continue",
+          "target": "Stats",
+          "condition": null
+        }
+      ],
+      "execute": [
+        {
+          "type": "set_var",
+          "var": "player_name",
+          "expression": "\"**Hero**\""
+        },
+        {
+          "type": "set_var",
+          "var": "health",
+          "expression": "75"
+        },
+        {
+          "type": "set_var",
+          "var": "items",
+          "expression": "[\"*Sword of Light*\", \"**Shield of Truth**\", \"`Magic Potion`\"]"
+        }
+      ]
+    },
+    "Stats": {
+      "id": "Stats",
+      "content": [
+        {
+          "type": "text",
+          "value": "**Character Statistics**"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "| Stat | Value |"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "|------|-------|"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "| Name | "
+        },
+        {
+          "type": "expression",
+          "code": "player_name"
+        },
+        {
+          "type": "text",
+          "value": " |"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "| Health | "
+        },
+        {
+          "type": "expression",
+          "code": "health"
+        },
+        {
+          "type": "text",
+          "value": " |"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "| Items | "
+        },
+        {
+          "type": "expression",
+          "code": "len(items)"
+        },
+        {
+          "type": "text",
+          "value": " |"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Your items in detail:"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "for_loop",
+          "variable": "i, item",
+          "collection": "enumerate(items, 1)",
+          "content": [
+            {
+              "type": "expression",
+              "code": "i"
+            },
+            {
+              "type": "text",
+              "value": ". "
+            },
+            {
+              "type": "expression",
+              "code": "item"
+            },
+            {
+              "type": "text",
+              "value": "\n"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "**Status Effects**"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "conditional",
+          "branches": [
+            {
+              "condition": "health > 80",
+              "content": [
+                {
+                  "type": "text",
+                  "value": "- \u2713 **Healthy**"
+                },
+                {
+                  "type": "text",
+                  "value": "\n"
+                },
+                {
+                  "type": "text",
+                  "value": "- \u2713 **Energized**"
+                },
+                {
+                  "type": "text",
+                  "value": "\n"
+                }
+              ]
+            },
+            {
+              "condition": "health > 50",
+              "content": [
+                {
+                  "type": "text",
+                  "value": "- \u26a0\ufe0f  *Fatigued*"
+                },
+                {
+                  "type": "text",
+                  "value": "\n"
+                }
+              ]
+            },
+            {
+              "condition": "True",
+              "content": [
+                {
+                  "type": "text",
+                  "value": "- \u274c **Wounded**"
+                },
+                {
+                  "type": "text",
+                  "value": "\n"
+                },
+                {
+                  "type": "text",
+                  "value": "- \u274c **Exhausted**"
+                },
+                {
+                  "type": "text",
+                  "value": "\n"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Done",
+          "target": "End",
+          "condition": null
+        }
+      ],
+      "execute": []
+    },
+    "End": {
+      "id": "End",
+      "content": [
+        {
+          "type": "text",
+          "value": "**Quest Complete!**"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Thank you for testing **Markdown rendering** with *Bardic*!"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [],
+      "execute": []
+    }
+  }
+}

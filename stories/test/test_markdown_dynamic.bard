@@ -1,0 +1,62 @@
+:: Start
+~ player_name = "**Hero**"
+~ health = 75
+~ items = ["*Sword of Light*", "**Shield of Truth**", "`Magic Potion`"]
+
+<h1>Welcome, {player_name}!</h1>
+
+Your current health: **{health}/100**
+
+<h2>Inventory</h2>
+
+You have {len(items)} items:
+
+<<for item in items>>
+- {item}
+<<endfor>>
+
+---
+
+<<if health > 80>>
+> You feel **strong** and ready for adventure!
+<<elif health > 50>>
+> You're in *decent* shape, but could use some rest.
+<<else>>
+> You're **badly wounded**. Seek help immediately!
+<<endif>>
+
++ [Continue] -> Stats
+
+:: Stats
+**Character Statistics**
+
+| Stat | Value |
+|------|-------|
+| Name | {player_name} |
+| Health | {health} |
+| Items | {len(items)} |
+
+Your items in detail:
+
+<<for i, item in enumerate(items, 1)>>
+{i}. {item}
+<<endfor>>
+
+**Status Effects**
+
+<<if health > 80>>
+- ✓ **Healthy**
+- ✓ **Energized**
+<<elif health > 50>>
+- ⚠️  *Fatigued*
+<<else>>
+- ❌ **Wounded**
+- ❌ **Exhausted**
+<<endif>>
+
++ [Done] -> End
+
+:: End
+**Quest Complete!**
+
+Thank you for testing **Markdown rendering** with *Bardic*!

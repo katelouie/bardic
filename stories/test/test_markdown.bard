@@ -1,0 +1,55 @@
+:: Start
+<h1>This is a heading</h1>
+
+This is **bold text** and this is *italic text*.
+
+This is ***bold and italic***.
+
+Here's a [link to Anthropic](https://www.anthropic.com).
+
+Here's some `inline code`.
+
++ [Continue] -> Lists
+
+:: Lists
+<h2>Unordered List</h2>
+
+- Item one
+- Item two
+- Item three
+
+**Ordered List:**
+
+1. First item
+2. Second item
+3. Third item
+
++ [Continue] -> Quotes
+
+:: Quotes
+> This is a blockquote.
+> It can span multiple lines.
+
+Here's a horizontal rule:
+
+---
+
+And some more text below it.
+
++ [Continue] -> Code
+
+:: Code
+Here's a code block:
+
+```python
+def hello():
+    print("Hello, world!")
+    return 42
+```
+
+And some inline `code here`.
+
++ [Done] -> End
+
+:: End
+Markdown test complete!

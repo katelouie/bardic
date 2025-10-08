@@ -1,3 +1,4 @@
+/* Reset and Base */
 * {
   margin: 0;
   padding: 0;
@@ -5,56 +6,130 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  background-color: #1a1a1a;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
   color: #e0e0e0;
+  min-height: 100vh;
 }
 
+/* Main app container - CENTERED with flexbox */
 .app {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 20px;
   min-height: 100vh;
   display: flex;
-  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
 }
 
+/* Container for all content - keeps max width */
+.container {
+  width: 100%;
+  max-width: 800px;
+}
+
+/* Header */
 .app-header {
   text-align: center;
-  padding: 20px 0;
-  border-bottom: 2px solid #333;
+  padding: 30px;
   margin-bottom: 30px;
+  background: rgba(168, 85, 247, 0.05);
+  border-bottom: 3px solid #a855f7;
+  border-radius: 12px;
 }
 
 .app-header h1 {
   font-size: 2.5rem;
-  color: #4a9eff;
+  background: linear-gradient(135deg, #a855f7 0%, #c084fc 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   margin-bottom: 10px;
+  font-weight: 700;
 }
 
 .passage-id {
   color: #888;
   font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
-.story-content {
-  flex: 1;
+/* Story Selection */
+.story-select {
+  background: rgba(37, 37, 37, 0.8);
+  padding: 40px;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(168, 85, 247, 0.2);
 }
 
-.passage {
-  background: #252525;
-  padding: 30px;
-  border-radius: 8px;
+.story-select h2 {
+  color: #a855f7;
   margin-bottom: 30px;
+  text-align: center;
+  font-size: 1.8rem;
+}
+
+.story-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.story-button {
+  padding: 20px;
+  background: rgba(51, 51, 51, 0.8);
+  color: #e0e0e0;
+  border: 2px solid #444;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: left;
+}
+
+.story-button:hover {
+  background: rgba(58, 58, 58, 0.9);
+  border-color: #a855f7;
+  transform: translateX(5px);
+}
+
+.story-button.selected {
+  background: rgba(168, 85, 247, 0.2);
+  border-color: #a855f7;
+  color: #fff;
+}
+
+.start-button {
+  width: 100%;
+  padding: 18px;
+  background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  font-size: 1.2rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.start-button:hover {
+  background: linear-gradient(135deg, #c084fc 0%, #a855f7 100%);
+  transform: scale(1.02);
+}
+
+/* Passage Display */
+.passage {
+  background: rgba(37, 37, 37, 0.8);
+  padding: 40px;
+  border-radius: 16px;
+  margin-bottom: 20px;
   line-height: 1.8;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-  white-space: pre-wrap; /* Preserve newlines and spaces */
-  font-family: 'Courier New', 'Consolas', 'Monaco', monospace; /* Monospace font for box-drawing */
-  overflow-x: auto; /* Allow horizontal scroll if needed */
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(168, 85, 247, 0.1);
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 1.1rem;
 }
 
 .passage p {
@@ -65,17 +140,73 @@ body {
   margin-bottom: 0;
 }
 
+/* Markdown Styles */
+.passage h1,
+.passage h2,
+.passage h3 {
+  color: #a855f7;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+}
+
+.passage h1 {
+  font-size: 2rem;
+  border-bottom: 2px solid #a855f7;
+  padding-bottom: 0.3em;
+}
+
+.passage h2 {
+  font-size: 1.6rem;
+}
+
+.passage h3 {
+  font-size: 1.3rem;
+}
+
+.passage strong {
+  color: #c084fc;
+  font-weight: 600;
+}
+
+.passage em {
+  color: #d8b4fe;
+  font-style: italic;
+}
+
+.passage code {
+  background: rgba(26, 26, 26, 0.6);
+  color: #ff6b6b;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: 'Monaco', monospace;
+  font-size: 0.9em;
+}
+
+.passage a {
+  color: #a855f7;
+  text-decoration: none;
+  border-bottom: 1px solid #a855f7;
+}
+
+.passage a:hover {
+  color: #c084fc;
+}
+
+/* Choices */
 .choices {
-  background: #252525;
-  padding: 30px;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  background: rgba(37, 37, 37, 0.8);
+  padding: 40px;
+  border-radius: 16px;
+  margin-bottom: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(168, 85, 247, 0.1);
 }
 
 .choices h3 {
   margin-bottom: 20px;
-  color: #4a9eff;
+  color: #a855f7;
   font-size: 1.3rem;
+  text-align: center;
 }
 
 .choice-button {
@@ -83,19 +214,19 @@ body {
   width: 100%;
   padding: 15px 20px;
   margin-bottom: 12px;
-  background: #333;
+  background: rgba(51, 51, 51, 0.8);
   color: #e0e0e0;
-  border: 2px solid #4a9eff;
-  border-radius: 6px;
-  font-size: 1.1rem;
+  border: 2px solid #a855f7;
+  border-radius: 12px;
+  font-size: 1.05rem;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   text-align: left;
 }
 
 .choice-button:hover:not(:disabled) {
-  background: #4a9eff;
-  color: #1a1a1a;
+  background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);
+  color: #ffffff;
   transform: translateX(5px);
 }
 
@@ -108,62 +239,68 @@ body {
   margin-bottom: 0;
 }
 
+/* Ending */
 .ending {
   text-align: center;
-  padding: 40px;
-  background: #252525;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  padding: 50px 30px;
+  background: rgba(37, 37, 37, 0.8);
+  border-radius: 16px;
+  margin-bottom: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  border: 2px solid #a855f7;
 }
 
 .ending h2 {
-  color: #4a9eff;
-  margin-bottom: 20px;
-  font-size: 2rem;
+  color: #a855f7;
+  margin-bottom: 25px;
+  font-size: 2.2rem;
 }
 
+/* Buttons */
 .restart-button,
 .small-button {
-  padding: 12px 24px;
-  background: #4a9eff;
-  color: #1a1a1a;
+  padding: 12px 28px;
+  background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);
+  color: #ffffff;
   border: none;
-  border-radius: 6px;
+  border-radius: 12px;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
 }
 
 .restart-button:hover,
 .small-button:hover {
-  background: #3a8eef;
-  transform: scale(1.05);
+  background: linear-gradient(135deg, #c084fc 0%, #a855f7 100%);
+  transform: translateY(-2px);
 }
 
+/* Footer */
 .app-footer {
   text-align: center;
   padding: 20px 0;
-  margin-top: 30px;
-  border-top: 2px solid #333;
+  margin-top: 20px;
+  border-top: 2px solid rgba(168, 85, 247, 0.2);
 }
 
+/* Loading & Error */
 .loading,
 .error {
   text-align: center;
-  padding: 40px;
-  background: #252525;
-  border-radius: 8px;
-  margin-top: 40px;
+  padding: 50px 30px;
+  background: rgba(37, 37, 37, 0.8);
+  border-radius: 16px;
+  border: 1px solid rgba(168, 85, 247, 0.2);
 }
 
 .loading {
-  color: #4a9eff;
+  color: #a855f7;
   font-size: 1.3rem;
 }
 
 .error {
-  color: #ff4a4a;
+  color: #ff6b6b;
 }
 
 .error h2 {
@@ -174,64 +311,37 @@ body {
   margin-top: 20px;
 }
 
-.story-select {
-  background: #252525;
-  padding: 40px;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+/* Responsive */
+@media (max-width: 768px) {
+  .app {
+    padding: 10px;
+  }
+
+  .app-header h1 {
+    font-size: 2rem;
+  }
+
+  .passage,
+  .choices,
+  .story-select {
+    padding: 25px;
+  }
 }
 
-.story-select h2 {
-  color: #4a9eff;
-  margin-bottom: 30px;
-  text-align: center;
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.story-list {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  margin-bottom: 30px;
-}
-
-.story-button {
-  padding: 20px;
-  background: #333;
-  color: #e0e0e0;
-  border: 2px solid #444;
-  border-radius: 6px;
-  font-size: 1.2rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  text-align: left;
-}
-
-.story-button:hover {
-  background: #3a3a3a;
-  border-color: #4a9eff;
-}
-
-.story-button.selected {
-  background: #2a4a6a;
-  border-color: #4a9eff;
-  color: #fff;
-}
-
-.start-button {
-  display: block;
-  width: 100%;
-  padding: 15px;
-  background: #4a9eff;
-  color: #1a1a1a;
-  border: none;
-  border-radius: 6px;
-  font-size: 1.2rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.start-button:hover {
-  background: #3a8eef;
-  transform: scale(1.02);
+.passage,
+.choices,
+.ending {
+  animation: fadeIn 0.4s ease-out;
 }
