@@ -494,8 +494,89 @@ class BardEngine:
                 # Render conditional blocks
                 branch_content = self._render_conditional(token)
                 result.append(branch_content)
+            elif token["type"] == "for_loop":
+                # Render loop
+                loop_content = self._render_loop(token)
+                result.append(loop_content)
 
         return "".join(result)
+
+    def _render_loop(self, loop: dict) -> str:
+        """Render a for-loop by iterating over a collection.
+
+        Args:
+            loop: Loop structure with variable, collection and content
+
+        Returns:
+            Rendered content from all loop iterations
+        """
+        variable = loop.get("variable")
+        collection_expr = loop.get("collection")
+        content = loop.get("content", [])
+
+        if not variable or not collection_expr:
+            return ""
+
+        try:
+            # Evaluate the collection expression
+            eval_context = {**self.context, **self.state}
+            safe_builtins = self._get_safe_builtins()
+            collection = eval(
+                collection_expr, {"__builtins__": safe_builtins}, eval_context
+            )
+
+            # Check if variable is tuple unpacking
+            variables = [v.strip() for v in variable.split(",")]
+            is_tuple_unpack = len(variables) > 1
+
+            # Render content for each item in the collection
+            result = []
+
+            for item in collection:
+                # Create a new context with the loop variable
+                _loop_context = {**self.state, **self.context, variable: item}
+                original_values = {}
+
+                try:
+                    if is_tuple_unpack:
+                        # Tuple unpacking: assign each variable
+                        for i, var in enumerate(variables):
+                            original_values[var] = self.state.get(var)
+                            if isinstance(item, (list, tuple)) and i < len(item):
+                                self.state[var] = item[i]
+                            else:
+                                self.state[var] = None
+                    else:
+                        # Single variable
+                        original_values[variable] = self.state.get(variable)
+                        self.state[variable] = item
+                except Exception as e:
+                    print(f"Warning: Loop variable assignment failed: {e}")
+                    print(f"  variable: {variable}, is_tuple: {is_tuple_unpack}, item: {item}")
+                    raise
+
+                # Render the loop body
+                iteration_content = self._render_content(content)
+                result.append(iteration_content)
+
+                # Restore original values
+                for var, original_value in original_values.items():
+                    if original_value is not None:
+                        self.state[var] = original_value
+                    elif var in self.state:
+                        del self.state[var]
+
+            return "".join(result)
+
+        except Exception as e:
+            error_msg = f"{{ERROR: Loop failed - {e}}}"
+            print(f"Warning: Loop rendering failed")
+            print(f"  collection_expr: {collection_expr}")
+            print(f"  variable: {variable}")
+            print(f"  error: {e}")
+            import traceback
+            traceback.print_exc()
+            return error_msg
 
     def _render_conditional(self, conditional: dict) -> str:
         """

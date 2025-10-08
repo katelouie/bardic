@@ -1,0 +1,42 @@
+from game_logic.test_tarot_objects import draw_cards
+
+:: Start
+<<py
+cards = draw_cards(5)
+for i, card in enumerate(cards):
+    card.in_position(["past", "present", "future", "advice", "outcome"][i])
+>>
+
+You drew {len(cards)} cards:
+
+<<for card in cards>>
+**{card.get_display_name()}**
+Position: {card.position}
+Suit: {card.suit}
+Major: {card.is_major_arcana()}
+
+<<endfor>>
+
++ [Continue] -> Analysis
+
+:: Analysis
+Analysis:
+
+Major arcana cards:
+<<for card in cards>>
+<<if card.is_major_arcana()>>
+- {card.name}
+<<endif>>
+<<endfor>>
+
+Reversed cards:
+<<for card in cards>>
+<<if card.reversed>>
+- {card.name}
+<<endif>>
+<<endfor>>
+
++ [Done] -> End
+
+:: End
+Reading complete!

@@ -1,0 +1,261 @@
+{
+  "version": "0.1.0",
+  "initial_passage": "Start",
+  "imports": [
+    "from game_logic.test_tarot_objects import draw_cards",
+    ""
+  ],
+  "passages": {
+    "Start": {
+      "id": "Start",
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "You drew "
+        },
+        {
+          "type": "expression",
+          "code": "len(cards)"
+        },
+        {
+          "type": "text",
+          "value": " cards:"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "for_loop",
+          "variable": "card",
+          "collection": "cards",
+          "content": [
+            {
+              "type": "text",
+              "value": "**"
+            },
+            {
+              "type": "expression",
+              "code": "card.get_display_name()"
+            },
+            {
+              "type": "text",
+              "value": "**"
+            },
+            {
+              "type": "text",
+              "value": "\n"
+            },
+            {
+              "type": "text",
+              "value": "Position: "
+            },
+            {
+              "type": "expression",
+              "code": "card.position"
+            },
+            {
+              "type": "text",
+              "value": "\n"
+            },
+            {
+              "type": "text",
+              "value": "Suit: "
+            },
+            {
+              "type": "expression",
+              "code": "card.suit"
+            },
+            {
+              "type": "text",
+              "value": "\n"
+            },
+            {
+              "type": "text",
+              "value": "Major: "
+            },
+            {
+              "type": "expression",
+              "code": "card.is_major_arcana()"
+            },
+            {
+              "type": "text",
+              "value": "\n"
+            },
+            {
+              "type": "text",
+              "value": "\n"
+            },
+            {
+              "type": "text",
+              "value": "\n"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Continue",
+          "target": "Analysis",
+          "condition": null
+        }
+      ],
+      "execute": [
+        {
+          "type": "python_block",
+          "code": "cards = draw_cards(5)\nfor i, card in enumerate(cards):\n    card.in_position([\"past\", \"present\", \"future\", \"advice\", \"outcome\"][i])"
+        }
+      ]
+    },
+    "Analysis": {
+      "id": "Analysis",
+      "content": [
+        {
+          "type": "text",
+          "value": "Analysis:"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Major arcana cards:"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "for_loop",
+          "variable": "card",
+          "collection": "cards",
+          "content": [
+            {
+              "type": "conditional",
+              "branches": [
+                {
+                  "condition": "card.is_major_arcana()",
+                  "content": [
+                    {
+                      "type": "text",
+                      "value": "- "
+                    },
+                    {
+                      "type": "expression",
+                      "code": "card.name"
+                    },
+                    {
+                      "type": "text",
+                      "value": "\n"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Reversed cards:"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "for_loop",
+          "variable": "card",
+          "collection": "cards",
+          "content": [
+            {
+              "type": "conditional",
+              "branches": [
+                {
+                  "condition": "card.reversed",
+                  "content": [
+                    {
+                      "type": "text",
+                      "value": "- "
+                    },
+                    {
+                      "type": "expression",
+                      "code": "card.name"
+                    },
+                    {
+                      "type": "text",
+                      "value": "\n"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Done",
+          "target": "End",
+          "condition": null
+        }
+      ],
+      "execute": []
+    },
+    "End": {
+      "id": "End",
+      "content": [
+        {
+          "type": "text",
+          "value": "Reading complete!"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [],
+      "execute": []
+    }
+  }
+}

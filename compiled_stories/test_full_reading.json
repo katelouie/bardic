@@ -1,0 +1,861 @@
+{
+  "version": "0.1.0",
+  "initial_passage": "Start",
+  "imports": [
+    "from game_logic.test_tarot_objects import Card, Client, Reader, draw_cards",
+    ""
+  ],
+  "passages": {
+    "Start": {
+      "id": "Start",
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\u2554\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2557"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\u2551     FIVE-CARD TAROT READING            \u2551"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\u255a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u255d"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Reader: "
+        },
+        {
+          "type": "expression",
+          "code": "reader.name"
+        },
+        {
+          "type": "text",
+          "value": " (Level: "
+        },
+        {
+          "type": "expression",
+          "code": "reader.get_level()"
+        },
+        {
+          "type": "text",
+          "value": ")"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Client: "
+        },
+        {
+          "type": "expression",
+          "code": "client.name"
+        },
+        {
+          "type": "text",
+          "value": ", age "
+        },
+        {
+          "type": "expression",
+          "code": "client.age"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Trust: "
+        },
+        {
+          "type": "expression",
+          "code": "client.trust_level"
+        },
+        {
+          "type": "text",
+          "value": "/100"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Begin reading",
+          "target": "Spread",
+          "condition": null
+        }
+      ],
+      "execute": [
+        {
+          "type": "python_block",
+          "code": "reader = Reader(\"You\")\nreader.experience = 250\nclient = Client(\"Marcus\", 42)\nclient.trust_level = 70\n\n\ncards = draw_cards(5)\npositions = [\"past\", \"present\", \"future\", \"challenge\", \"outcome\"]\nfor i, card in enumerate(cards):\n    card.in_position(positions[i])"
+        }
+      ]
+    },
+    "Spread": {
+      "id": "Spread",
+      "content": [
+        {
+          "type": "text",
+          "value": "\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Cards drawn:"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "for_loop",
+          "variable": "card",
+          "collection": "cards",
+          "content": [
+            {
+              "type": "text",
+              "value": "\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510"
+            },
+            {
+              "type": "text",
+              "value": "\n"
+            },
+            {
+              "type": "text",
+              "value": "\u2502 "
+            },
+            {
+              "type": "expression",
+              "code": "card.get_display_name()"
+            },
+            {
+              "type": "text",
+              "value": "\n"
+            },
+            {
+              "type": "text",
+              "value": "\u2502 Position: "
+            },
+            {
+              "type": "expression",
+              "code": "card.position"
+            },
+            {
+              "type": "text",
+              "value": "\n"
+            },
+            {
+              "type": "text",
+              "value": "\u2502 Suit: "
+            },
+            {
+              "type": "expression",
+              "code": "card.suit"
+            },
+            {
+              "type": "text",
+              "value": "\n"
+            },
+            {
+              "type": "conditional",
+              "branches": [
+                {
+                  "condition": "card.is_major_arcana()",
+                  "content": [
+                    {
+                      "type": "text",
+                      "value": "\u2502 \u2b50 MAJOR ARCANA"
+                    },
+                    {
+                      "type": "text",
+                      "value": "\n"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "value": "\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518"
+            },
+            {
+              "type": "text",
+              "value": "\n"
+            },
+            {
+              "type": "text",
+              "value": "\n"
+            },
+            {
+              "type": "text",
+              "value": "\n"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Analyze the spread",
+          "target": "Analysis",
+          "condition": null
+        }
+      ],
+      "execute": []
+    },
+    "Analysis": {
+      "id": "Analysis",
+      "content": [
+        {
+          "type": "text",
+          "value": "ANALYSIS:"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Total cards: "
+        },
+        {
+          "type": "expression",
+          "code": "len(cards)"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Major Arcana count: "
+        },
+        {
+          "type": "expression",
+          "code": "sum(1 for c in cards if c.is_major_arcana())"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "conditional",
+          "branches": [
+            {
+              "condition": "sum(1 for c in cards if c.is_major_arcana()) >= 3",
+              "content": [
+                {
+                  "type": "text",
+                  "value": "\u26a0\ufe0f  HIGH SIGNIFICANCE - Multiple major arcana!"
+                },
+                {
+                  "type": "text",
+                  "value": "\n"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Reversed cards: "
+        },
+        {
+          "type": "expression",
+          "code": "sum(1 for c in cards if c.reversed)"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "conditional",
+          "branches": [
+            {
+              "condition": "sum(1 for c in cards if c.reversed) >= 3",
+              "content": [
+                {
+                  "type": "text",
+                  "value": "\u26a0\ufe0f  BLOCKED ENERGY - Many reversals"
+                },
+                {
+                  "type": "text",
+                  "value": "\n"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "MAJOR ARCANA CARDS:"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "for_loop",
+          "variable": "card",
+          "collection": "cards",
+          "content": [
+            {
+              "type": "conditional",
+              "branches": [
+                {
+                  "condition": "card.is_major_arcana()",
+                  "content": [
+                    {
+                      "type": "text",
+                      "value": "\u2022 "
+                    },
+                    {
+                      "type": "expression",
+                      "code": "card.name"
+                    },
+                    {
+                      "type": "text",
+                      "value": " ("
+                    },
+                    {
+                      "type": "expression",
+                      "code": "card.position"
+                    },
+                    {
+                      "type": "text",
+                      "value": ")"
+                    },
+                    {
+                      "type": "text",
+                      "value": "\n"
+                    },
+                    {
+                      "type": "text",
+                      "value": "  "
+                    },
+                    {
+                      "type": "expression",
+                      "code": "card.get_position_meaning()"
+                    },
+                    {
+                      "type": "text",
+                      "value": "\n"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Provide interpretation",
+          "target": "Interpret",
+          "condition": null
+        }
+      ],
+      "execute": []
+    },
+    "Interpret": {
+      "id": "Interpret",
+      "content": [
+        {
+          "type": "text",
+          "value": "YOUR INTERPRETATION:"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "for_loop",
+          "variable": "i, card",
+          "collection": "enumerate(cards)",
+          "content": [
+            {
+              "type": "text",
+              "value": "\u2550\u2550\u2550 Card "
+            },
+            {
+              "type": "expression",
+              "code": "i+1"
+            },
+            {
+              "type": "text",
+              "value": ": "
+            },
+            {
+              "type": "expression",
+              "code": "card.position.upper()"
+            },
+            {
+              "type": "text",
+              "value": " \u2550\u2550\u2550"
+            },
+            {
+              "type": "text",
+              "value": "\n"
+            },
+            {
+              "type": "text",
+              "value": "\n"
+            },
+            {
+              "type": "text",
+              "value": "\n"
+            },
+            {
+              "type": "expression",
+              "code": "card.get_display_name()"
+            },
+            {
+              "type": "text",
+              "value": "\n"
+            },
+            {
+              "type": "text",
+              "value": "\n"
+            },
+            {
+              "type": "text",
+              "value": "\n"
+            },
+            {
+              "type": "conditional",
+              "branches": [
+                {
+                  "condition": "card.position == \"past\"",
+                  "content": [
+                    {
+                      "type": "text",
+                      "value": "This card represents your history and foundations."
+                    },
+                    {
+                      "type": "text",
+                      "value": "\n"
+                    }
+                  ]
+                },
+                {
+                  "condition": "card.position == \"present\"",
+                  "content": [
+                    {
+                      "type": "text",
+                      "value": "This shows where you are right now."
+                    },
+                    {
+                      "type": "text",
+                      "value": "\n"
+                    }
+                  ]
+                },
+                {
+                  "condition": "card.position == \"future\"",
+                  "content": [
+                    {
+                      "type": "text",
+                      "value": "This indicates potential outcomes."
+                    },
+                    {
+                      "type": "text",
+                      "value": "\n"
+                    }
+                  ]
+                },
+                {
+                  "condition": "card.position == \"challenge\"",
+                  "content": [
+                    {
+                      "type": "text",
+                      "value": "This reveals obstacles or lessons."
+                    },
+                    {
+                      "type": "text",
+                      "value": "\n"
+                    }
+                  ]
+                },
+                {
+                  "condition": "True",
+                  "content": [
+                    {
+                      "type": "text",
+                      "value": "This suggests the final resolution."
+                    },
+                    {
+                      "type": "text",
+                      "value": "\n"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "value": "\n"
+            },
+            {
+              "type": "text",
+              "value": "\n"
+            },
+            {
+              "type": "conditional",
+              "branches": [
+                {
+                  "condition": "card.reversed",
+                  "content": [
+                    {
+                      "type": "text",
+                      "value": "\u26a0\ufe0f  Being reversed, there may be resistance or delay."
+                    },
+                    {
+                      "type": "text",
+                      "value": "\n"
+                    }
+                  ]
+                },
+                {
+                  "condition": "True",
+                  "content": [
+                    {
+                      "type": "text",
+                      "value": "\u2713  Upright energy flows clearly here."
+                    },
+                    {
+                      "type": "text",
+                      "value": "\n"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "value": "\n"
+            },
+            {
+              "type": "text",
+              "value": "\n"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "expression",
+          "code": "client.name"
+        },
+        {
+          "type": "text",
+          "value": "'s response: \""
+        },
+        {
+          "type": "expression",
+          "code": "client.get_trust_description()"
+        },
+        {
+          "type": "text",
+          "value": "\""
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Final trust: "
+        },
+        {
+          "type": "expression",
+          "code": "client.trust_level"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Your experience: "
+        },
+        {
+          "type": "expression",
+          "code": "reader.experience"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Level: "
+        },
+        {
+          "type": "expression",
+          "code": "reader.get_level()"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Cards "
+        },
+        {
+          "type": "expression",
+          "code": "client.name"
+        },
+        {
+          "type": "text",
+          "value": " has seen: "
+        },
+        {
+          "type": "expression",
+          "code": "len(client.cards_seen)"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "End session",
+          "target": "End",
+          "condition": null
+        }
+      ],
+      "execute": [
+        {
+          "type": "python_block",
+          "code": "# Update reader and client\n# Update reader and client\nreader.add_experience(25)\nfor card in cards:\n    client.add_card_seen(card)\n\n\n# Trust change based on reading quality\n# Trust change based on reading quality\nif sum(1 for c in cards if c.is_major_arcana()) >= 3:\n    client.modify_trust(15)  # Powerful reading\nelse:\n    client.modify_trust(5)"
+        }
+      ]
+    },
+    "End": {
+      "id": "End",
+      "content": [
+        {
+          "type": "text",
+          "value": "\u2554\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2557"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\u2551        SESSION COMPLETE                \u2551"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\u255a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u255d"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Thank you for using Bardic!"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [],
+      "execute": []
+    }
+  }
+}

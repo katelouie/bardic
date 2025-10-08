@@ -1,0 +1,18 @@
+:: Start
+~ suits = ["cups", "swords", "wands", "pentacles"]
+~ ranks = ["ace", "two", "three"]
+
+Deck preview:
+
+<<for suit in suits>>
+=== {suit.upper()} ===
+<<for rank in ranks>>
+{rank} of {suit}
+<<endfor>>
+
+<<endfor>>
+
++ [Done] -> End
+
+:: End
+Complete!

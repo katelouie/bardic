@@ -615,27 +615,92 @@ Standard reading.
 
 ### Loops
 
-Iterate over collections.
+Iterate over collections to generate dynamic content.
 
 ```bard
-<<for item in collection>> {item.name} <<endfor>>
+<<for variable in collection>>
+  content using {variable}
+<<endfor>>
 ```
 
 **Examples:**
 
 ```bard
-Your inventory: <<for item in inventory>>
+# Simple list
+<<for item in items>>
+- {item}
+<<endfor>>
 
-- {item.name} (quantity: {item.quantity}) <<endfor>>
+# Range
+<<for i in range(5)>>
+Number {i}
+<<endfor>>
+
+# Objects
+<<for card in cards>>
+{card.name}: {card.get_display_name()}
+<<endfor>>
+
+# Enumerate
+<<for i, item in enumerate(items)>>
+{i+1}. {item}
+<<endfor>>
+
+# With start index
+<<for i, item in enumerate(items, 5)>>
+{i}. {item}
+<<endfor>>
 ```
 
-**Inline loops:**
+~~**Inline loops:**~~
 
 ```bard
 Cards drawn: <<for card in cards>>{card.name}, <<endfor>>
 ```
 
-**Status:** 📅 Week 3
+- Opens with `<<for variable in collection>>`
+- Closes with `<<endfor>>`
+- Variable available in expressions within loop
+- Collection evaluated once before loop starts
+- Can iterate over: lists, tuples, ranges, dicts, etc.
+- Supports tuple unpacking (enumerate, zip, etc.)
+- Can be nested
+- Loop variable is temporary (doesn't persist after loop)
+
+**Nested Loops:**
+
+```bard
+<<for suit in suits>>
+  Suit: {suit}
+  <<for rank in ranks>>
+    {rank} of {suit}
+  <<endfor>>
+<<endfor>>
+```
+
+**With Conditionals:**
+
+```bard
+<<for item in inventory>>
+  <<if item.power > 10>>
+  - {item.name} (powerful!)
+  <<endif>>
+<<endfor>>
+```
+
+**Tuple Unpacking:**
+
+```bard
+<<for key, value in items.items()>>
+{key}: {value}
+<<endfor>>
+
+<<for i, card in enumerate(cards)>>
+Card {i+1}: {card.name}
+<<endfor>>
+```
+
+**Status:** ✅ Implemented (Week 3, Session 11)
 
 ---
 

@@ -284,6 +284,73 @@ def extract_conditional_block(lines: list[str], start_index: int) -> tuple[dict,
     return conditional, lines_consumed
 
 
+def extract_loop_block(lines: list[str], start_index: int) -> tuple[dict, int]:
+    """
+    Extract a <<for>> ... <<endfor>> block from lines. Supports nested loops.
+
+    Args:
+        lines: List of all lines
+        start_index: Index of the <<for line
+
+    Returns:
+        Tuple of (loop_structure, lines_consumed)
+    """
+    loop = {"type": "for_loop", "variable": None, "collection": None, "content": []}
+
+    i = start_index
+
+    while i < len(lines):
+        line = lines[i].strip()
+
+        # Check for nested <<for>> (not the opening one)
+        if line.startswith("<<for ") and i != start_index:
+            # Nested loop - recursively extract it
+            nested_loop, nested_lines = extract_loop_block(lines, i)
+            loop["content"].append(nested_loop)
+            i += nested_lines
+            continue
+
+        # Check for opening <<for>> (only at start_index)
+        if line.startswith("<<for ") and i == start_index:
+            # Parse: <<for variable in collection>>
+            match = re.match(r"<<for\s+(.+?)\s+in\s+(.+?)>>", line)
+
+            if match:
+                loop["variable"] = match.group(1).strip()
+                loop["collection"] = match.group(2).strip()
+            else:
+                raise ValueError("Invalid for loop syntax: {line}")
+
+            i += 1
+            continue
+
+        # Chec kfor nested <<if>> inside loop
+        if line.startswith("<<if "):
+            # Nested conditional - recursively extract it
+            nested_conditional, nested_lines = extract_conditional_block(lines, i)
+            loop["content"].append(nested_conditional)
+            i += nested_lines
+            continue
+
+        # Check for <<endfor>>
+        if line.startswith("<<endfor>>"):
+            i += 1
+            break
+
+        # Regular content line
+        content_tokens = parse_content_line(lines[i])
+        loop["content"].extend(content_tokens)
+        # Add newline after content line (same as main parser and conditionals)
+        loop["content"].append({"type": "text", "value": "\n"})
+
+        i += 1
+
+    # Calculate lines consumed
+    lines_consumed = i - start_index
+
+    return loop, lines_consumed
+
+
 def parse(source: str) -> Dict[str, Any]:
     """
     Parse a .bard source string into structured data.
@@ -342,6 +409,13 @@ def parse(source: str) -> Dict[str, Any]:
         if line.strip().startswith("<<if "):
             conditional, lines_consumed = extract_conditional_block(lines, i)
             current_passage["content"].append(conditional)
+            i += lines_consumed
+            continue
+
+        # Loop block: for
+        if line.strip().startswith("<<for "):
+            loop, lines_consumed = extract_loop_block(lines, i)
+            current_passage["content"].append(loop)
             i += lines_consumed
             continue
 
@@ -429,24 +503,34 @@ def _cleanup_whitespace(passage: dict[str, Any]) -> None:
         token = content[i]
 
         # Check if this is a newline token before a conditional
-        if (token.get("type") == "text" and
-            token.get("value") == "\n" and
-            i + 1 < len(content) and
-            content[i + 1].get("type") == "conditional"):
-
+        if (
+            token.get("type") == "text"
+            and token.get("value") == "\n"
+            and i + 1 < len(content)
+            and content[i + 1].get("type") == "conditional"
+        ):
             # Skip this newline if there's already a newline before it
-            if cleaned and cleaned[-1].get("type") == "text" and cleaned[-1].get("value") == "\n":
+            if (
+                cleaned
+                and cleaned[-1].get("type") == "text"
+                and cleaned[-1].get("value") == "\n"
+            ):
                 i += 1
                 continue
 
         # Check if this is a newline after a conditional
-        if (token.get("type") == "text" and
-            token.get("value") == "\n" and
-            cleaned and
-            cleaned[-1].get("type") == "conditional"):
-
+        if (
+            token.get("type") == "text"
+            and token.get("value") == "\n"
+            and cleaned
+            and cleaned[-1].get("type") == "conditional"
+        ):
             # Skip if next token is also a newline (avoid double spacing after conditional)
-            if i + 1 < len(content) and content[i + 1].get("type") == "text" and content[i + 1].get("value") == "\n":
+            if (
+                i + 1 < len(content)
+                and content[i + 1].get("type") == "text"
+                and content[i + 1].get("value") == "\n"
+            ):
                 i += 1
                 continue
 

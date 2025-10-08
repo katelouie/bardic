@@ -1,0 +1,148 @@
+{
+  "version": "0.1.0",
+  "initial_passage": "Start",
+  "imports": [],
+  "passages": {
+    "Start": {
+      "id": "Start",
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "You have "
+        },
+        {
+          "type": "expression",
+          "code": "len(items)"
+        },
+        {
+          "type": "text",
+          "value": " items in your inventory:"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "for_loop",
+          "variable": "item",
+          "collection": "items",
+          "content": [
+            {
+              "type": "text",
+              "value": "- "
+            },
+            {
+              "type": "expression",
+              "code": "item"
+            },
+            {
+              "type": "text",
+              "value": "\n"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Continue",
+          "target": "Numbers",
+          "condition": null
+        }
+      ],
+      "execute": [
+        {
+          "type": "set_var",
+          "var": "items",
+          "expression": "[\"sword\", \"shield\", \"potion\", \"key\"]"
+        }
+      ]
+    },
+    "Numbers": {
+      "id": "Numbers",
+      "content": [
+        {
+          "type": "text",
+          "value": "Counting:"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "for_loop",
+          "variable": "i",
+          "collection": "range(1, 6)",
+          "content": [
+            {
+              "type": "text",
+              "value": "Number "
+            },
+            {
+              "type": "expression",
+              "code": "i"
+            },
+            {
+              "type": "text",
+              "value": "\n"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Continue",
+          "target": "End",
+          "condition": null
+        }
+      ],
+      "execute": []
+    },
+    "End": {
+      "id": "End",
+      "content": [
+        {
+          "type": "text",
+          "value": "Done!"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [],
+      "execute": []
+    }
+  }
+}

@@ -1,0 +1,22 @@
+:: Start
+~ items = ["sword", "shield", "potion", "key"]
+
+You have {len(items)} items in your inventory:
+
+<<for item in items>>
+- {item}
+<<endfor>>
+
++ [Continue] -> Numbers
+
+:: Numbers
+Counting:
+
+<<for i in range(1, 6)>>
+Number {i}
+<<endfor>>
+
++ [Continue] -> End
+
+:: End
+Done!

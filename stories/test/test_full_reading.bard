@@ -1,0 +1,134 @@
+from game_logic.test_tarot_objects import Card, Client, Reader, draw_cards
+
+:: Start
+<<py
+reader = Reader("You")
+reader.experience = 250
+client = Client("Marcus", 42)
+client.trust_level = 70
+
+cards = draw_cards(5)
+positions = ["past", "present", "future", "challenge", "outcome"]
+for i, card in enumerate(cards):
+    card.in_position(positions[i])
+>>
+
+╔════════════════════════════════════════╗
+║     FIVE-CARD TAROT READING            ║
+╚════════════════════════════════════════╝
+
+Reader: {reader.name} (Level: {reader.get_level()})
+Client: {client.name}, age {client.age}
+Trust: {client.trust_level}/100
+
++ [Begin reading] -> Spread
+
+:: Spread
+═══════════════════════════════════════════
+
+Cards drawn:
+
+<<for card in cards>>
+┌─────────────────────────────────────┐
+│ {card.get_display_name()}
+│ Position: {card.position}
+│ Suit: {card.suit}
+<<if card.is_major_arcana()>>
+│ ⭐ MAJOR ARCANA
+<<endif>>
+└─────────────────────────────────────┘
+
+<<endfor>>
+
+═══════════════════════════════════════════
+
++ [Analyze the spread] -> Analysis
+
+:: Analysis
+ANALYSIS:
+
+Total cards: {len(cards)}
+
+Major Arcana count: {sum(1 for c in cards if c.is_major_arcana())}
+<<if sum(1 for c in cards if c.is_major_arcana()) >= 3>>
+⚠️  HIGH SIGNIFICANCE - Multiple major arcana!
+<<endif>>
+
+Reversed cards: {sum(1 for c in cards if c.reversed)}
+<<if sum(1 for c in cards if c.reversed) >= 3>>
+⚠️  BLOCKED ENERGY - Many reversals
+<<endif>>
+
+──────────────────────────────────────────
+
+MAJOR ARCANA CARDS:
+<<for card in cards>>
+<<if card.is_major_arcana()>>
+• {card.name} ({card.position})
+  {card.get_position_meaning()}
+<<endif>>
+<<endfor>>
+
+──────────────────────────────────────────
+
++ [Provide interpretation] -> Interpret
+
+:: Interpret
+YOUR INTERPRETATION:
+
+<<for i, card in enumerate(cards)>>
+═══ Card {i+1}: {card.position.upper()} ═══
+
+{card.get_display_name()}
+
+<<if card.position == "past">>
+This card represents your history and foundations.
+<<elif card.position == "present">>
+This shows where you are right now.
+<<elif card.position == "future">>
+This indicates potential outcomes.
+<<elif card.position == "challenge">>
+This reveals obstacles or lessons.
+<<else>>
+This suggests the final resolution.
+<<endif>>
+
+<<if card.reversed>>
+⚠️  Being reversed, there may be resistance or delay.
+<<else>>
+✓  Upright energy flows clearly here.
+<<endif>>
+
+<<endfor>>
+
+═══════════════════════════════════════════
+
+<<py
+# Update reader and client
+reader.add_experience(25)
+for card in cards:
+    client.add_card_seen(card)
+
+# Trust change based on reading quality
+if sum(1 for c in cards if c.is_major_arcana()) >= 3:
+    client.modify_trust(15)  # Powerful reading
+else:
+    client.modify_trust(5)
+>>
+
+{client.name}'s response: "{client.get_trust_description()}"
+
+Final trust: {client.trust_level}
+Your experience: {reader.experience}
+Level: {reader.get_level()}
+
+Cards {client.name} has seen: {len(client.cards_seen)}
+
++ [End session] -> End
+
+:: End
+╔════════════════════════════════════════╗
+║        SESSION COMPLETE                ║
+╚════════════════════════════════════════╝
+
+Thank you for using Bardic!

@@ -1,0 +1,139 @@
+{
+  "version": "0.1.0",
+  "initial_passage": "Start",
+  "imports": [],
+  "passages": {
+    "Start": {
+      "id": "Start",
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Numbered list:"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "for_loop",
+          "variable": "i, item",
+          "collection": "enumerate(items)",
+          "content": [
+            {
+              "type": "expression",
+              "code": "i+1"
+            },
+            {
+              "type": "text",
+              "value": ". "
+            },
+            {
+              "type": "expression",
+              "code": "item"
+            },
+            {
+              "type": "text",
+              "value": "\n"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Starting from 5:"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "for_loop",
+          "variable": "i, item",
+          "collection": "enumerate(items, 5)",
+          "content": [
+            {
+              "type": "expression",
+              "code": "i"
+            },
+            {
+              "type": "text",
+              "value": ". "
+            },
+            {
+              "type": "expression",
+              "code": "item"
+            },
+            {
+              "type": "text",
+              "value": "\n"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Done",
+          "target": "End",
+          "condition": null
+        }
+      ],
+      "execute": [
+        {
+          "type": "set_var",
+          "var": "items",
+          "expression": "[\"apple\", \"banana\", \"cherry\"]"
+        }
+      ]
+    },
+    "End": {
+      "id": "End",
+      "content": [
+        {
+          "type": "text",
+          "value": "Done!"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [],
+      "execute": []
+    }
+  }
+}

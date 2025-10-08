@@ -1,0 +1,128 @@
+{
+  "version": "0.1.0",
+  "initial_passage": "Start",
+  "imports": [],
+  "passages": {
+    "Start": {
+      "id": "Start",
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Deck preview:"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "for_loop",
+          "variable": "suit",
+          "collection": "suits",
+          "content": [
+            {
+              "type": "text",
+              "value": "=== "
+            },
+            {
+              "type": "expression",
+              "code": "suit.upper()"
+            },
+            {
+              "type": "text",
+              "value": " ==="
+            },
+            {
+              "type": "text",
+              "value": "\n"
+            },
+            {
+              "type": "for_loop",
+              "variable": "rank",
+              "collection": "ranks",
+              "content": [
+                {
+                  "type": "expression",
+                  "code": "rank"
+                },
+                {
+                  "type": "text",
+                  "value": " of "
+                },
+                {
+                  "type": "expression",
+                  "code": "suit"
+                },
+                {
+                  "type": "text",
+                  "value": "\n"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "value": "\n"
+            },
+            {
+              "type": "text",
+              "value": "\n"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Done",
+          "target": "End",
+          "condition": null
+        }
+      ],
+      "execute": [
+        {
+          "type": "set_var",
+          "var": "suits",
+          "expression": "[\"cups\", \"swords\", \"wands\", \"pentacles\"]"
+        },
+        {
+          "type": "set_var",
+          "var": "ranks",
+          "expression": "[\"ace\", \"two\", \"three\"]"
+        }
+      ]
+    },
+    "End": {
+      "id": "End",
+      "content": [
+        {
+          "type": "text",
+          "value": "Complete!"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [],
+      "execute": []
+    }
+  }
+}

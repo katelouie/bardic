@@ -53,6 +53,8 @@ body {
   line-height: 1.8;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
   white-space: pre-wrap; /* Preserve newlines and spaces */
+  font-family: 'Courier New', 'Consolas', 'Monaco', monospace; /* Monospace font for box-drawing */
+  overflow-x: auto; /* Allow horizontal scroll if needed */
 }
 
 .passage p {

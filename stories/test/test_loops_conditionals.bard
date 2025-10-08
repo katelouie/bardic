@@ -1,0 +1,40 @@
+:: Start
+~ numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+Even numbers:
+<<for n in numbers>>
+<<if n % 2 == 0>>
+{n}
+<<endif>>
+<<endfor>>
+
+Odd numbers:
+<<for n in numbers>>
+<<if n % 2 == 1>>
+{n}
+<<endif>>
+<<endfor>>
+
++ [Continue] -> Filtered
+
+:: Filtered
+<<py
+items = [
+    {"name": "sword", "power": 10},
+    {"name": "shield", "power": 5},
+    {"name": "potion", "power": 0},
+    {"name": "staff", "power": 12}
+]
+>>
+
+Powerful items (power > 5):
+<<for item in items>>
+<<if item["power"] > 5>>
+- {item["name"]}: {item["power"]} power
+<<endif>>
+<<endfor>>
+
++ [Done] -> End
+
+:: End
+Done!

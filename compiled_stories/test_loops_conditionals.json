@@ -1,0 +1,206 @@
+{
+  "version": "0.1.0",
+  "initial_passage": "Start",
+  "imports": [],
+  "passages": {
+    "Start": {
+      "id": "Start",
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Even numbers:"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "for_loop",
+          "variable": "n",
+          "collection": "numbers",
+          "content": [
+            {
+              "type": "conditional",
+              "branches": [
+                {
+                  "condition": "n % 2 == 0",
+                  "content": [
+                    {
+                      "type": "expression",
+                      "code": "n"
+                    },
+                    {
+                      "type": "text",
+                      "value": "\n"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Odd numbers:"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "for_loop",
+          "variable": "n",
+          "collection": "numbers",
+          "content": [
+            {
+              "type": "conditional",
+              "branches": [
+                {
+                  "condition": "n % 2 == 1",
+                  "content": [
+                    {
+                      "type": "expression",
+                      "code": "n"
+                    },
+                    {
+                      "type": "text",
+                      "value": "\n"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Continue",
+          "target": "Filtered",
+          "condition": null
+        }
+      ],
+      "execute": [
+        {
+          "type": "set_var",
+          "var": "numbers",
+          "expression": "[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]"
+        }
+      ]
+    },
+    "Filtered": {
+      "id": "Filtered",
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Powerful items (power > 5):"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "for_loop",
+          "variable": "item",
+          "collection": "items",
+          "content": [
+            {
+              "type": "conditional",
+              "branches": [
+                {
+                  "condition": "item[\"power\"] > 5",
+                  "content": [
+                    {
+                      "type": "text",
+                      "value": "- "
+                    },
+                    {
+                      "type": "expression",
+                      "code": "item[\"name\"]"
+                    },
+                    {
+                      "type": "text",
+                      "value": ": "
+                    },
+                    {
+                      "type": "expression",
+                      "code": "item[\"power\"]"
+                    },
+                    {
+                      "type": "text",
+                      "value": " power"
+                    },
+                    {
+                      "type": "text",
+                      "value": "\n"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Done",
+          "target": "End",
+          "condition": null
+        }
+      ],
+      "execute": [
+        {
+          "type": "python_block",
+          "code": "items = [\n    {\"name\": \"sword\", \"power\": 10},\n    {\"name\": \"shield\", \"power\": 5},\n    {\"name\": \"potion\", \"power\": 0},\n    {\"name\": \"staff\", \"power\": 12}\n]"
+        }
+      ]
+    },
+    "End": {
+      "id": "End",
+      "content": [
+        {
+          "type": "text",
+          "value": "Done!"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [],
+      "execute": []
+    }
+  }
+}
