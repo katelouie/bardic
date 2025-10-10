@@ -7,6 +7,8 @@ import json
 from typing import Dict, Any, List, Optional
 from dataclasses import dataclass
 import traceback
+import uuid
+import ast
 
 
 @dataclass
@@ -23,6 +25,11 @@ class PassageOutput:
     content: str
     choices: List[Dict[str, str]]
     passage_id: str
+    render_directives: Optional[List[Dict[str, Any]]] = None
+
+    def __post_init__(self):
+        if self.render_directives is None:
+            self.render_directives = []
 
 
 class BardEngine:
@@ -33,7 +40,10 @@ class BardEngine:
     """
 
     def __init__(
-        self, story_data: Dict[str, Any], context: Optional[dict[str, Any]] = None
+        self,
+        story_data: Dict[str, Any],
+        context: Optional[dict[str, Any]] = None,
+        evaluate_directives: bool = True,
     ):
         """
         Initialize the engine with compiled story data.
@@ -46,7 +56,11 @@ class BardEngine:
         self.current_passage_id = None  # Will be set by goto()
         self.state = {}  # Game state (variables)
         self.context = context or {}
+        self.evaluate_directives = evaluate_directives
         self._current_output = None  # Cache for current passage output
+
+        # Add more frameworks as needed (eg for unity)
+        self.framework_processors = {"react": self._process_for_react}
 
         # Execute Imports first
         self._execute_imports()
@@ -103,6 +117,166 @@ class BardEngine:
             )
         except Exception as e:
             raise RuntimeError(f"Error executing imports:\n{import_code}\n\nError: {e}")
+
+    def _process_for_react(self, component_name: str, args: dict) -> dict:
+        """
+        Format directive data for React convenience.
+
+        Converts generic data into React-friendly format:
+        - Suggests component name (PascalCase)
+        - Generates unique key for list rendering
+        - Organizes props cleanly
+
+        Args:
+            component_name: The directive name (ex: 'card_detail')
+            args: Evaluated arguments dictionary
+
+        Returns:
+            React-optimized data structure
+        """
+        # Convert snake_case to PascalCase for component name
+        suggested_component = "".join(
+            word.capitalize() for word in component_name.split("_")
+        )
+
+        # Clean up props - convert arg_0, arg_1 to more meaningful names if possible
+        props = {}
+        for key, value in args.items():
+            # Keep named arguments as-is
+            if not key.startswith("arg_"):
+                props[key] = value
+            else:  # For positional args, keep them but that's less ideal
+                props[key] = value
+
+        return {
+            "componentName": suggested_component,
+            "key": f"{component_name}_{uuid.uuid4().hex[:8]}",
+            "props": props,
+        }
+
+    def _parse_directive_args(
+        self, args_str: str, eval_context: dict, safe_builtins: dict
+    ) -> dict:
+        """
+        Parse directive arguments into a dictionary.
+
+        Supports both positional and keyword arguments:
+        - f(a, b , c) becomes {"arg_0": a, "arg_1": b, "arg_2": c}
+        - f(x=1, y=2) becomes {"x": 1, "y": 2}
+        - f(a, x=1) becomes {"arg_0": a, "x": 1}
+
+        Args:
+            args_str: Argument string from directive
+            eval_context: Evaluation context (state + context)
+            safe_builtins: Safe builtin functions
+
+        Returns:
+            Dictionary of evaluated arguments
+        """
+        if not args_str.strip():
+            return {}
+
+        try:
+            # Create a fake function call to parse arguments properly
+            # This is part of why this parse function lives in engine, not parser
+            fake_call = f"__directive__({args_str})"
+            tree = ast.parse(fake_call, mode="eval")
+            call_node = tree.body
+
+            result = {}
+
+            # Process positional arguments
+            for i, arg in enumerate(call_node.args):
+                # Compile and evaluate each argument
+                arg_code = compile(ast.Expression(arg), "<directive>", "eval")
+                value = eval(arg_code, {"__builtins__": safe_builtins}, eval_context)
+                result["arg_{i}"] = value
+
+            # Process keyword arguments
+            for keyword in call_node.keywords:
+                arg_code = compile(ast.Expression(keyword.value), "<directive>", "eval")
+                value = eval(arg_code, {"__builtins__": safe_builtins}, eval_context)
+                result[keyword.arg] = value
+
+            return result
+
+        except Exception as e:
+            raise ValueError(f"Could not parse directive arguments: {args_str}") from e
+
+    def process_render_directive(self, directive: dict[str, Any]) -> dict[str, Any]:
+        """
+        Process a render directive based on configuration.
+
+        Creates structured data that frontends can use.
+
+        Two modes:
+        1. evaluate_directives=True: Evaluate Python expressions, return data
+        2. evaluate_directives=False: Return raw expression, let frontend eval
+
+        Args:
+            directive: Parsed directive from content tokens
+
+        Returns:
+            Processed directive ready for frontend
+        """
+        name: str = directive.get("name", "")
+        args_str = directive.get("args", "")
+        framework_hint = directive.get("framework_hint")
+
+        if self.evaluate_directives:
+            # Evaluated mode: Execute python expressions, return data
+            try:
+                eval_context = {**self.context, **self.state}
+                safe_builtins = self._get_safe_builtins()
+
+                # Parse and evaluate arguments
+                if args_str:
+                    args_dict = self._parse_directive_args(
+                        args_str, eval_context, safe_builtins
+                    )
+                else:
+                    args_dict = {}
+
+                # Build base result
+                result: dict[str, Any] = {
+                    "type": "render_directive",
+                    "name": "name",
+                    "mode": "evaluated",
+                    "data": "args_dict",
+                }
+
+                # Add framework-specific preprocessing if requested
+                if framework_hint and framework_hint in self.framework_processors:
+                    processor = self.framework_processors[framework_hint]
+                    result["framework"] = framework_hint
+                    result[framework_hint] = processor(name, args_dict)
+
+                return result
+
+            except Exception as e:
+                # Error during evaluation
+                print(f"Warning: Failed to evaluate render directive '{name}': {e}")
+                return {
+                    "type": "render_directive",
+                    "name": name,
+                    "mode": "error",
+                    "error": str(e),
+                    "raw_args": args_str,
+                }
+        else:
+            # Raw mode: pass expressions to frontend for evaluation
+            result = {
+                "type": "render_directive",
+                "name": name,
+                "mode": "raw",
+                "raw_args": args_str,
+                "state_snapshot": dict(self.state),  # Provide for frontend eval
+            }
+
+            if framework_hint:
+                result["framework_hint"] = framework_hint
+
+            return result
 
     def _execute_passage(self, passage_id: str) -> None:
         """
@@ -441,6 +615,7 @@ class BardEngine:
     def _render_content(self, content_tokens: list[dict]) -> str:
         """Render content with variable substitution and format specifiers."""
         result = []
+        directives = []
         safe_builtins = self._get_safe_builtins()
 
         for token in content_tokens:
@@ -490,6 +665,10 @@ class BardEngine:
                     result.append(
                         f"{{ERROR: {token['code']} - {type(e).__name__}: {e}}}"
                     )
+            elif token["type"] == "render_directive":
+                # Process and collect directive (don't render as text)
+                processed = self._process_render_directive(token)
+                directives.append(processed)
             elif token["type"] == "conditional":
                 # Render conditional blocks
                 branch_content = self._render_conditional(token)
@@ -552,7 +731,9 @@ class BardEngine:
                         self.state[variable] = item
                 except Exception as e:
                     print(f"Warning: Loop variable assignment failed: {e}")
-                    print(f"  variable: {variable}, is_tuple: {is_tuple_unpack}, item: {item}")
+                    print(
+                        f"  variable: {variable}, is_tuple: {is_tuple_unpack}, item: {item}"
+                    )
                     raise
 
                 # Render the loop body
@@ -570,11 +751,12 @@ class BardEngine:
 
         except Exception as e:
             error_msg = f"{{ERROR: Loop failed - {e}}}"
-            print(f"Warning: Loop rendering failed")
+            print("Warning: Loop rendering failed")
             print(f"  collection_expr: {collection_expr}")
             print(f"  variable: {variable}")
             print(f"  error: {e}")
             import traceback
+
             traceback.print_exc()
             return error_msg
 

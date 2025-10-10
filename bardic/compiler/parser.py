@@ -412,11 +412,19 @@ def parse(source: str) -> Dict[str, Any]:
             i += lines_consumed
             continue
 
-        # Loop block: for
+        # Loop block: <<for
         if line.strip().startswith("<<for "):
             loop, lines_consumed = extract_loop_block(lines, i)
             current_passage["content"].append(loop)
             i += lines_consumed
+            continue
+
+        # Render directive: @render or @render:framework
+        if line.strip().startswith("@render"):
+            directive = parse_render_line(line)
+            if directive:
+                current_passage["content"].append(directive)
+            i += 1
             continue
 
         # Variable assignment: ~ var = value
@@ -736,3 +744,90 @@ def parse_value(value_str: str) -> Any:
 
     # Return as-is (will be evaluated as expression later)
     return value
+
+
+def parse_render_line(line: str) -> Optional[dict]:
+    """
+    Parse a complete @render line including framwork hint detection.
+
+    Handles:
+        @render my_function(args)
+        @render:react my_function(args)
+        @render simple_function
+
+    Args:
+        line: The full line of the story file
+
+    Returns:
+        Parsed directive dict, or None if invalid
+    """
+    # Must start with @render
+    if not line.strip().startswith("@render"):
+        return None
+
+    # Extract everything after "@render"
+    after_render = line.strip()[7:]  # Skip '@render'
+
+    framework_hint = None
+    directive_str = None
+
+    if after_render.startswith(":"):
+        # Pattern: :framework directive_name(args)
+        match = re.match(r"^:(\w+)\s+(.+)$", after_render)
+        if match:
+            framework_hint = match.group(1)
+            directive_str = match.group(2)
+        else:
+            print(f"Warning: Invalid @render:framework syntax: {line.strip()}")
+            return None
+    elif after_render.strip():
+        # No framework hint, just the directive
+        directive_str = after_render.strip()
+    else:
+        print(f"Warning: Empty @render directive: {line.strip()}")
+        return None
+
+    # Parse the directive string and arguments
+    directive = parse_render_directive(directive_str)
+    if not directive:
+        return None
+
+    # Add framework hint
+    directive["framework_hint"] = framework_hint
+
+    return directive
+
+
+def parse_render_directive(directive_str: str) -> Optional[dict]:
+    """
+    Parse a render directive with optional framework hint.
+
+    Syntax:
+        @render directive_name(args) # generic
+        @render:react directive_name(args) # react convenience
+        @render:unity directive_name(args) # unity convenience
+
+    Examples:
+        render_spread(cards, layout="celtic") # generic
+        :react render_card_detail(card, pos="past") # react-optimized
+        :unity spawn_card(card) # unity-optimized
+
+    Args:
+        directive_str: The text after '@render' or '@render:'
+
+    Returns:
+        Dict with type='render_directive', name, framework_hint, and args
+    """
+    directive_str = directive_str.strip()
+
+    # Pattern: function_name(args) or function_name
+    match = re.match(r"^(\w+)(?:\((.*)\))?$", directive_str)
+
+    if not match:
+        print(f"Warning: Invalid directive syntax: {directive_str}")
+        return None
+
+    name = match.group(1)
+    args = match.group(2) if match.group(2) else ""
+
+    return {"type": "render_directive", "name": name, "args": args.strip()}

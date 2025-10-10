@@ -11,6 +11,7 @@ from pydantic import BaseModel
 import json
 from pathlib import Path
 from typing import Any
+from extensions import get_game_context, register_custom_routes
 
 # Import your Bardic engine!
 # We need to add the parent directory to the path to find it
@@ -21,6 +22,9 @@ from bardic import BardEngine
 
 # Create the FastAPI app
 app = FastAPI(title="Bardic Web Runtime")
+
+# Add the custom routes from the extensions module
+register_custom_routes(app)
 
 # Add CORS middleware (this lets your React app talk to your API)
 # Don't worry too much about this - it's just standard web security stuff
@@ -52,16 +56,12 @@ for dir_path in [PROJECT_ROOT, GAME_LOGIC_DIR]:
 
 def get_default_context() -> dict[str, Any]:
     """
-    Get default context functions available to all stories.
+    Get context functions for stories.
 
-    This is where you'd add your game-specific functions.
-    For now, we'll add some useful utilities.
+    Conbines default utilities with game-specific functions.
     """
-    return {
-        "random_int": lambda min_val, max_val: random.randint(min_val, max_val),
-        "random_choice": lambda items: random.choice(items),
-        "chance": lambda probability: random.random() < probability,
-    }
+    # Get game-specific context from extensions
+    return get_game_context()
 
 
 # This is an "endpoint" - a URL that does something

@@ -165,6 +165,15 @@ function App() {
           </ReactMarkdown>
         </div>
 
+        {passage.render_directives && passage.render_directives.length > 0 && (
+          <div className="render-directives">
+            {passage.render_directives.map((directive, i) => {
+              const Component = componentRegistry[directive.component] || componentRegistry.default
+              return <Component key={i} {...directive.props} />
+            })}
+          </div>
+        )}
+
         {passage.is_end ? (
           <div className="ending">
             <h2>The End</h2>
