@@ -1,0 +1,35 @@
+from game_logic.test_tarot_objects import Card
+
+:: Start
+~ cards = [
+    Card("The Fool", 0, False),
+    Card("The Magician", 1, False),
+    Card("The High Priestess", 2, False)
+]
+
+**Your Reading**
+
+You draw three cards from the deck...
+
+@render card_spread(cards, layout='three_card')
+
+The first card is {cards[0].name}.
+
+@render card_detail(cards[0], position='past')
+
++ [Continue] -> Interpret
+
+:: Interpret
+~ interpretation = "positive"
+
+**Interpretation**
+
+@render interpretation_panel(cards, interpretation)
+
+The cards suggest a journey of discovery.
+
++ [Draw again] -> Start
++ [End reading] -> End
+
+:: End
+**Thank you for your reading.**

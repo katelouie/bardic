@@ -1,0 +1,246 @@
+{
+  "version": "0.1.0",
+  "initial_passage": "Start",
+  "imports": [
+    "from game_logic.test_tarot_objects import Card",
+    ""
+  ],
+  "passages": {
+    "Start": {
+      "id": "Start",
+      "content": [
+        {
+          "type": "text",
+          "value": "    Card(\"The Fool\", 0, False),"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "    Card(\"The Magician\", 1, False),"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "    Card(\"The High Priestess\", 2, False)"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "]"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "**Your Reading**"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "You draw three cards from the deck..."
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "render_directive",
+          "name": "card_spread",
+          "args": "cards, layout='three_card'",
+          "framework_hint": null
+        },
+        {
+          "type": "text",
+          "value": "@render card_spread(cards, layout='three_card')"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "The first card is "
+        },
+        {
+          "type": "expression",
+          "code": "cards[0].name"
+        },
+        {
+          "type": "text",
+          "value": "."
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "render_directive",
+          "name": "card_detail",
+          "args": "cards[0], position='past'",
+          "framework_hint": null
+        },
+        {
+          "type": "text",
+          "value": "@render card_detail(cards[0], position='past')"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Continue",
+          "target": "Interpret",
+          "condition": null
+        }
+      ],
+      "execute": [
+        {
+          "type": "set_var",
+          "var": "cards",
+          "expression": "["
+        }
+      ]
+    },
+    "Interpret": {
+      "id": "Interpret",
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "**Interpretation**"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "render_directive",
+          "name": "interpretation_panel",
+          "args": "cards, interpretation",
+          "framework_hint": null
+        },
+        {
+          "type": "text",
+          "value": "@render interpretation_panel(cards, interpretation)"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "The cards suggest a journey of discovery."
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Draw again",
+          "target": "Start",
+          "condition": null
+        },
+        {
+          "text": "End reading",
+          "target": "End",
+          "condition": null
+        }
+      ],
+      "execute": [
+        {
+          "type": "set_var",
+          "var": "interpretation",
+          "expression": "\"positive\""
+        }
+      ]
+    },
+    "End": {
+      "id": "End",
+      "content": [
+        {
+          "type": "text",
+          "value": "**Thank you for your reading.**"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [],
+      "execute": []
+    }
+  }
+}

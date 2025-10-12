@@ -190,6 +190,18 @@ function App() {
           </div>
         )}
 
+        {passage.render_directives && passage.render_directives.length > 0 && (
+          <div className="render-directives">
+            <h3>Render Directives</h3>
+            {passage.render_directives.map((directive, i) => (
+              <div key={i} className="directive">
+                <strong>{directive.name}</strong>
+                <pre>{JSON.stringify(directive.data, null, 2)}</pre>
+              </div>
+            ))}
+          </div>
+        )}
+
         {passage.is_end ? (
           <div className="ending">
             <h2>The End</h2>
