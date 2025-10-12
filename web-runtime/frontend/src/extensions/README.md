@@ -361,9 +361,25 @@ bardic serve
 
 ---
 
+## File Structure
+
+```
+extensions/
+├── componentRegistry.jsx      # Registry mapping (import and register here)
+├── DefaultDirective.jsx       # Fallback when component not found
+├── TarotCard.jsx             # Single tarot card display
+├── CardSpread.jsx            # Multiple cards in a spread
+├── CardDetail.jsx            # Detailed single card view
+├── InterpretationPanel.jsx   # Reading interpretation display
+└── README.md                 # This file
+```
+
 ## Examples in This Directory
 
 - **`TarotCard.jsx`** - Single card display
-- **`componentRegistry.js`** - Registry with CardSpread, CardDetail, InterpretationPanel examples
+- **`CardSpread.jsx`** - Grid of multiple cards
+- **`CardDetail.jsx`** - Card with position and details
+- **`InterpretationPanel.jsx`** - Styled interpretation text
+- **`DefaultDirective.jsx`** - Debug view for unregistered components
 
 Study these for patterns and styling!
