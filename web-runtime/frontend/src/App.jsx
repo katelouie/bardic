@@ -3,6 +3,7 @@ import ReactMarkdown from 'react-markdown'
 import rehypeRaw from 'rehype-raw'
 import remarkGfm from 'remark-gfm'
 import './App.css'
+import componentRegistry from './extensions/componentRegistry'
 
 function App() {
   const [passage, setPassage] = useState(null)
@@ -56,6 +57,8 @@ function App() {
       if (!response.ok) throw new Error('Failed to start story')
 
       const data = await response.json()
+      console.log('Story started:', data)
+      console.log('Render directives:', data.render_directives)
       setPassage(data)
     } catch (err) {
       setError(err.message)
@@ -82,6 +85,8 @@ function App() {
       if (!response.ok) throw new Error('Failed to make choice')
 
       const data = await response.json()
+      console.log('Choice made:', data)
+      console.log('Render directives:', data.render_directives)
       setPassage(data)
     } catch (err) {
       setError(err.message)
@@ -181,24 +186,35 @@ function App() {
           </ReactMarkdown>
         </div>
 
+        {/* Render Directives - Custom Components */}
         {passage.render_directives && passage.render_directives.length > 0 && (
           <div className="render-directives">
             {passage.render_directives.map((directive, i) => {
-              const Component = componentRegistry[directive.component] || componentRegistry.default
-              return <Component key={i} {...directive.props} />
+              // Check if there's a React-specific hint
+              if (directive.react) {
+                const Component = componentRegistry[directive.react.componentName] 
+                  || componentRegistry.default
+                
+                return (
+                  <Component 
+                    key={directive.react.key} 
+                    {...directive.react.props} 
+                  />
+                )
+              }
+              
+              // Fallback to generic directive format
+              const Component = componentRegistry[directive.name] 
+                || componentRegistry.default
+              
+              return (
+                <Component 
+                  key={i} 
+                  data={directive.data}
+                  name={directive.name}
+                />
+              )
             })}
-          </div>
-        )}
-
-        {passage.render_directives && passage.render_directives.length > 0 && (
-          <div className="render-directives">
-            <h3>Render Directives</h3>
-            {passage.render_directives.map((directive, i) => (
-              <div key={i} className="directive">
-                <strong>{directive.name}</strong>
-                <pre>{JSON.stringify(directive.data, null, 2)}</pre>
-              </div>
-            ))}
           </div>
         )}
 

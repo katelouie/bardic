@@ -258,7 +258,8 @@ body {
 
 /* Buttons */
 .restart-button,
-.small-button {
+.small-button,
+.retry-button {
   padding: 12px 28px;
   background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);
   color: #ffffff;
@@ -271,7 +272,8 @@ body {
 }
 
 .restart-button:hover,
-.small-button:hover {
+.small-button:hover,
+.retry-button:hover {
   background: linear-gradient(135deg, #c084fc 0%, #a855f7 100%);
   transform: translateY(-2px);
 }
@@ -305,6 +307,7 @@ body {
 
 .error h2 {
   margin-bottom: 15px;
+  color: #ff6b6b;
 }
 
 .error button {
@@ -349,10 +352,16 @@ body {
 
 /* Render Directives Container */
 .render-directives {
-  margin: 30px 0;
+  margin: 25px 0;
+  animation: fadeIn 0.5s ease-out;
 }
 
-/* Default directive styling */
+/* Individual directive spacing */
 .render-directives>* {
   margin: 20px 0;
+}
+
+/* Add a subtle glow effect for render directive containers */
+.render-directives>div {
+  animation: fadeIn 0.6s ease-out;
 }

@@ -11,38 +11,6 @@
       "content": [
         {
           "type": "text",
-          "value": "    Card(\"The Fool\", 0, False),"
-        },
-        {
-          "type": "text",
-          "value": "\n"
-        },
-        {
-          "type": "text",
-          "value": "    Card(\"The Magician\", 1, False),"
-        },
-        {
-          "type": "text",
-          "value": "\n"
-        },
-        {
-          "type": "text",
-          "value": "    Card(\"The High Priestess\", 2, False)"
-        },
-        {
-          "type": "text",
-          "value": "\n"
-        },
-        {
-          "type": "text",
-          "value": "]"
-        },
-        {
-          "type": "text",
-          "value": "\n"
-        },
-        {
-          "type": "text",
           "value": "\n"
         },
         {
@@ -84,12 +52,8 @@
         {
           "type": "render_directive",
           "name": "card_spread",
-          "args": "cards, layout='three_card'",
-          "framework_hint": null
-        },
-        {
-          "type": "text",
-          "value": "@render card_spread(cards, layout='three_card')"
+          "args": "cards=cards, layout='three_card'",
+          "framework_hint": "react"
         },
         {
           "type": "text",
@@ -126,12 +90,8 @@
         {
           "type": "render_directive",
           "name": "card_detail",
-          "args": "cards[0], position='past'",
-          "framework_hint": null
-        },
-        {
-          "type": "text",
-          "value": "@render card_detail(cards[0], position='past')"
+          "args": "card=cards[0], position='past'",
+          "framework_hint": "react"
         },
         {
           "type": "text",
@@ -147,9 +107,8 @@
       ],
       "execute": [
         {
-          "type": "set_var",
-          "var": "cards",
-          "expression": "["
+          "type": "python_block",
+          "code": "cards = [\n    Card(\"The Fool\", 0, False),\n    Card(\"The Magician\", 1, False),\n    Card(\"The High Priestess\", 2, False)\n]"
         }
       ]
     },
@@ -183,12 +142,8 @@
         {
           "type": "render_directive",
           "name": "interpretation_panel",
-          "args": "cards, interpretation",
-          "framework_hint": null
-        },
-        {
-          "type": "text",
-          "value": "@render interpretation_panel(cards, interpretation)"
+          "args": "interpretation=interpretation",
+          "framework_hint": "react"
         },
         {
           "type": "text",

@@ -150,6 +150,7 @@ async def start_story(request: StartStoryRequest):
         print(f"Passage ID: {output.passage_id}")
         print(f"Content length: {len(output.content)}")
         print(f"Content:\n{repr(output.content)}\n")
+        print(f"Render directives: {output.render_directives}")
         print(f"=== END DEBUG ===\n")
 
         # Return it to the frontend
@@ -161,6 +162,7 @@ async def start_story(request: StartStoryRequest):
             ],
             "passage_id": output.passage_id,
             "is_end": engine.is_end(),
+            "render_directives": output.render_directives,
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error loading story: {str(e)}")
@@ -191,6 +193,7 @@ async def make_choice(request: MakeChoiceRequest):
         print(f"Passage ID: {output.passage_id}")
         print(f"Content length: {len(output.content)}")
         print(f"Content:\n{repr(output.content)}\n")
+        print(f"Render directives: {output.render_directives}")
         print(f"=== END DEBUG ===\n")
 
         # Return the new passage
@@ -202,6 +205,7 @@ async def make_choice(request: MakeChoiceRequest):
             ],
             "passage_id": output.passage_id,
             "is_end": engine.is_end(),
+            "render_directives": output.render_directives,
         }
     except (IndexError, ValueError) as e:
         raise HTTPException(status_code=400, detail=f"Invalid choice: {str(e)}")

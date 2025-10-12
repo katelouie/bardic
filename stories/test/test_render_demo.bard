@@ -1,0 +1,63 @@
+from game_logic.test_tarot_objects import Card
+
+:: Start
+<<py
+cards = [
+    Card("The Fool", 0, False),
+    Card("The Magician", 1, False),
+    Card("The High Priestess", 2, True)
+]
+>>
+
+**Welcome to the Tarot Reading Demo**
+
+This story demonstrates render directives in action.
+
+You have drawn three cards from the Major Arcana.
+
+@render:react card_spread(cards=cards, layout='three_card')
+
+Let's examine each card in detail...
+
++ [Continue] -> CardDetails
+
+:: CardDetails
+
+**First Card: The Past**
+
+@render:react card_detail(card=cards[0], position='past')
+
+The Fool represents new beginnings and taking a leap of faith.
+
+**Second Card: The Present**
+
+@render:react card_detail(card=cards[1], position='present')
+
+The Magician represents manifestation and using your skills.
+
+**Third Card: The Future**
+
+@render:react card_detail(card=cards[2], position='future')
+
+The High Priestess (reversed) suggests hidden knowledge yet to be revealed.
+
++ [See interpretation] -> Interpret
+
+:: Interpret
+~ interpretation = "The cards suggest a journey from innocent beginnings through skillful action, leading to deeper wisdom."
+~ confidence = 0.87
+
+**Your Reading**
+
+@render:react interpretation_panel(interpretation=interpretation, confidence=confidence, style='traditional')
+
+The three cards together tell a story of growth and transformation.
+
++ [Draw again] -> Start
++ [End reading] -> End
+
+:: End
+
+**Thank you for this reading.**
+
+May the cards guide you well.

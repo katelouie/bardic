@@ -443,6 +443,7 @@ def parse(source: str) -> Dict[str, Any]:
             if directive:
                 current_passage["content"].append(directive)
             i += 1
+            continue
 
         # Immediate jump to target
         if line.strip().startswith("->"):
