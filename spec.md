@@ -886,22 +886,232 @@ The first card is {cards[0].name}.
 
 ### Immediate Jumps (Diverts)
 
-Navigate without a choice.
+Navigate to another passage without a choice. Like Ink's `->` divert.
+
+**Syntax:** `-> PassageName`
 
 ```bard
-:: CheckHealth <<if health <= 0>> -> Death <<endif>>
+:: CheckHealth
+<<if health <= 0>>
+You collapse to the ground...
+-> Death
+<<endif>>
 
-You're still alive...
+You're still alive!
+
+:: Death
+Game Over.
 ```
+
+**How It Works:**
+
+1. When `-> Target` is encountered during rendering, it immediately jumps to the target passage
+2. Content before the jump is rendered
+3. Content after the jump is skipped
+4. The target passage is executed and rendered
+5. Contents from both passages are combined
 
 **Rules:**
 
-- `-> PassageName` immediately jumps
-- No choice needed
-- Can be conditional
-- Useful for error handling, automatic progression
+- Syntax: `-> PassageName` (arrow, space, passage name)
+- Executes immediately when encountered
+- Content BEFORE the jump renders
+- Content AFTER the jump is skipped
+- Can be used anywhere: passages, conditionals, loops
+- Can be conditional (inside `<<if>>` blocks)
+- In loops: exits the loop and jumps immediately
+- Multiple conditional jumps: only the first true condition jumps
+- Jump loop detection prevents infinite recursion
+- Compile-time validation: ensures target passages exist
 
-**Status:** 📅 Week 4
+**Examples:**
+
+```bard
+# Simple unconditional jump
+:: Intro
+The game begins...
+-> Chapter1
+
+# Conditional jump - automatic progression
+:: CheckStatus
+<<if health <= 0>>
+You collapse...
+-> Death
+<<elif health < 50>>
+You're wounded.
+-> Injured
+<<else>>
+You're healthy.
+-> Healthy
+<<endif>>
+
+# Jump after Python code
+:: ProcessTurn
+<<py
+turn_count += 1
+if turn_count >= 10:
+    game_over = True
+>>
+
+<<if game_over>>
+-> GameOver
+<<endif>>
+
+Turn {turn_count} continues...
+
+# Jump in a loop - exits when condition met
+:: SearchInventory
+<<for item in inventory>>
+Checking {item.name}...
+<<if item.name == "key">>
+Found the key!
+-> FoundKey
+<<endif>>
+<<endfor>>
+
+Key not found.
+
+:: FoundKey
+You found the key! Time to unlock the door.
+```
+
+**Multiple Conditional Jumps:**
+
+Only the first true condition's jump executes:
+
+```bard
+:: RoutePlayer
+<<if score >= 90>>
+-> GradeA
+<<elif score >= 80>>
+-> GradeB
+<<elif score >= 70>>
+-> GradeC
+<<else>>
+-> GradeF
+<<endif>>
+```
+
+With `score = 85`, only `-> GradeB` executes. The other branches are never evaluated.
+
+**Content Flow Example:**
+
+```bard
+:: Start
+~ health = 0
+
+Checking your status...
+
+<<if health <= 0>>
+You feel weak...
+-> Death
+<<endif>>
+
+You're fine!  # This never renders if health <= 0
+
+:: Death
+You have died.
+```
+
+**Output when health = 0:**
+
+```txt
+Checking your status...
+
+You feel weak...
+
+You have died.
+```
+
+Notice:
+
+- "Checking your status..." renders (before conditional)
+- "You feel weak..." renders (inside true branch, before jump)
+- Jump executes
+- "You're fine!" never renders (after jump)
+- "You have died." renders (from Death passage)
+
+**Jump in Loops:**
+
+When a jump is found inside a loop, the loop exits immediately:
+
+```bard
+:: Search
+~ numbers = [1, 2, 3, 4, 5]
+
+Searching for 3...
+
+<<for n in numbers>>
+Checking {n}
+<<if n == 3>>
+-> Found
+<<endif>>
+<<endfor>>
+
+Not found.
+
+:: Found
+Found it!
+```
+
+**Output:**
+
+```txt
+Searching for 3...
+
+Checking 1
+Checking 2
+Checking 3
+Found it!
+```
+
+Notice: Loop processes 1, 2, 3, then exits. Never checks 4 or 5. "Not found" never renders.
+
+**Jump Loop Detection:**
+
+Infinite jump loops are detected at runtime:
+
+```bard
+:: A
+-> B
+
+:: B
+-> A
+```
+
+Raises: `RuntimeError: Jump loop detected: A -> B -> A`
+
+**Compile-Time Validation:**
+
+The compiler validates that all jump targets exist:
+
+```bard
+:: Start
+-> NonExistentPassage
+```
+
+Raises: `ValueError: Jump target 'NonExistentPassage' not found (in passage 'Start')`
+
+**Use Cases:**
+
+- **Error handling:** Automatic jump to death/failure state
+- **State routing:** Different paths based on variables
+- **Cutscenes:** Auto-progress through narrative beats
+- **Early exits:** Leave loops when conditions met
+- **Scene transitions:** Seamless flow between passages
+- **Game over conditions:** Immediate end when defeat detected
+
+**Design Notes:**
+
+- Jumps are immediate (like Ink's `->`, not like Twine's `<<goto>>`)
+- Only ONE jump executes per passage rendering
+- Render methods stay pure - navigation happens in `goto()`
+- Jump following includes loop detection
+- Content accumulation happens automatically
+
+**Similar to:** Ink's divert (`->`) system
+
+**Status:** ✅ Implemented (Week 3)
 
 ---
 

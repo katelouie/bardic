@@ -1,0 +1,16 @@
+:: Start
+~ numbers = [1, 2, 3, 4, 5]
+
+Searching for 3...
+
+<<for n in numbers>>
+Number: {n}
+<<if n == 3>>
+-> Found
+<<endif>>
+<<endfor>>
+
+Not found.
+
+:: Found
+Found it! The number was 3.

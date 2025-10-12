@@ -1,0 +1,42 @@
+:: Start
+~ health = 30
+
+**Health Check**
+
+Your health: {health}
+
+<<if health <= 0>>
+You collapse!
+-> Death
+<<elif health < 50>>
+You're wounded but alive.
+-> Injured
+<<endif>>
+
+You're feeling fine.
+
++ [Continue] -> End
+
+:: Death
+**You died.**
+
+Game Over.
+
+:: Injured
+**You're injured.**
+
+You limp forward, barely standing.
+
++ [Rest] -> Rest
++ [Continue anyway] -> End
+
+:: Rest
+~ health = 100
+
+You rest and recover.
+Health: {health}
+
++ [Continue] -> Start
+
+:: End
+**The End**

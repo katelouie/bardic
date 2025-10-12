@@ -12,6 +12,7 @@ function App() {
   const [stories, setStories] = useState([])
   const [selectedStory, setSelectedStory] = useState(null)
   const [showStorySelect, setShowStorySelect] = useState(true)
+  const [storiesError, setStoriesError] = useState(null)
 
   useEffect(() => {
     loadStories()
@@ -19,11 +20,19 @@ function App() {
 
   const loadStories = async () => {
     try {
+      setStoriesError(null)
       const response = await fetch('http://127.0.0.1:8000/api/stories')
+
+      if (!response.ok) {
+        throw new Error(`Server returned ${response.status}: ${response.statusText}`)
+      }
+
       const data = await response.json()
+      console.log('Loaded stories:', data.stories.length)
       setStories(data.stories)
     } catch (err) {
-      console.error('Failed to load stories', err)
+      console.error('Failed to load stories:', err)
+      setStoriesError(err.message)
     }
   }
 
@@ -115,7 +124,14 @@ function App() {
 
           <div className="story-select">
             <h2>Available Stories</h2>
-            {stories.length === 0 ? (
+            {storiesError ? (
+              <div className="error">
+                <p>Failed to load stories: {storiesError}</p>
+                <button onClick={loadStories} className="retry-button">
+                  Retry
+                </button>
+              </div>
+            ) : stories.length === 0 ? (
               <p>Loading stories...</p>
             ) : (
               <div className="story-list">

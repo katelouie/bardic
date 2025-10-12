@@ -20,12 +20,14 @@ class PassageOutput:
         content: The rendered text content
         choices: List of available choices
         passage_id: ID of the current passage
+        jump_target: Target passage ID if a jump is encountered, None otherwise
     """
 
     content: str
     choices: List[Dict[str, str]]
     passage_id: str
     render_directives: Optional[List[Dict[str, Any]]] = None
+    jump_target: Optional[str] = None
 
     def __post_init__(self):
         if self.render_directives is None:
@@ -190,7 +192,7 @@ class BardEngine:
                 # Compile and evaluate each argument
                 arg_code = compile(ast.Expression(arg), "<directive>", "eval")
                 value = eval(arg_code, {"__builtins__": safe_builtins}, eval_context)
-                result["arg_{i}"] = value
+                result[f"arg_{i}"] = value
 
             # Process keyword arguments
             for keyword in call_node.keywords:
@@ -203,7 +205,7 @@ class BardEngine:
         except Exception as e:
             raise ValueError(f"Could not parse directive arguments: {args_str}") from e
 
-    def process_render_directive(self, directive: dict[str, Any]) -> dict[str, Any]:
+    def _process_render_directive(self, directive: dict[str, Any]) -> dict[str, Any]:
         """
         Process a render directive based on configuration.
 
@@ -240,9 +242,9 @@ class BardEngine:
                 # Build base result
                 result: dict[str, Any] = {
                     "type": "render_directive",
-                    "name": "name",
+                    "name": name,
                     "mode": "evaluated",
-                    "data": "args_dict",
+                    "data": args_dict,
                 }
 
                 # Add framework-specific preprocessing if requested
@@ -307,11 +309,14 @@ class BardEngine:
         This renders content and filters choices based on current state.
         It does NOT execute commands - that's done by _execute_passage.
 
+        If a jump is encountered, returns jump_target in output.
+        The CALLER decides whether to follow the jump.
+
         Args:
             passage_id: ID of the passage to render
 
         Returns:
-            PassageOutput with content and choices
+            PassageOutput with content, choices and directives
 
         Raises:
             ValueError: If passage_id doesn't exist
@@ -324,10 +329,12 @@ class BardEngine:
         # Render content with current state
         if isinstance(passage["content"], list):
             # New format: list of tokens
-            content = self._render_content(passage["content"])
+            content, jump_target, directives = self._render_content(passage["content"])
         else:
             # Old format: plain string (backwards compatible)
             content = passage["content"]
+            jump_target = None
+            directives = []
 
         # Filter choices based on conditions
         available_choices = []
@@ -339,6 +346,8 @@ class BardEngine:
             content=content,
             choices=available_choices,
             passage_id=passage_id,
+            jump_target=jump_target,  # Just report it here, don't follow in this fn.
+            render_directives=directives,
         )
 
     def _is_choice_available(self, choice: dict) -> bool:
@@ -364,11 +373,17 @@ class BardEngine:
         """
         Navigate to a passage, execute its commands, and cache the output.
 
+        Automatically follows any jumps, combining content and directives from all passages in the
+        jump chain. Includes jump loop detection.
+
         This is the primary navigation method. It:
         1. Changes current_passage_id
-        2. Executes passage commands (variables, etc.) - ONCE
-        3. Renders and caches the output
-        4. Returns the PassageOutput
+        2. Executes passage commands (variables, etc.) - ONCE per passage
+        3. Renders the passage
+        4. If jump found, follows it (recursively)
+        5. Combines content and directives from all jumped passages
+        6. Caches the final output
+        7. Returns the PassageOutput
 
         Use this for: Story navigation, jumping between passages
 
@@ -376,22 +391,70 @@ class BardEngine:
             passage_id: ID of the passage to navigate to
 
         Returns:
-            PassageOutput for the new passage
+            PassageOutput for the final passage (after following any jumps)
 
         Raises:
             ValueError: If passage_id doesn't exist
+            RuntimeError: If a jump loop is detected
         """
         if passage_id not in self.passages:
             raise ValueError(f"Cannot navigate to unknown passage: '{passage_id}'")
 
-        # Update current passage
-        self.current_passage_id = passage_id
+        accumulated_content = []
+        accumulated_directives = []
+        visited = set()
 
-        # Execute commands (side effects happen here, once)
-        self._execute_passage(passage_id)
+        # Start with the requested passage
+        current_id = passage_id
 
-        # Render and cache the output
-        self._current_output = self._render_passage(passage_id)
+        # Follow jump chain
+        while True:
+            # Check for jump loops
+            if current_id in visited:
+                jump_chain = " -> ".join(visited) + f" -> {current_id}"
+                raise RuntimeError(f"Jump loop detected: {jump_chain}")
+
+            visited.add(current_id)
+
+            # Update current passage
+            self.current_passage_id = current_id
+
+            # Execute commands (side effects happen here, once per passage)
+            self._execute_passage(current_id)
+
+            # Render the passage
+            output = self._render_passage(current_id)
+
+            # Accumulate content
+            if output.content:
+                accumulated_content.append(output.content)
+
+            # Accumulatve directives
+            if output.render_directives:
+                accumulated_directives.extend(output.render_directives)
+
+            # Check for jump
+            if output.jump_target:
+                # There's a jump - follow it
+                current_id = output.jump_target
+            else:
+                # No jump - we're done
+                break
+
+        # Combine all content from jump chain
+        combined_content = "\n\n".join(accumulated_content)
+
+        # Create final output with combined content
+        final_output = PassageOutput(
+            content=combined_content,
+            choices=output.choices,  # Choices from final passage
+            passage_id=output.passage_id,  # Final passage ID
+            jump_target=None,  # No more jumps
+            render_directives=accumulated_directives,
+        )
+
+        # Cache the final output
+        self._current_output = final_output
 
         return self._current_output
 
@@ -612,7 +675,9 @@ class BardEngine:
 
         return value
 
-    def _render_content(self, content_tokens: list[dict]) -> str:
+    def _render_content(
+        self, content_tokens: list[dict]
+    ) -> tuple[str, Optional[str], list[dict]]:
         """Render content with variable substitution and format specifiers."""
         result = []
         directives = []
@@ -671,16 +736,29 @@ class BardEngine:
                 directives.append(processed)
             elif token["type"] == "conditional":
                 # Render conditional blocks
-                branch_content = self._render_conditional(token)
+                branch_content, jump_target, branch_directives = (
+                    self._render_conditional(token)
+                )
                 result.append(branch_content)
+                directives.extend(branch_directives)  # Collect directives from branch
+                # If jump was found in the conditional, stop and return
+                if jump_target:
+                    return "".join(result), jump_target, directives
             elif token["type"] == "for_loop":
                 # Render loop
-                loop_content = self._render_loop(token)
+                loop_content, jump_target, loop_directives = self._render_loop(token)
                 result.append(loop_content)
+                directives.extend(loop_directives)  # Collect directives from loop
+                # If jump was found in the loop, stop and return
+                if jump_target:
+                    return "".join(result), jump_target, directives
+            elif token["type"] == "jump":
+                # Jump found - stop rendering HERE and return the target
+                return "".join(result), token["target"], directives
 
-        return "".join(result)
+        return "".join(result), None, directives
 
-    def _render_loop(self, loop: dict) -> str:
+    def _render_loop(self, loop: dict) -> tuple[str, Optional[str], list[dict]]:
         """Render a for-loop by iterating over a collection.
 
         Args:
@@ -694,7 +772,7 @@ class BardEngine:
         content = loop.get("content", [])
 
         if not variable or not collection_expr:
-            return ""
+            return "", None, []
 
         try:
             # Evaluate the collection expression
@@ -710,6 +788,7 @@ class BardEngine:
 
             # Render content for each item in the collection
             result = []
+            all_directives = []  # Collect directives from all iterations
 
             for item in collection:
                 # Create a new context with the loop variable
@@ -737,8 +816,11 @@ class BardEngine:
                     raise
 
                 # Render the loop body
-                iteration_content = self._render_content(content)
+                iteration_content, jump_target, iteration_directives = (
+                    self._render_content(content)
+                )
                 result.append(iteration_content)
+                all_directives.extend(iteration_directives)  # Collect directives
 
                 # Restore original values
                 for var, original_value in original_values.items():
@@ -747,7 +829,11 @@ class BardEngine:
                     elif var in self.state:
                         del self.state[var]
 
-            return "".join(result)
+                # If a jump was found, stop the loop and return
+                if jump_target:
+                    return "".join(result), jump_target, all_directives
+
+            return "".join(result), None, all_directives
 
         except Exception as e:
             error_msg = f"{{ERROR: Loop failed - {e}}}"
@@ -758,9 +844,11 @@ class BardEngine:
             import traceback
 
             traceback.print_exc()
-            return error_msg
+            return error_msg, None
 
-    def _render_conditional(self, conditional: dict) -> str:
+    def _render_conditional(
+        self, conditional: dict
+    ) -> tuple[str, Optional[str], list[dict]]:
         """
         Render a conditional block by evaluating conditions and rendering the first true branch.
 
@@ -790,7 +878,7 @@ class BardEngine:
                 continue
 
         # No branch was true - return empty string
-        return ""
+        return "", None, []
 
     def _split_format_spec(self, code: str) -> tuple[str, str | None]:
         """Split 'expression:format_spec' at the rightmost valid colon."""

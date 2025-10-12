@@ -268,6 +268,15 @@ def extract_conditional_block(lines: list[str], start_index: int) -> tuple[dict,
             i += 1
             continue
 
+        # Check for jump inside conditional
+        if line.startswith("->"):
+            match = re.match(r"->\s*(\w+)", line)
+            if match and current_branch is not None:
+                target = match.group(1)
+                current_branch["content"].append({"type": "jump", "target": target})
+            i += 1
+            continue
+
         # Regular content line -- add to current branch
         if current_branch is not None:
             # Parse the line for expressions
@@ -336,6 +345,15 @@ def extract_loop_block(lines: list[str], start_index: int) -> tuple[dict, int]:
         if line.startswith("<<endfor>>"):
             i += 1
             break
+
+        # Check for jump inside loop
+        if line.startswith("->"):
+            match = re.match(r"->\s*(\w+)", line)
+            if match:
+                target = match.group(1)
+                loop["content"].append({"type": "jump", "target": target})
+            i += 1
+            continue
 
         # Regular content line
         content_tokens = parse_content_line(lines[i])
@@ -424,6 +442,14 @@ def parse(source: str) -> Dict[str, Any]:
             directive = parse_render_line(line)
             if directive:
                 current_passage["content"].append(directive)
+            i += 1
+
+        # Immediate jump to target
+        if line.strip().startswith("->"):
+            match = re.match(r"->\s*(\w+)", line.strip())
+            if match:
+                target = match.group(1)
+                current_passage["content"].append({"type": "jump", "target": target})
             i += 1
             continue
 

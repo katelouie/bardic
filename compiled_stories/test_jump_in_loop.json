@@ -1,0 +1,108 @@
+{
+  "version": "0.1.0",
+  "initial_passage": "Start",
+  "imports": [],
+  "passages": {
+    "Start": {
+      "id": "Start",
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Searching for 3..."
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "for_loop",
+          "variable": "n",
+          "collection": "numbers",
+          "content": [
+            {
+              "type": "text",
+              "value": "Number: "
+            },
+            {
+              "type": "expression",
+              "code": "n"
+            },
+            {
+              "type": "text",
+              "value": "\n"
+            },
+            {
+              "type": "conditional",
+              "branches": [
+                {
+                  "condition": "n == 3",
+                  "content": [
+                    {
+                      "type": "jump",
+                      "target": "Found"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Not found."
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [],
+      "execute": [
+        {
+          "type": "set_var",
+          "var": "numbers",
+          "expression": "[1, 2, 3, 4, 5]"
+        }
+      ]
+    },
+    "Found": {
+      "id": "Found",
+      "content": [
+        {
+          "type": "text",
+          "value": "Found it! The number was 3."
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [],
+      "execute": []
+    }
+  }
+}
