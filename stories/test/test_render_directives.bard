@@ -1,13 +1,11 @@
 from game_logic.test_tarot_objects import Card
 
 :: Start
-<<py
-cards = [
+~ cards = [
     Card("The Fool", 0, False),
     Card("The Magician", 1, False),
     Card("The High Priestess", 2, False)
 ]
->>
 
 **Your Reading**
 

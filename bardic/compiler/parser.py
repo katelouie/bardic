@@ -462,11 +462,18 @@ def parse(source: str) -> Dict[str, Any]:
                 var_name = var_name.strip()
                 value_expr = value_expr.strip()
 
+                # Check if this is a multi-line expression
+                complete_expr, lines_consumed = extract_multiline_expression(
+                    lines, i, value_expr
+                )
+
                 # Store as execution command
                 current_passage["execute"].append(
-                    {"type": "set_var", "var": var_name, "expression": value_expr}
+                    {"type": "set_var", "var": var_name, "expression": complete_expr}
                 )
-            i += 1
+                i += lines_consumed
+            else:
+                i += 1
             continue
 
         # Choice: + [Text] -> Target or + {condition} [Text] -> Target
@@ -858,3 +865,73 @@ def parse_render_directive(directive_str: str) -> Optional[dict]:
     args = match.group(2) if match.group(2) else ""
 
     return {"type": "render_directive", "name": name, "args": args.strip()}
+
+
+def extract_multiline_expression(
+    lines: list[str], start_index: int, initial_expr: str
+) -> tuple[str, int]:
+    """
+    Extract a multi-line expression that starts with an opening bracket.
+
+    Handles:
+    - Lists: [...]
+    - Dicts: {...}
+    - Tuples: (...)
+
+    Args:
+        lines: All lines in the passage
+        start_index: Index of the line with the opening bracket
+        initial_expr: The expression from the first line (e.g. "[")
+
+    Returns:
+        Tuple of (complete_expression, lines_consumed)
+    """
+    # Check if this might be a multi-line expression
+    stripped = initial_expr.strip()
+
+    if not any(stripped.endswith(c) for c in ["[", "{", "("]):
+        # not a multi-line expression, return as-is
+        return initial_expr, 1
+
+    # Track bracket nesting
+    bracket_stack = []
+    bracket_pairs = {"[": "]", "{": "}", "(": ")"}
+    reverse_pairs = {"]": "[", "}": "{", ")": "("}
+
+    # Add opening brackets from initial expression
+    for char in stripped:
+        if char in bracket_pairs:
+            bracket_stack.append(char)
+
+    # Start collecting lines
+    expr_lines = [initial_expr]
+    i = start_index + 1
+
+    # Continue until brackets are balanced
+    while i < len(lines) and bracket_stack:
+        line = lines[i]
+
+        # Track brackets in this line
+        for char in line:
+            if char in bracket_pairs:
+                bracket_stack.append(char)
+            elif char in reverse_pairs:
+                # Closing bracket
+                if bracket_stack and bracket_stack[-1] == reverse_pairs[char]:
+                    bracket_stack.pop()
+                else:
+                    # Mismatched bracket - stop here
+                    break
+
+        expr_lines.append(line)
+        i += 1
+
+        # If brackets are balanced, we're done
+        if not bracket_stack:
+            break
+
+    # Join all lines preserving structure
+    complete_expr = "\n".join(expr_lines)
+    lines_consumed = i - start_index
+
+    return complete_expr, lines_consumed

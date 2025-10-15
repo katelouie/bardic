@@ -107,8 +107,9 @@
       ],
       "execute": [
         {
-          "type": "python_block",
-          "code": "cards = [\n    Card(\"The Fool\", 0, False),\n    Card(\"The Magician\", 1, False),\n    Card(\"The High Priestess\", 2, False)\n]"
+          "type": "set_var",
+          "var": "cards",
+          "expression": "[\n    Card(\"The Fool\", 0, False),\n    Card(\"The Magician\", 1, False),\n    Card(\"The High Priestess\", 2, False)\n]"
         }
       ]
     },
