@@ -1,0 +1,322 @@
+{
+  "version": "0.1.0",
+  "initial_passage": "Start",
+  "imports": [],
+  "passages": {
+    "Start": {
+      "id": "Start",
+      "content": [
+        {
+          "type": "text",
+          "value": "**The Treasure Room**"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "You enter a dusty chamber. Three pedestals hold items:"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Take the Sword of Light",
+          "target": "GetSword",
+          "condition": null,
+          "sticky": false
+        },
+        {
+          "text": "Take the Shield of Ages",
+          "target": "GetShield",
+          "condition": null,
+          "sticky": false
+        },
+        {
+          "text": "Take the Amulet of Power",
+          "target": "GetAmulet",
+          "condition": null,
+          "sticky": false
+        },
+        {
+          "text": "Leave empty-handed",
+          "target": "Leave",
+          "condition": null,
+          "sticky": true
+        }
+      ],
+      "execute": []
+    },
+    "GetSword": {
+      "id": "GetSword",
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "You grasp the gleaming sword. It feels right in your hands."
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "The pedestal sinks into the floor, sealing itself forever."
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Look at other items",
+          "target": "Start",
+          "condition": null,
+          "sticky": true
+        }
+      ],
+      "execute": [
+        {
+          "type": "set_var",
+          "var": "has_sword",
+          "expression": "True"
+        }
+      ]
+    },
+    "GetShield": {
+      "id": "GetShield",
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "You strap on the ancient shield. It's lighter than it looks."
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "The pedestal crumbles to dust."
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Look at other items",
+          "target": "Start",
+          "condition": null,
+          "sticky": true
+        }
+      ],
+      "execute": [
+        {
+          "type": "set_var",
+          "var": "has_shield",
+          "expression": "True"
+        }
+      ]
+    },
+    "GetAmulet": {
+      "id": "GetAmulet",
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "You pocket the mysterious amulet. It pulses with energy."
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "The pedestal vanishes in a flash of light."
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Look at other items",
+          "target": "Start",
+          "condition": null,
+          "sticky": true
+        }
+      ],
+      "execute": [
+        {
+          "type": "set_var",
+          "var": "has_amulet",
+          "expression": "True"
+        }
+      ]
+    },
+    "Leave": {
+      "id": "Leave",
+      "content": [
+        {
+          "type": "text",
+          "value": "**Your Inventory**"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "conditional",
+          "branches": [
+            {
+              "condition": "has_sword",
+              "content": [
+                {
+                  "type": "text",
+                  "value": "- Sword of Light \u2694\ufe0f"
+                },
+                {
+                  "type": "text",
+                  "value": "\n"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "conditional",
+          "branches": [
+            {
+              "condition": "has_shield",
+              "content": [
+                {
+                  "type": "text",
+                  "value": "- Shield of Ages \ud83d\udee1\ufe0f"
+                },
+                {
+                  "type": "text",
+                  "value": "\n"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "conditional",
+          "branches": [
+            {
+              "condition": "has_amulet",
+              "content": [
+                {
+                  "type": "text",
+                  "value": "- Amulet of Power \ud83d\udd2e"
+                },
+                {
+                  "type": "text",
+                  "value": "\n"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "conditional",
+          "branches": [
+            {
+              "condition": "not has_sword and not has_shield and not has_amulet",
+              "content": [
+                {
+                  "type": "text",
+                  "value": "You leave with nothing. Perhaps courage was the real treasure?"
+                },
+                {
+                  "type": "text",
+                  "value": "\n"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "*The End*"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [],
+      "execute": []
+    }
+  }
+}

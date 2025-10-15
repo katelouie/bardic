@@ -476,8 +476,8 @@ def parse(source: str) -> Dict[str, Any]:
                 i += 1
             continue
 
-        # Choice: + [Text] -> Target or + {condition} [Text] -> Target
-        if line.startswith("+ "):
+        # Choice: +/* [Text] -> Target or +/* {condition} [Text] -> Target
+        if line.startswith("+ ") or line.startswith("* "):
             choice = parse_choice_line(line, current_passage)
             if choice:
                 current_passage["choices"].append(choice)
@@ -679,8 +679,25 @@ def check_duplicate_passages(
 
 
 def parse_choice_line(line: str, passage: dict) -> Optional[dict]:
-    """Parse a choice line and return choice dict or None."""
-    choice_line = line[2:].strip()
+    """Parse a choice line and return choice dict or None.
+
+    Supports:
+    + [Text] -> Target (sticky choice, always available)
+    * [Text] -> Target (one-time choice, disappears after use)
+    {condition} + [Text] -> Target (conditional sticky)
+    {condition} * [Text] -> Target (conditional one-time)
+    """
+    # Determine if sticky ('+') or one-time ('*')
+    if line.startswith("+ "):
+        sticky = True
+        choice_line = line[2:].strip()
+    elif line.startswith("* "):
+        sticky = False
+        choice_line = line[2:].strip()
+    else:
+        # Not a valid choice
+        return None
+
     condition = None
 
     # Check for condition
@@ -697,7 +714,12 @@ def parse_choice_line(line: str, passage: dict) -> Optional[dict]:
         else:
             return None
 
-    return {"text": choice_text, "target": target, "condition": condition}
+    return {
+        "text": choice_text,
+        "target": target,
+        "condition": condition,
+        "sticky": sticky,
+    }
 
 
 def parse_file(filepath: str) -> Dict[str, Any]:

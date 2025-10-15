@@ -1,0 +1,54 @@
+:: Start
+**The Treasure Room**
+
+You enter a dusty chamber. Three pedestals hold items:
+
+* [Take the Sword of Light] -> GetSword
+* [Take the Shield of Ages] -> GetShield
+* [Take the Amulet of Power] -> GetAmulet
++ [Leave empty-handed] -> Leave
+
+:: GetSword
+~ has_sword = True
+
+You grasp the gleaming sword. It feels right in your hands.
+
+The pedestal sinks into the floor, sealing itself forever.
+
++ [Look at other items] -> Start
+
+:: GetShield
+~ has_shield = True
+
+You strap on the ancient shield. It's lighter than it looks.
+
+The pedestal crumbles to dust.
+
++ [Look at other items] -> Start
+
+:: GetAmulet
+~ has_amulet = True
+
+You pocket the mysterious amulet. It pulses with energy.
+
+The pedestal vanishes in a flash of light.
+
++ [Look at other items] -> Start
+
+:: Leave
+**Your Inventory**
+
+<<if has_sword>>
+- Sword of Light ⚔️
+<<endif>>
+<<if has_shield>>
+- Shield of Ages 🛡️
+<<endif>>
+<<if has_amulet>>
+- Amulet of Power 🔮
+<<endif>>
+<<if not has_sword and not has_shield and not has_amulet>>
+You leave with nothing. Perhaps courage was the real treasure?
+<<endif>>
+
+*The End*

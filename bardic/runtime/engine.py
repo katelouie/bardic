@@ -57,6 +57,7 @@ class BardEngine:
         self.passages = story_data["passages"]
         self.current_passage_id = None  # Will be set by goto()
         self.state = {}  # Game state (variables)
+        self.used_choices = set()  # Track which one-time choices have been used
         self.context = context or {}
         self.evaluate_directives = evaluate_directives
         self._current_output = None  # Cache for current passage output
@@ -351,10 +352,24 @@ class BardEngine:
         )
 
     def _is_choice_available(self, choice: dict) -> bool:
-        """Check if a choice should be shown based on its condition."""
+        """Check if a choice should be shown based on its condition and if used (1-time).
+
+        A choice is available if:
+        1. Its condition (if any) evaluates to True
+        2. It's sticky (+ ) or it hasn't been used yet (* )
+        """
+        # Check if one-time choice has already been used
+        sticky = choice.get("sticky", True)
+        if not sticky:
+            # This is a one-time choice - check if used
+            choice_id = f"{self.current_passage_id}:{choice['text']}:{choice['target']}"
+            if choice_id in self.used_choices:
+                return False  # Already used, hide it
+
+        # Check condition (if present)
         condition = choice.get("condition")
 
-        # No condition = always available
+        # No condition = always available (if not used)
         if not condition:
             return True
 
@@ -480,7 +495,9 @@ class BardEngine:
         This uses the FILTERED choices from the cached output, ensuring
         the choice index matches what the user actually sees.
 
-        Use this for: Player making choices in the story
+        Use this for: Player making choices in the story.
+
+        Tracks one-time choices so they don't appear again.
 
         Args:
             choice_index: Index of the choice (0-based, from filtered choices)
@@ -500,7 +517,16 @@ class BardEngine:
                 f"Choice index {choice_index} out of range (0-{len(filtered_choices) - 1})"
             )
 
-        target = filtered_choices[choice_index]["target"]
+        chosen_choice = filtered_choices[choice_index]
+        target = chosen_choice["target"]
+
+        # Track this choice if it's one-time (not sticky)
+        if not chosen_choice.get(
+            "sticky", True
+        ):  # Default to True for backwards compatability
+            # Create a unique ID for this choice based on passage + choice index + target
+            choice_id = f"{current_output.passage_id}:{chosen_choice['text']}:{target}"
+            self.used_choices.add(choice_id)
 
         # Navigate to target (executes and caches)
         return self.goto(target)
@@ -955,3 +981,14 @@ class BardEngine:
             story_data = json.load(f)
 
         return cls(story_data)
+
+    def reset_one_time_choices(self) -> None:
+        """
+        Reset all one-time choices, making them available again.
+
+        Useful for:
+        - Restarting the story
+        - Implementing a "new game" feature
+        - Testing/debugging
+        """
+        self.used_choices.clear()
