@@ -232,8 +232,8 @@ Allow player navigation between passages.
 **Status:**
 
 - Basic choices: ✅ Implemented (Week 1)
-- Conditional: 📅 Week 2
-- One-time (*): 📅 Week 4
+- Conditional: ✅ Implemented (Week 1)
+- One-time (*): ✅ Implemented (Week 3)
 - Parameters: 📅 Week 4
 
 ---
