@@ -1,0 +1,32 @@
+@metadata
+  title: Metadata Test Story
+  author: CLI-Claude & Kate
+  version: 1.0.0
+  story_id: test_metadata
+  description: A test story to verify @metadata directive works
+
+:: Start
+Welcome to the metadata test story!
+
+This story tests the @metadata directive.
+Current story info should be in the compiled JSON.
+
++ [Check the metadata] -> CheckMetadata
++ [End the story] -> End
+
+:: CheckMetadata
+The metadata for this story includes:
+- Title: Metadata Test Story
+- Author: CLI-Claude & Kate
+- Version: 1.0.0
+- Story ID: test_metadata
+
+Pretty cool, right?
+
++ [Back to start] -> Start
++ [End] -> End
+
+:: End
+Thanks for testing the metadata system!
+
+Story over.

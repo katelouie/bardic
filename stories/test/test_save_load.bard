@@ -1,0 +1,67 @@
+:: Start
+~ gold = 100
+~ health = 100
+~ inventory = []
+
+**The Adventure Begins**
+
+You start with {gold} gold and {health} health.
+
+* [Buy sword (50 gold)] -> BuySword
+* [Buy potion (30 gold)] -> BuyPotion
++ [Continue adventure] -> Forest
+
+:: BuySword
+~ gold = gold - 50
+~ inventory = inventory + ["sword"]
+
+You buy a shiny sword!
+
+Gold remaining: {gold}
+
++ [Continue] -> Start
+
+:: BuyPotion
+~ gold = gold - 30
+~ inventory = inventory + ["potion"]
+
+You buy a healing potion!
+
+Gold remaining: {gold}
+
++ [Continue] -> Start
+
+:: Forest
+**The Dark Forest**
+
+Health: {health}
+Gold: {gold}
+Inventory: {", ".join(inventory) if inventory else "Empty"}
+
+You enter a dark forest...
+
++ [Fight monster] -> Combat
++ [Return to town] -> Start
+
+:: Combat
+~ health = health - 20
+
+You fight a monster! Lost 20 health.
+
+<<if health <= 0>>
+-> Death
+<<endif>>
+
+Health remaining: {health}
+
++ [Continue] -> Forest
+
+:: Death
+**Game Over**
+
+You have died!
+
+Final stats:
+- Health: {health}
+- Gold: {gold}
+- Inventory: {", ".join(inventory) if inventory else "Empty"}
