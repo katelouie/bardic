@@ -1,0 +1,108 @@
+:: Start
+~ battle_difficulty = 5
+~ player_wins = True
+
+**Testing Python Blocks in Conditionals**
+
+Battle difficulty: {battle_difficulty}
+
+<<if player_wins>>
+  You won the battle!
+
+  <<py
+  # Award loot based on difficulty
+  gold = battle_difficulty * 10
+  experience = battle_difficulty * 5
+  >>
+
+  You gained:
+  - {gold} gold
+  - {experience} XP
+<<else>>
+  You lost the battle!
+  Better luck next time.
+<<endif>>
+
++ [Win harder battle] -> HarderBattle
++ [Test loop with Python] -> LoopPython
++ [Test nested] -> Nested
+
+:: HarderBattle
+~ battle_difficulty = 10
+~ player_wins = True
+
+**Harder Battle!**
+
+<<if player_wins>>
+  Victory!
+
+  <<py
+  # More complex reward calculation
+  gold = battle_difficulty * 10
+  experience = battle_difficulty * 5
+
+  # Check for level up
+  total_xp = experience
+  if total_xp >= 25:
+      level_up = True
+      max_health_bonus = 10
+  else:
+      level_up = False
+      max_health_bonus = 0
+  >>
+
+  Rewards: {gold} gold, {experience} XP
+
+  <<if level_up>>
+    **LEVEL UP!** +{max_health_bonus} max health!
+  <<endif>>
+<<endif>>
+
++ [Back to start] -> Start
+
+:: LoopPython
+**Testing Python in Loops**
+
+~ items = ["sword", "shield", "potion", "key"]
+
+Your inventory:
+
+<<for item in items>>
+  <<py
+  # Calculate item value based on name
+  if item == "sword":
+      value = 100
+  elif item == "shield":
+      value = 75
+  elif item == "potion":
+      value = 25
+  else:
+      value = 10
+  >>
+
+  - {item} (worth {value} gold)
+<<endfor>>
+
++ [Back to start] -> Start
+
+:: Nested
+~ health = 80
+~ has_key = True
+
+**Nested Conditionals with Python**
+
+<<if health > 50>>
+  You're in good shape!
+  <<py
+  health_bonus = 10
+  >>
+  Your effective health: {health + health_bonus}
+<<else>>
+  You're hurt!
+  <<py
+  healing_needed = 100 - health
+  >>
+  You need {healing_needed} healing.
+<<endif>>
+
++ [Back to start] -> Start

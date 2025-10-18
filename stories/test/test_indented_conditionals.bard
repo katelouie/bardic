@@ -1,0 +1,138 @@
+:: Start
+~ health = 80
+
+**Testing Indented Conditionals**
+
+Your health: {health}
+
+<<if health > 75>>
+  You feel strong!
+  Really strong.
+<<elif health > 50>>
+  You're doing okay.
+  Not great, not terrible.
+<<else>>
+  You're in bad shape.
+  Very bad shape.
+<<endif>>
+
++ [Take damage] -> TakeDamage
++ [Heal] -> Heal
++ [Test nested conditionals] -> Nested
++ [Test Python in conditional] -> PythonTest
++ [Test loops] -> Loops
+
+:: TakeDamage
+~ health = health - 30
+
+You took {30} damage!
+
+Health: {health}
+
+<<if health > 0>>
+  You're still alive.
+<<else>>
+  You collapsed!
+<<endif>>
+
++ [Continue] -> Start
+
+:: Heal
+~ health = min(100, health + 40)
+
+You healed!
+
+Health: {health}
+
+<<if health == 100>>
+  You're at full health!
+<<else>>
+  You still need more healing.
+<<endif>>
+
++ [Continue] -> Start
+
+:: Nested
+~ level = 5
+~ has_key = True
+
+**Testing Nested Indented Conditionals**
+
+Level: {level}
+
+<<if level > 3>>
+  You are experienced.
+
+  <<if has_key>>
+    You have the key to the treasure room!
+  <<else>>
+    But you need to find the key.
+  <<endif>>
+
+  Your adventure continues.
+<<else>>
+  You are still a novice.
+
+  <<if has_key>>
+    The key won't help you yet.
+  <<else>>
+    Keep training!
+  <<endif>>
+<<endif>>
+
++ [Continue] -> Start
+
+:: PythonTest
+<<py
+def calculate_grade(score_val):
+    if score_val >= 90:
+        return "A"
+    elif score_val >= 80:
+        return "B"
+    elif score_val >= 70:
+        return "C"
+    else:
+        return "D"
+
+score = 85
+grade = calculate_grade(score)
+bonus_points = 10
+>>
+
+**Testing Conditional After Python Block**
+
+<<if score >= 60>>
+  You passed!
+  Your grade is: {grade}
+  Bonus points: {bonus_points}
+  Final score: {score + bonus_points}
+<<else>>
+  You failed.
+  Better luck next time!
+<<endif>>
+
++ [Continue] -> Start
+
+:: Loops
+**Testing Indented Loops**
+
+~ items = ["sword", "shield", "potion"]
+
+Your inventory:
+
+<<for item in items>>
+  - {item}
+<<endfor>>
+
+Numbers with conditionals:
+
+<<for n in range(1, 6)>>
+  Number {n}:
+  <<if n % 2 == 0>>
+    Even!
+  <<else>>
+    Odd!
+  <<endif>>
+<<endfor>>
+
++ [Continue] -> Start
