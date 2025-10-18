@@ -271,11 +271,11 @@ def serve(port, frontend_port, no_browser):
 
     # Start backend
     click.echo(click.style("Starting backend server...", fg="yellow"))
+    click.echo()
     backend_process = subprocess.Popen(
         [sys.executable, "-m", "uvicorn", "main:app", "--reload", "--port", str(port)],
         cwd=backend_dir,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        # Don't capture output - let it flow to terminal for debugging
     )
 
     # Wait for backend to start
@@ -292,6 +292,7 @@ def serve(port, frontend_port, no_browser):
 
     # Start frontend
     click.echo(click.style("Starting frontend server...", fg="yellow"))
+    click.echo()
 
     # Check if node_modules exist
     if not (frontend_dir / "node_modules").exists():
@@ -307,8 +308,7 @@ def serve(port, frontend_port, no_browser):
     frontend_process = subprocess.Popen(
         ["npm", "run", "dev", "--", "--port", str(frontend_port)],
         cwd=frontend_dir,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        # Don't capture output - let it flow to terminal for debugging
     )
 
     # Wait for frontend to start
