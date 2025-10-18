@@ -1,0 +1,72 @@
+@metadata
+  title: The Mysterious Door
+  author: Bardic Template
+  version: 1.0.0
+  story_id: example
+  description: A simple example story demonstrating Bardic features
+
+:: Start
+You stand before a mysterious door in an ancient hallway.
+
+The door is made of dark wood, with strange symbols carved into its surface. A faint light glows from beneath it.
+
+~ courage = 50
+~ has_key = False
+
+What will you do?
+
++ [Try to open the door] -> TryDoor
++ [Examine the symbols] -> ExamineSymbols
++ [Search the hallway] -> SearchHallway
+
+:: TryDoor
+You grasp the cold metal handle and pull.
+
+<<if has_key>>
+  The key from the hallway fits perfectly! The door swings open with a satisfying *click*.
+
+  Beyond the threshold, you see a room filled with golden light...
+
+  **You found the treasure!**
+
+  *Courage: {courage}*
+<<else>>
+  The door is locked tight. You need to find a key.
+
+  + [Examine the symbols] -> ExamineSymbols
+  + [Search the hallway] -> SearchHallway
+<<endif>>
+
+:: ExamineSymbols
+You lean closer to study the mysterious symbols carved into the wood.
+
+<<python>>
+courage = courage + 10
+<<endpython>>
+
+The symbols form a pattern - they seem to be instructions:
+
+*"Seek what is hidden, and courage shall reward thee."*
+
+Your **courage** increases to **{courage}** as you understand the meaning.
+
++ [Try to open the door] -> TryDoor
++ [Search the hallway] -> SearchHallway
+
+:: SearchHallway
+You carefully examine the hallway, running your hands along the stone walls.
+
+<<python>>
+courage = courage + 5
+<<endpython>>
+
+Behind a loose stone, you find something small and metallic...
+
+**A key!**
+
+~ has_key = True
+
+Your courage grows to **{courage}** with this discovery.
+
++ [Try the key on the door] -> TryDoor
++ [Examine the symbols first] -> ExamineSymbols

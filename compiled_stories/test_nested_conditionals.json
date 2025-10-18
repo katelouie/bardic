@@ -1,6 +1,7 @@
 {
   "version": "0.1.0",
   "initial_passage": "Start",
+  "metadata": {},
   "imports": [],
   "passages": {
     "Start": {
@@ -50,78 +51,6 @@
           "type": "conditional",
           "branches": [
             {
-              "condition": "player_class == \"warrior\"",
-              "content": [
-                {
-                  "type": "conditional",
-                  "branches": [
-                    {
-                      "condition": "health > 75",
-                      "content": [
-                        {
-                          "type": "text",
-                          "value": "  You're a strong warrior!"
-                        },
-                        {
-                          "type": "text",
-                          "value": "\n"
-                        }
-                      ]
-                    },
-                    {
-                      "condition": "True",
-                      "content": [
-                        {
-                          "type": "text",
-                          "value": "  You're a wounded warrior."
-                        },
-                        {
-                          "type": "text",
-                          "value": "\n"
-                        }
-                      ]
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "condition": "player_class == \"mage\"",
-              "content": [
-                {
-                  "type": "conditional",
-                  "branches": [
-                    {
-                      "condition": "health > 75",
-                      "content": [
-                        {
-                          "type": "text",
-                          "value": "  Your magic is powerful!"
-                        },
-                        {
-                          "type": "text",
-                          "value": "\n"
-                        }
-                      ]
-                    },
-                    {
-                      "condition": "True",
-                      "content": [
-                        {
-                          "type": "text",
-                          "value": "  Your magic is weakening."
-                        },
-                        {
-                          "type": "text",
-                          "value": "\n"
-                        }
-                      ]
-                    }
-                  ]
-                }
-              ]
-            },
-            {
               "condition": "True",
               "content": [
                 {
@@ -132,7 +61,7 @@
                       "content": [
                         {
                           "type": "text",
-                          "value": "  You're in good shape!"
+                          "value": "You're in good shape!"
                         },
                         {
                           "type": "text",
@@ -145,7 +74,7 @@
                       "content": [
                         {
                           "type": "text",
-                          "value": "  You need help!"
+                          "value": "You need help!"
                         },
                         {
                           "type": "text",
@@ -168,12 +97,16 @@
         {
           "text": "Become mage",
           "target": "BecomeMage",
-          "condition": null
+          "condition": null,
+          "sticky": true,
+          "tags": []
         },
         {
           "text": "Take damage",
           "target": "Damage",
-          "condition": null
+          "condition": null,
+          "sticky": true,
+          "tags": []
         }
       ],
       "execute": [
@@ -187,7 +120,8 @@
           "var": "health",
           "expression": "80"
         }
-      ]
+      ],
+      "tags": []
     },
     "BecomeMage": {
       "id": "BecomeMage",
@@ -213,7 +147,9 @@
         {
           "text": "Back",
           "target": "Start",
-          "condition": null
+          "condition": null,
+          "sticky": true,
+          "tags": []
         }
       ],
       "execute": [
@@ -222,7 +158,8 @@
           "var": "player_class",
           "expression": "\"mage\""
         }
-      ]
+      ],
+      "tags": []
     },
     "Damage": {
       "id": "Damage",
@@ -248,7 +185,9 @@
         {
           "text": "Back",
           "target": "Start",
-          "condition": null
+          "condition": null,
+          "sticky": true,
+          "tags": []
         }
       ],
       "execute": [
@@ -257,7 +196,8 @@
           "var": "health",
           "expression": "health - 40"
         }
-      ]
+      ],
+      "tags": []
     }
   }
 }

@@ -9,6 +9,7 @@ import json
 import subprocess
 import time
 import webbrowser
+import shutil
 from bardic.runtime.engine import BardEngine
 
 
@@ -228,6 +229,91 @@ def play(story_file: str, no_color: bool):
         )
         click.echo()
         sys.exit(0)
+
+
+@cli.command()
+@click.argument("project_name")
+@click.option("--template", "-t", default="nicegui", type=click.Choice(['nicegui']), help="Template to use (default: nicegui)")
+@click.option("--path", "-p", type=click.Path(), help="Parent directory for project (default: current directory)")
+def init(project_name: str, template: str, path: str):
+    """
+    Initialize a new Bardic project from a template.
+
+    Creates a new directory with a ready-to-use player application,
+    example story, and all necessary files.
+
+    \b
+    Example:
+        bardic init my-game
+        bardic init my-game --template nicegui
+        bardic init my-game --path ~/projects
+
+    \b
+    After initialization:
+        cd my-game
+        pip install -r requirements.txt
+        bardic compile example.bard -o compiled_stories/example.json
+        python player.py
+    """
+    # Determine parent directory
+    parent_dir = Path(path) if path else Path.cwd()
+    if not parent_dir.exists():
+        click.echo(click.style("✗ Error: ", fg="red", bold=True) + f"Parent directory does not exist: {parent_dir}", err=True)
+        sys.exit(1)
+
+    # Create project directory
+    project_dir = parent_dir / project_name
+    if project_dir.exists():
+        click.echo(click.style("✗ Error: ", fg="red", bold=True) + f"Directory already exists: {project_dir}", err=True)
+        sys.exit(1)
+
+    # Find template directory
+    bardic_root = Path(__file__).parent.parent
+    template_dir = bardic_root / "templates" / template
+
+    if not template_dir.exists():
+        click.echo(click.style("✗ Error: ", fg="red", bold=True) + f"Template not found: {template}", err=True)
+        sys.exit(1)
+
+    try:
+        # Create project directory
+        project_dir.mkdir(parents=True)
+        click.echo(click.style("✓", fg="green", bold=True) + f" Created directory: {project_dir}")
+
+        # Create compiled_stories directory
+        (project_dir / "compiled_stories").mkdir()
+        click.echo(click.style("✓", fg="green", bold=True) + " Created compiled_stories/")
+
+        # Copy template files
+        for item in template_dir.iterdir():
+            if item.is_file():
+                dest = project_dir / item.name
+                shutil.copy2(item, dest)
+                click.echo(click.style("✓", fg="green", bold=True) + f" Created {item.name}")
+
+        click.echo()
+        click.echo("=" * 60)
+        click.echo(click.style(f"✓ Project '{project_name}' initialized!", fg="green", bold=True))
+        click.echo("=" * 60)
+        click.echo()
+        click.echo(click.style("Next steps:", fg="cyan", bold=True))
+        click.echo()
+        click.echo(f"  1. cd {project_name}")
+        click.echo("  2. pip install -r requirements.txt")
+        click.echo("  3. bardic compile example.bard -o compiled_stories/example.json")
+        click.echo("  4. python player.py")
+        click.echo()
+        click.echo(click.style("Your game will be running at http://localhost:8080", fg="yellow"))
+        click.echo()
+        click.echo(click.style("Tip:", fg="cyan") + " Check out player.py for customization points marked with TODO")
+        click.echo()
+
+    except Exception as e:
+        # Clean up on error
+        if project_dir.exists():
+            shutil.rmtree(project_dir)
+        click.echo(click.style("✗ Error: ", fg="red", bold=True) + str(e), err=True)
+        sys.exit(1)
 
 
 @cli.command()
