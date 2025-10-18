@@ -365,3 +365,270 @@ body {
 .render-directives>div {
   animation: fadeIn 0.6s ease-out;
 }
+
+/* Save/Load Menus */
+.save-menu,
+.load-menu {
+  background: rgba(37, 37, 37, 0.8);
+  padding: 40px;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(168, 85, 247, 0.2);
+}
+
+/* Save Form */
+.save-form {
+  margin-bottom: 30px;
+}
+
+.save-form label {
+  display: block;
+  color: #a855f7;
+  margin-bottom: 10px;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.save-input {
+  width: 100%;
+  padding: 15px;
+  background: rgba(51, 51, 51, 0.8);
+  border: 2px solid #a855f7;
+  border-radius: 8px;
+  color: #e0e0e0;
+  font-size: 1rem;
+  margin-bottom: 20px;
+  transition: border-color 0.3s;
+}
+
+.save-input:focus {
+  outline: none;
+  border-color: #c084fc;
+  background: rgba(58, 58, 58, 0.9);
+}
+
+.save-buttons {
+  display: flex;
+  gap: 15px;
+}
+
+.save-button,
+.cancel-button,
+.load-button,
+.delete-button,
+.back-button {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.save-button,
+.load-button {
+  background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);
+  color: #ffffff;
+  flex: 1;
+}
+
+.save-button:hover,
+.load-button:hover {
+  background: linear-gradient(135deg, #c084fc 0%, #a855f7 100%);
+  transform: translateY(-2px);
+}
+
+.cancel-button,
+.back-button {
+  background: rgba(51, 51, 51, 0.8);
+  color: #e0e0e0;
+  border: 2px solid #666;
+  flex: 1;
+}
+
+.cancel-button:hover,
+.back-button:hover {
+  background: rgba(58, 58, 58, 0.9);
+  border-color: #888;
+}
+
+.delete-button {
+  background: rgba(255, 107, 107, 0.2);
+  color: #ff6b6b;
+  border: 2px solid #ff6b6b;
+  padding: 8px 16px;
+  font-size: 0.9rem;
+}
+
+.delete-button:hover {
+  background: rgba(255, 107, 107, 0.3);
+  border-color: #ff8888;
+}
+
+/* Save Message */
+.save-message {
+  padding: 15px 20px;
+  border-radius: 8px;
+  margin-top: 20px;
+  font-size: 1rem;
+  text-align: center;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.save-message.success {
+  background: rgba(81, 207, 102, 0.2);
+  border: 2px solid #51cf66;
+  color: #51cf66;
+}
+
+.save-message.error {
+  background: rgba(255, 107, 107, 0.2);
+  border: 2px solid #ff6b6b;
+  color: #ff6b6b;
+}
+
+/* Save Info */
+.save-info {
+  margin-top: 30px;
+  padding: 20px;
+  background: rgba(26, 26, 26, 0.6);
+  border-radius: 8px;
+  border: 1px solid rgba(168, 85, 247, 0.2);
+}
+
+.save-info p {
+  color: #c084fc;
+  margin: 5px 0;
+}
+
+/* Save List */
+.save-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 30px;
+  max-height: 500px;
+  overflow-y: auto;
+  padding-right: 10px;
+}
+
+.save-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.save-list::-webkit-scrollbar-track {
+  background: rgba(26, 26, 26, 0.6);
+  border-radius: 4px;
+}
+
+.save-list::-webkit-scrollbar-thumb {
+  background: #a855f7;
+  border-radius: 4px;
+}
+
+.save-slot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  background: rgba(51, 51, 51, 0.8);
+  border: 2px solid rgba(168, 85, 247, 0.3);
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.save-slot:hover {
+  background: rgba(58, 58, 58, 0.9);
+  border-color: #a855f7;
+  transform: translateX(5px);
+}
+
+.save-slot-info {
+  flex: 1;
+}
+
+.save-slot-info h3 {
+  color: #a855f7;
+  margin-bottom: 8px;
+  font-size: 1.2rem;
+}
+
+.save-detail {
+  color: #c084fc;
+  font-size: 0.9rem;
+  margin: 3px 0;
+}
+
+.save-date {
+  color: #888;
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+
+.save-slot-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.no-saves {
+  text-align: center;
+  color: #888;
+  padding: 40px;
+  font-size: 1.1rem;
+}
+
+/* Footer Buttons */
+.footer-buttons {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.load-from-menu-button {
+  width: 100%;
+  padding: 15px;
+  margin-top: 10px;
+  background: rgba(51, 51, 51, 0.8);
+  color: #a855f7;
+  border: 2px solid #a855f7;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.load-from-menu-button:hover {
+  background: rgba(168, 85, 247, 0.2);
+  border-color: #c084fc;
+  transform: scale(1.02);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .save-slot {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .save-slot-actions {
+    width: 100%;
+  }
+
+  .save-button,
+  .cancel-button,
+  .load-button,
+  .delete-button {
+    flex: 1;
+  }
+
+  .footer-buttons {
+    flex-direction: column;
+  }
+
+  .footer-buttons .small-button {
+    width: 100%;
+  }
+}

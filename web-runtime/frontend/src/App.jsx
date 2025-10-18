@@ -14,6 +14,11 @@ function App() {
   const [selectedStory, setSelectedStory] = useState(null)
   const [showStorySelect, setShowStorySelect] = useState(true)
   const [storiesError, setStoriesError] = useState(null)
+  const [showSaveMenu, setShowSaveMenu] = useState(false)
+  const [showLoadMenu, setShowLoadMenu] = useState(false)
+  const [saveName, setSaveName] = useState('')
+  const [saves, setSaves] = useState([])
+  const [saveMessage, setSaveMessage] = useState(null)
 
   useEffect(() => {
     loadStories()
@@ -95,6 +100,115 @@ function App() {
     }
   }
 
+  const saveGame = async () => {
+    if (!saveName.trim()) {
+      setSaveMessage({ type: 'error', text: 'Please enter a save name' })
+      return
+    }
+
+    try {
+      const response = await fetch('http://127.0.0.1:8000/api/story/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_id: sessionId,
+          save_name: saveName
+        })
+      })
+
+      if (!response.ok) throw new Error('Failed to save game')
+
+      const data = await response.json()
+      console.log('Game saved:', data)
+
+      setSaveMessage({ type: 'success', text: `Saved: ${saveName}` })
+      setSaveName('')
+
+      // Hide message after 3 seconds
+      setTimeout(() => setSaveMessage(null), 3000)
+    } catch (err) {
+      console.error('Save failed', err)
+      setSaveMessage({ type: 'error', text: 'Failed to save game' })
+    }
+  }
+
+  const loadSaves = async () => {
+    try {
+      const response = await fetch('http://127.0.0.1:8000/api/saves/list')
+
+      if (!response.ok) throw new Error('Failed to load saves')
+
+      const data = await response.json()
+      console.log('Saves loaded:', data.saves)
+      setSaves(data.saves)
+    } catch (err) {
+      console.error('Failed to load saves:', err)
+    }
+  }
+
+  const loadGame = async (saveId, storyId) => {
+    setLoading(true)
+    setShowLoadMenu(false)
+    setShowStorySelect(false)
+
+    try {
+      const response = await fetch('http://127.0.0.1:8000/api/story/load', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_id: sessionId,
+          save_id: saveId,
+          story_id: storyId
+        })
+      })
+
+      if (!response.ok) throw new Error('Failed to load game')
+
+      const data = await response.json()
+      console.log('Game loaded:', data)
+      setPassage(data)
+      setSaveMessage({ type: 'success', text: `Loaded: ${data.metadata.save_name}` })
+      setTimeout(() => setSaveMessage(null), 3000)
+    } catch (err) {
+      console.error('Load failed:', err)
+      setError(err.message)
+      setShowStorySelect(true)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const deleteSave = async (saveId) => {
+    if (!confirm('Delete this save?')) return
+
+    try {
+      const response = await fetch(`http://127.0.0.1:8000/api/saves/delete/${saveId}`, {
+        method: 'DELETE'
+      })
+
+      if (!response.ok) throw new Error('Failed to delete save')
+
+      // Refresh save list
+      loadSaves()
+      setSaveMessage({ type: 'success', text: 'Save deleted' })
+      setTimeout(() => setSaveMessage(null), 3000)
+    } catch (err) {
+      console.error('Delete failed:', err)
+      setSaveMessage({ type: 'error', text: 'Failed to delete save' })
+    }
+  }
+
+  const openSaveMenu = () => {
+    setShowSaveMenu(true)
+    setSaveName('')
+    setSaveMessage(null)
+  }
+
+  const openLoadMenu = async () => {
+    setShowLoadMenu(true)
+    await loadSaves()
+  }
+
   // Loading state
   if (loading && !passage) {
     return (
@@ -152,9 +266,116 @@ function App() {
               </div>
             )}
             {selectedStory && (
-              <button onClick={startStory} className="start-button">
-                Start Story
-              </button>
+              <>
+                <button onClick={startStory} className="start-button">
+                  Start Story
+                </button>
+                <button onClick={openLoadMenu} className="load-from-menu-button">
+                  Load Saved Game
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (showSaveMenu && passage) {
+    return (
+      <div className="app">
+        <div className="container">
+          <header className="app-header">
+            <h1>Save Game</h1>
+          </header>
+
+          <div className="save-menu">
+            <div className="save-form">
+              <label htmlFor="saveName">Save Name:</label>
+              <input
+                id="saveName"
+                type="text"
+                value={saveName}
+                onChange={(e) => setSaveName(e.target.value)}
+                placeholder="e.g., Before boss fight"
+                className="save-input"
+                autoFocus
+              />
+
+              <div className="save-buttons">
+                <button onClick={saveGame} className="save-button">
+                  Save Game
+                </button>
+                <button onClick={() => setShowSaveMenu(false)} className="cancel-button">
+                  Cancel
+                </button>
+              </div>
+            </div>
+
+            {saveMessage && (
+              <div className={`save-message ${saveMessage.type}`}>
+                {saveMessage.text}
+              </div>
+            )}
+
+            <div className="save-info">
+              <p><strong>Current Passage:</strong> {passage.passage_id}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Load menu
+  if (showLoadMenu) {
+    return (
+      <div className="app">
+        <div className="container">
+          <header className="app-header">
+            <h1>Load Game</h1>
+          </header>
+
+          <div className="load-menu">
+            {saves.length === 0 ? (
+              <p className="no-saves">No saved games found</p>
+            ) : (
+              <div className="save-list">
+                {saves.map((save) => (
+                  <div key={save.save_id} className="save-slot">
+                    <div className="save-slot-info">
+                      <h3>{save.save_name}</h3>
+                      <p className="save-detail">Story: {save.story_name}</p>
+                      <p className="save-detail">Passage: {save.passage}</p>
+                      <p className="save-date">{save.date_display}</p>
+                    </div>
+                    <div className="save-slot-actions">
+                      <button
+                        onClick={() => loadGame(save.save_id, save.story_id)}
+                        className="load-button"
+                      >
+                        Load
+                      </button>
+                      <button
+                        onClick={() => deleteSave(save.save_id)}
+                        className="delete-button"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <button onClick={() => setShowLoadMenu(false)} className="back-button">
+              Back
+            </button>
+
+            {saveMessage && (
+              <div className={`save-message ${saveMessage.type}`}>
+                {saveMessage.text}
+              </div>
             )}
           </div>
         </div>
@@ -192,24 +413,24 @@ function App() {
             {passage.render_directives.map((directive, i) => {
               // Check if there's a React-specific hint
               if (directive.react) {
-                const Component = componentRegistry[directive.react.componentName] 
+                const Component = componentRegistry[directive.react.componentName]
                   || componentRegistry.default
-                
+
                 return (
-                  <Component 
-                    key={directive.react.key} 
-                    {...directive.react.props} 
+                  <Component
+                    key={directive.react.key}
+                    {...directive.react.props}
                   />
                 )
               }
-              
+
               // Fallback to generic directive format
-              const Component = componentRegistry[directive.name] 
+              const Component = componentRegistry[directive.name]
                 || componentRegistry.default
-              
+
               return (
-                <Component 
-                  key={i} 
+                <Component
+                  key={i}
                   data={directive.data}
                   name={directive.name}
                 />
@@ -242,9 +463,17 @@ function App() {
         )}
 
         <footer className="app-footer">
-          <button onClick={startStory} className="small-button">
-            Restart Story
-          </button>
+          <div className='footer-buttons'>
+            <button onClick={openSaveMenu} className="small-button">
+              💾 Save Game
+            </button>
+            <button onClick={openLoadMenu} className="small-button">
+              📁 Load Game
+            </button>
+            <button onClick={startStory} className="small-button">
+              Restart Story
+            </button>
+          </div>
         </footer>
       </div>
     </div>
