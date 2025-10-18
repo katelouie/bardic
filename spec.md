@@ -785,6 +785,122 @@ from services.tarot import TarotService
 
 ---
 
+### Metadata
+
+Specify story metadata like title, author, version, and story ID.
+
+**Syntax:** `@metadata` directive with key-value pairs
+
+```bard
+from models.card import Card
+
+@metadata
+  title: The Oracle's Journey
+  author: Kate Louie
+  version: 1.0.0
+  story_id: tarot_game
+  description: A mystical tarot reading adventure
+
+@include shared/cards.bard
+
+:: Start
+Welcome, seeker...
+```
+
+**Rules:**
+
+- Must appear after imports, before includes and passages
+- Opened with `@metadata` on its own line
+- Each metadata field is indented with key-value pairs (`key: value`)
+- Empty lines allowed within metadata block
+- Block ends when a non-indented line is encountered
+- All fields are optional
+- Metadata is stored in compiled JSON and accessible at runtime
+
+**Common Fields:**
+
+- `title` - Human-readable story name
+- `author` - Story creator
+- `version` - Story version (for compatibility checking)
+- `story_id` - Unique identifier (used for save files)
+- `description` - Brief story description
+- You can add any custom fields you need!
+
+**Usage in Engine:**
+
+Metadata is available in `story["metadata"]` and used for:
+- Save/load file compatibility checking
+- Story listing in web runtime
+- Display in UI
+- Version tracking
+
+**Example with all features:**
+
+```bard
+from models.card import Card
+from services.tarot import TarotService
+
+@metadata
+  title: The Tarot Reader
+  author: Jane Doe
+  version: 2.1.0
+  story_id: tarot_reader_game
+  description: Guide clients through mystical tarot readings
+  genre: interactive fiction
+  content_warning: none
+
+@include shared/mechanics.bard
+
+:: Start
+Your story begins...
+```
+
+**Compiled Output:**
+
+```json
+{
+  "version": "0.1.0",
+  "initial_passage": "Start",
+  "metadata": {
+    "title": "The Tarot Reader",
+    "author": "Jane Doe",
+    "version": "2.1.0",
+    "story_id": "tarot_reader_game",
+    "description": "Guide clients through mystical tarot readings",
+    "genre": "interactive fiction",
+    "content_warning": "none"
+  },
+  "imports": [...],
+  "passages": {...}
+}
+```
+
+**Backend Usage:**
+
+```python
+# Save system automatically uses metadata
+save_data = engine.save_state()
+# save_data now includes story_id, title, version from metadata
+
+# Story listing uses metadata
+story_metadata = story_data.get("metadata", {})
+story_title = story_metadata.get("title", "Unknown Story")
+story_id = story_metadata.get("story_id", filename)
+```
+
+**Benefits:**
+
+- ✅ Clean separation of metadata from story content
+- ✅ Consistent place for story information
+- ✅ Used automatically by save/load system
+- ✅ No pollution of game state
+- ✅ Easy to read and edit
+- ✅ Optional - stories work fine without it
+
+**Status:** ✅ Implemented (Session 12)
+
+---
+
 ### Passage Parameters
 
 Pass data between passages like function arguments.
@@ -2443,7 +2559,7 @@ function StoryView({ passageData }) {
 
 ---
 
-## Examples
+## Examples of Stories
 
 ### Simple Story
 
