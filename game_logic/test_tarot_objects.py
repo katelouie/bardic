@@ -36,6 +36,37 @@ class Card:
         }
         return meanings.get(str(self.position), "unknown position")
 
+    def to_save_dict(self) -> dict:
+        """
+        Serialize a card into a dictionary for saving.
+
+        This method is called automatically by the engine when saving. You can
+        customize what gets saved here.
+        """
+        return {
+            "name": self.name,
+            "number": self.number,
+            "reversed": self.reversed,
+            "suit": self.suit,
+        }
+
+    @classmethod
+    def from_save_dict(cls, data: dict) -> "Card":
+        """
+        Restore a card from saved data.
+
+        This method is called automatically by the engine when loading.
+        It goes through __init__, so validation runs!
+        """
+        card = cls(
+            name=data["name"],
+            suit=data["suit"],
+            number=data["number"],
+        )
+        card.set_reversed(data.get("reversed", False))
+
+        return card
+
 
 class Client:
     def __init__(self, name, age) -> None:
@@ -44,6 +75,7 @@ class Client:
         self.trust_level = 50
         self.cards_seen = []
         self.session_count = 0
+        self.flavor_text: str = "Client Flavor Text"
 
     def add_card_seen(self, card) -> None:
         self.cards_seen.append(card.name)
