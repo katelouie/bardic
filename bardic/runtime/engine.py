@@ -9,6 +9,7 @@ from dataclasses import dataclass
 import traceback
 import uuid
 import ast
+from datetime import datetime
 
 
 @dataclass
@@ -85,6 +86,8 @@ class BardEngine:
 
         Imports are executed in a temporary namespace and then added to the state,
         making them available to all passages.
+
+        Classes are automatically registered in context for serialization.
         """
         import_statements = self.story.get("imports", [])
 
@@ -107,10 +110,18 @@ class BardEngine:
 
             exec(import_code, {"__builtins__": safe_builtins}, import_namespace)
 
-            # Add imported modules/objects to state
+            # Add imported modules/objects to state AND auto-register classes
             for key, value in import_namespace.items():
                 if not key.startswith("_"):
+                    # Always add to state (for use in stories)
                     self.state[key] = value
+
+                    # Auto-register classes for serialization
+                    if isinstance(value, type):
+                        # It's a class -- add to context for save/load
+                        self.context[key] = value
+                        print(f"Auto-registered class for serialization: {key}")
+
         except ImportError as e:
             raise RuntimeError(
                 "Failed to import modules:\n"
@@ -760,6 +771,11 @@ class BardEngine:
                 # Process and collect directive (don't render as text)
                 processed = self._process_render_directive(token)
                 directives.append(processed)
+            elif token["type"] == "python_block":
+                # Execute Python block (modifies state, produces no text output)
+                # This happens during rendering, so it only runs if its branch/loop is active
+                self._execute_python_block(token)
+                # Don't append anything to result - Python blocks don't generate text
             elif token["type"] == "conditional":
                 # Render conditional blocks
                 branch_content, jump_target, branch_directives = (
@@ -992,3 +1008,278 @@ class BardEngine:
         - Testing/debugging
         """
         self.used_choices.clear()
+
+    def save_state(self) -> dict[str, Any]:
+        """
+        Serialize engine state to a dictionary that can be saved to JSON.
+
+        Returns a complete snapshot of the current game state including:
+        - Current passage ID
+        - All variables in state
+        - Used one-time choices
+        - Story metadata for validation
+
+        Returns:
+            Dictionary containing all state needed to restore the game
+
+        Example:
+            state = engine.save_state()
+            with open('save.json', 'w') as f:
+                json.dump(state, f)
+        """
+        # Get metadata from story
+        story_metadata = self.story.get("metadata", {})
+
+        return {
+            "version": "0.1.0",  # Save format version
+            "story_version": story_metadata.get("version", "unknown"),
+            "story_name": story_metadata.get("title", "unknown"),
+            "story_id": story_metadata.get("story_id", "unknown"),
+            "timestamp": self._get_timestamp(),
+            "current_passage_id": self.current_passage_id,
+            "state": self._serialize_state(self.state),
+            "used_choices": list(self.used_choices),
+            "metadata": {
+                "passage_count": len(self.passages),
+                "initial_passage": self.story["initial_passage"],
+            },
+        }
+
+    def load_state(self, save_data: dict[str, Any]) -> None:
+        """
+        Restore engine state from a saved dictionary.
+
+        Validates the save data before loading to ensure compatibility.
+
+        Args:
+            save_data: Dictionary from save_state()
+
+        Raises:
+            ValueError: If save data is invalid or incompatible
+
+        Example:
+            with open('save.json') as f:
+                save_data = json.load(f)
+            engine.load_state(save_data)
+        """
+        # Validate save format
+        if not isinstance(save_data, dict):
+            raise ValueError("Save data must be a dictionary")
+
+        if "version" not in save_data:
+            raise ValueError("Save data missing version field")
+
+        # Validate story compatibility using metadata
+        story_metadata = self.story.get("metadata", {})
+
+        saved_story_name = save_data.get("story_name", "unknown")
+        current_story_name = story_metadata.get("title", "unknown")
+
+        saved_story_id = save_data.get("story_id", "unknown")
+        current_story_id = story_metadata.get("story_id", "unknown")
+
+        # Check both story_id (primary) and story_name (secondary) for compatibility
+        if saved_story_id != "unknown" and current_story_id != "unknown":
+            if saved_story_id != current_story_id:
+                print(
+                    f"Warning: Save is from a different story ID: '{saved_story_id}' vs '{current_story_id}'"
+                )
+        elif saved_story_name != current_story_name and saved_story_name != "unknown":
+            print(
+                f"Warning: Save is from a different story: '{saved_story_name}' vs '{current_story_name}'"
+            )
+
+        # Validate passage exists
+        target_passage = save_data.get("current_passage_id", "Start")
+        if target_passage not in self.passages:
+            raise ValueError(
+                f"Save data references unknown passage: '{target_passage}'\n"
+                f"Available passages: {', '.join(sorted(self.passages.keys())[:5])}..."
+            )
+
+        # Restore state
+        self.state = self._deserialize_state(save_data.get("state", {}))
+        self.used_choices = set(save_data.get("used_choices", []))
+
+        # Navigate to saved passage (this re-renders with restored state)
+        self.goto(target_passage)
+
+    def _serialize_state(self, state: dict[str, Any]) -> dict[str, Any]:
+        """
+        Serialize state dictionary for JSON storage.
+
+        Delegates all value serialization to _serialize_value for consistency.
+        This ensures custom serialization methods and recursive handling work
+        for all values, regardless of nesting level.
+
+        Args:
+            state: Raw state dictionary
+
+        Returns:
+            JSON-serializable dictionary
+        """
+        serialized = {}
+        for key, value in state.items():
+            serialized[key] = self._serialize_value(value)
+        return serialized
+
+    def _serialize_value(self, value: Any) -> Any:
+        """Serialize a single value for JSON storage.
+
+        Priority order:
+        0. Skip classes/types (they shouldn't be in save files)
+        1. Check for custom to_save_dict() method (explicit serialization)
+        2. Try direct JSON serialization (primitives)
+        3. Collections (lists, tuples, dicts) - recurse
+        4. Objects with __dict__
+        5. Fallback to string representation
+        """
+        # Priority 0: Skip classes/types - they shouldn't be serialized
+        if isinstance(value, type):
+            # This is a class definition, not an instance - skip it
+            return None
+
+        # Priority 1: Custom serialization method
+        if hasattr(value, "to_save_dict") and callable(getattr(value, "to_save_dict")):
+            return {
+                "_type": type(value).__name__,
+                "_module": type(value).__module__,
+                "_data": value.to_save_dict(),
+                "_custom": True,  # Flag that this used custom serialization
+            }
+
+        # Priority 2: Direct JSON serialization (primitives)
+        try:
+            json.dumps(value)
+            return value
+        except (TypeError, ValueError):
+            pass
+
+        # Priority 3: Collections - recurse for nested structures
+        if isinstance(value, list):
+            return [self._serialize_value(v) for v in value]
+        elif isinstance(value, tuple):
+            # Store tuples as lists (JSON doesn't have tuples)
+            return [self._serialize_value(v) for v in value]
+        elif isinstance(value, dict):
+            # Recurse through dict values
+            return {k: self._serialize_value(v) for k, v in value.items()}
+
+        # Priority 4: Object with __dict__
+        if hasattr(value, "__dict__"):
+            return {
+                "_type": type(value).__name__,
+                "_module": type(value).__module__,
+                "_data": {
+                    # Recurse for nested objects in attributes
+                    k: self._serialize_value(v)
+                    for k, v in value.__dict__.items()
+                    if not k.startswith("_")
+                },
+            }
+
+        # Priority 5: Fallback to string
+        print(f"Warning: Serializing {type(value).__name__} as string representation")
+        return {"_type": "string_repr", "_value": str(value)}
+
+    def _deserialize_state(self, state: dict[str, Any]) -> dict[str, Any]:
+        """
+        Deserialize state dictionary from JSON storage.
+
+        Delegates all value deserialization to _deserialize_value for consistency.
+        This ensures custom deserialization methods and recursive handling work
+        for all values, regardless of nesting level.
+
+        Args:
+            state: Serialized state dictionary
+
+        Returns:
+            Restored state dictionary
+        """
+        deserialized = {}
+        for key, value in state.items():
+            deserialized[key] = self._deserialize_value(value)
+        return deserialized
+
+    def _deserialize_value(self, value: Any) -> Any:
+        """Deserialize a single value from JSON storage.
+
+        Priority Order:
+        1. Handle primitives (return as-is)
+        2. Handle collections (recurse)
+        3. Handle objects with custom from_save_dict() (explicit deserialization)
+        4. Handle objects with __new__ + __dict__ (automatic deserialization)
+        5. Return as dict if class not available
+        """
+        # Priority 1: Primitives - return as-is
+        if not isinstance(value, (dict, list)):
+            return value
+
+        # Priority 2: Collections - recurse
+        if isinstance(value, list):
+            return [self._deserialize_value(v) for v in value]
+
+        # Priority 3-5: Objects with _type metadata
+        if not isinstance(value, dict) or "_type" not in value:
+            # Plain dict without _type - recurse through values
+            if isinstance(value, dict):
+                return {k: self._deserialize_value(v) for k, v in value.items()}
+            return value
+
+        obj_type = value["_type"]
+        obj_data = value.get("_data", {})
+
+        # Special case: string representation
+        if obj_type == "string_repr":
+            return value.get("_value", "")
+
+        # Try to get class from context
+        if obj_type not in self.context:
+            # Class not available - recurse through data dict
+            print(f"Warning: Class '{obj_type}' not in context, keeping as dict")
+            return {k: self._deserialize_value(v) for k, v in obj_data.items()}
+
+        cls = self.context[obj_type]
+
+        # Priority 3: Custom deserialization method
+        if hasattr(cls, "from_save_dict") and callable(getattr(cls, "from_save_dict")):
+            try:
+                return cls.from_save_dict(obj_data)
+            except Exception as e:
+                print(f"Warning: Custom deserialization failed for {obj_type}: {e}")
+                # Fall through to automatic method
+
+        # Priority 4: Automatic deserialization using __new__
+        try:
+            obj = cls.__new__(cls)
+            if hasattr(obj, "__dict__"):
+                # Recursively deserialize nested values in obj_data
+                deserialized_data = {
+                    k: self._deserialize_value(v) for k, v in obj_data.items()
+                }
+                obj.__dict__.update(deserialized_data)
+            return obj
+        except Exception as e:
+            print(f"Warning: Failed to deserialize {obj_type}: {e}")
+            # Recurse through data dict as fallback
+            return {k: self._deserialize_value(v) for k, v in obj_data.items()}
+
+    def _get_timestamp(self) -> str:
+        """Get current timestamp in ISO format."""
+        return datetime.now().isoformat()
+
+    def get_save_metadata(self) -> dict[str, Any]:
+        """
+        Get metadata about the current save state without full serialization.
+
+        Useful for displaying save slot information without loading the full save.
+
+        Returns:
+            Dictionary with save metadata (passage, timestamp, etc.)
+        """
+        return {
+            "current_passage": self.current_passage_id,
+            "timestamp": self._get_timestamp(),
+            "story_name": self.story.get("name", "unknown"),
+            "has_choices": self.has_choices(),
+        }
