@@ -107,8 +107,25 @@ bardic serve
 - Save/load functionality
 - Story selection
 - Clean, customizable interface
+- Single-file player
+- Best for: Rapid prototyping, Python-only projects
 
-Future templates: React, Terminal, Custom
+**Web Template**
+- FastAPI backend + React frontend
+- Full SPA architecture
+- @render directives for custom React components
+- Extensions system (custom context + API routes)
+- Production-ready structure
+- Best for: Complex games, web deployment
+
+**Reflex Template**
+- Reactive Reflex framework
+- Pure Python (no JavaScript)
+- Simple state management
+- Note: Save/load coming soon
+- Best for: Python devs who want reactivity without React
+
+Choose with: `bardic init my-game --template [nicegui|web|reflex]`
 
 ## Development
 

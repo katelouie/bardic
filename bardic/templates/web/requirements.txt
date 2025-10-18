@@ -1,0 +1,9 @@
+# Bardic interactive fiction engine
+bardic>=0.1.0
+
+# Backend framework
+fastapi>=0.100.0
+uvicorn>=0.20.0
+
+# CORS middleware
+python-multipart>=0.0.6

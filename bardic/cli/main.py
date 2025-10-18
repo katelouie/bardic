@@ -233,7 +233,7 @@ def play(story_file: str, no_color: bool):
 
 @cli.command()
 @click.argument("project_name")
-@click.option("--template", "-t", default="nicegui", type=click.Choice(['nicegui']), help="Template to use (default: nicegui)")
+@click.option("--template", "-t", default="nicegui", type=click.Choice(['nicegui', 'web', 'reflex']), help="Template to use (default: nicegui)")
 @click.option("--path", "-p", type=click.Path(), help="Parent directory for project (default: current directory)")
 def init(project_name: str, template: str, path: str):
     """
@@ -243,17 +243,16 @@ def init(project_name: str, template: str, path: str):
     example story, and all necessary files.
 
     \b
-    Example:
-        bardic init my-game
-        bardic init my-game --template nicegui
-        bardic init my-game --path ~/projects
+    Available templates:
+      nicegui - Python-based UI with save/load (default)
+      web     - FastAPI backend + React frontend
+      reflex  - Reflex reactive framework
 
     \b
-    After initialization:
-        cd my-game
-        pip install -r requirements.txt
-        bardic compile example.bard -o compiled_stories/example.json
-        python player.py
+    Example:
+        bardic init my-game
+        bardic init my-game --template web
+        bardic init my-game --path ~/projects
     """
     # Determine parent directory
     parent_dir = Path(path) if path else Path.cwd()
@@ -280,16 +279,20 @@ def init(project_name: str, template: str, path: str):
         project_dir.mkdir(parents=True)
         click.echo(click.style("✓", fg="green", bold=True) + f" Created directory: {project_dir}")
 
-        # Create compiled_stories directory
-        (project_dir / "compiled_stories").mkdir()
-        click.echo(click.style("✓", fg="green", bold=True) + " Created compiled_stories/")
+        # Create compiled_stories directory if not web template (web uses frontend/public/stories/)
+        if template != 'web':
+            (project_dir / "compiled_stories").mkdir()
+            click.echo(click.style("✓", fg="green", bold=True) + " Created compiled_stories/")
 
-        # Copy template files
+        # Copy template files and directories
         for item in template_dir.iterdir():
+            dest = project_dir / item.name
             if item.is_file():
-                dest = project_dir / item.name
                 shutil.copy2(item, dest)
                 click.echo(click.style("✓", fg="green", bold=True) + f" Created {item.name}")
+            elif item.is_dir():
+                shutil.copytree(item, dest)
+                click.echo(click.style("✓", fg="green", bold=True) + f" Created {item.name}/")
 
         click.echo()
         click.echo("=" * 60)
@@ -298,14 +301,42 @@ def init(project_name: str, template: str, path: str):
         click.echo()
         click.echo(click.style("Next steps:", fg="cyan", bold=True))
         click.echo()
-        click.echo(f"  1. cd {project_name}")
-        click.echo("  2. pip install -r requirements.txt")
-        click.echo("  3. bardic compile example.bard -o compiled_stories/example.json")
-        click.echo("  4. python player.py")
-        click.echo()
-        click.echo(click.style("Your game will be running at http://localhost:8080", fg="yellow"))
-        click.echo()
-        click.echo(click.style("Tip:", fg="cyan") + " Check out player.py for customization points marked with TODO")
+
+        # Template-specific instructions
+        if template == "nicegui":
+            click.echo(f"  1. cd {project_name}")
+            click.echo("  2. pip install -r requirements.txt")
+            click.echo("  3. bardic compile example.bard -o compiled_stories/example.json")
+            click.echo("  4. python player.py")
+            click.echo()
+            click.echo(click.style("Your game will be running at http://localhost:8080", fg="yellow"))
+            click.echo()
+            click.echo(click.style("Tip:", fg="cyan") + " Check out player.py for customization points marked with TODO")
+
+        elif template == "web":
+            click.echo(f"  1. cd {project_name}")
+            click.echo("  2. pip install -r requirements.txt  # Backend dependencies")
+            click.echo("  3. cd frontend && npm install && cd ..")
+            click.echo("  4. bardic compile example.bard -o frontend/public/stories/example.json")
+            click.echo("  5. cd backend && python main.py  # Terminal 1")
+            click.echo("  6. cd frontend && npm run dev     # Terminal 2")
+            click.echo()
+            click.echo(click.style("Backend: http://127.0.0.1:8000", fg="yellow"))
+            click.echo(click.style("Frontend: http://localhost:5173", fg="yellow"))
+            click.echo()
+            click.echo(click.style("Tip:", fg="cyan") + " See README.md for @render directives and extensions")
+
+        elif template == "reflex":
+            click.echo(f"  1. cd {project_name}")
+            click.echo("  2. pip install -r requirements.txt")
+            click.echo("  3. mkdir -p compiled_stories")
+            click.echo("  4. bardic compile example.bard -o compiled_stories/example.json")
+            click.echo("  5. reflex run")
+            click.echo()
+            click.echo(click.style("Your game will be running at http://localhost:3000", fg="yellow"))
+            click.echo()
+            click.echo(click.style("Note:", fg="cyan") + " Save/load feature coming soon")
+
         click.echo()
 
     except Exception as e:
