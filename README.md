@@ -62,6 +62,7 @@ Open `http://localhost:8080` and play your game!
 ## Example Game
 
 Check out [Arcanum](https://github.com/katelouie/arcanum-game) - a complete tarot reading game built with Bardic. It demonstrates:
+
 - Custom Python classes (Card, Client objects)
 - Dynamic UI with passage tags
 - Save/load functionality
@@ -81,7 +82,7 @@ Check out [Arcanum](https://github.com/katelouie/arcanum-game) - a complete taro
 - **Custom Objects** - Use Python classes in your stories
 - **Metadata** - Story information for save/load
 
-See [spec.md](spec.md) for complete language documentation.
+See [docs/spec.md](docs/spec.md) for complete language documentation. See also the [implementation status doc](docs/IMPLEMENTATION_STATUS.md) for current progress on planned language features.
 
 ### CLI Commands
 
@@ -103,6 +104,7 @@ bardic serve
 ### Templates
 
 **NiceGUI Template** (default)
+
 - Python-based UI framework
 - Save/load functionality
 - Story selection
@@ -111,6 +113,7 @@ bardic serve
 - Best for: Rapid prototyping, Python-only projects
 
 **Web Template**
+
 - FastAPI backend + React frontend
 - Full SPA architecture
 - @render directives for custom React components
@@ -119,6 +122,7 @@ bardic serve
 - Best for: Complex games, web deployment
 
 **Reflex Template**
+
 - Reactive Reflex framework
 - Pure Python (no JavaScript)
 - Simple state management
@@ -171,6 +175,7 @@ Stories compile to platform-independent JSON that runs anywhere.
 ## Contributing
 
 Contributions welcome! Please:
+
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
