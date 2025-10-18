@@ -470,3 +470,15 @@ buck-out/
 .ionide
 
 # End of https://www.toptal.com/developers/gitignore/api/python,visualstudiocode,macos,react,reactnative
+
+# Claude Code continuity files (private)
+claude_info/
+
+# Save game files (local testing)
+saves/
+
+# Compiled story outputs (generated)
+compiled_stories/
+
+# Local test files
+test_*.py
