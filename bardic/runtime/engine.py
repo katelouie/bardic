@@ -21,6 +21,8 @@ class PassageOutput:
         content: The rendered text content
         choices: List of available choices
         passage_id: ID of the current passage
+        render_directives: List of render directives for frontend
+        input_directives: List of input directives requesting user input
         jump_target: Target passage ID if a jump is encountered, None otherwise
     """
 
@@ -28,11 +30,14 @@ class PassageOutput:
     choices: List[Dict[str, str]]
     passage_id: str
     render_directives: Optional[List[Dict[str, Any]]] = None
+    input_directives: Optional[List[Dict[str, Any]]] = None
     jump_target: Optional[str] = None
 
     def __post_init__(self):
         if self.render_directives is None:
             self.render_directives = []
+        if self.input_directives is None:
+            self.input_directives = []
 
 
 class BardEngine:
@@ -58,6 +63,7 @@ class BardEngine:
         self.passages = story_data["passages"]
         self.current_passage_id = None  # Will be set by goto()
         self.state = {}  # Game state (variables)
+        self.state['_inputs'] = {}  # Initialize empty inputs dict (always available)
         self.used_choices = set()  # Track which one-time choices have been used
         self.context = context or {}
         self.evaluate_directives = evaluate_directives
@@ -354,12 +360,16 @@ class BardEngine:
             if self._is_choice_available(choice):
                 available_choices.append(choice)
 
+        # Get input directives from passage
+        input_directives = passage.get("input_directives", [])
+
         return PassageOutput(
             content=content,
             choices=available_choices,
             passage_id=passage_id,
             jump_target=jump_target,  # Just report it here, don't follow in this fn.
             render_directives=directives,
+            input_directives=input_directives,
         )
 
     def _is_choice_available(self, choice: dict) -> bool:
@@ -477,6 +487,7 @@ class BardEngine:
             passage_id=output.passage_id,  # Final passage ID
             jump_target=None,  # No more jumps
             render_directives=accumulated_directives,
+            input_directives=output.input_directives,  # Input directives from final passage
         )
 
         # Cache the final output
@@ -541,6 +552,25 @@ class BardEngine:
 
         # Navigate to target (executes and caches)
         return self.goto(target)
+
+    def submit_inputs(self, input_data: dict) -> None:
+        """
+        Submit user input data and store in state.
+
+        Inputs are stored in the special '_inputs' dictionary in state,
+        which persists across passage transitions. New inputs with the
+        same name overwrite previous values.
+
+        Use this for: Collecting text input from players.
+
+        Args:
+            input_data: Dict mapping input names to values (e.g., {"reader_name": "Alice"})
+        """
+        if '_inputs' not in self.state:
+            self.state['_inputs'] = {}
+
+        # Merge new inputs (overwrites duplicates)
+        self.state['_inputs'].update(input_data)
 
     def _execute_commands(self, commands: list[dict]) -> None:
         """Execute passage commands (variable assignments, python blocks, etc)"""

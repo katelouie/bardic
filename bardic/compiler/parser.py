@@ -357,6 +357,42 @@ def extract_conditional_block(lines: list[str], start_index: int) -> tuple[dict,
             i += lines_consumed
             continue
 
+        # Check for @input directive inside conditional
+        if stripped.startswith("@input") and current_branch is not None:
+            # Dedent lines collected so far
+            if current_branch_lines:
+                dedented = detect_and_strip_indentation(current_branch_lines)
+                for dedented_line in dedented:
+                    content_tokens = parse_content_line(dedented_line)
+                    current_branch["content"].extend(content_tokens)
+                    current_branch["content"].append({"type": "text", "value": "\n"})
+                current_branch_lines = []  # Reset
+
+            # Parse and add input directive
+            directive = parse_input_line(line)
+            if directive:
+                current_branch["content"].append(directive)
+            i += 1
+            continue
+
+        # Check for @render directive inside conditional
+        if stripped.startswith("@render") and current_branch is not None:
+            # Dedent lines collected so far
+            if current_branch_lines:
+                dedented = detect_and_strip_indentation(current_branch_lines)
+                for dedented_line in dedented:
+                    content_tokens = parse_content_line(dedented_line)
+                    current_branch["content"].extend(content_tokens)
+                    current_branch["content"].append({"type": "text", "value": "\n"})
+                current_branch_lines = []  # Reset
+
+            # Parse and add render directive
+            directive = parse_render_line(line)
+            if directive:
+                current_branch["content"].append(directive)
+            i += 1
+            continue
+
         # Check for nested <<if>> (not the opening one)
         if stripped.startswith("<<if ") and i != start_index:
             # This is a nested conditional - recursively extract it
@@ -531,6 +567,22 @@ def extract_loop_block(lines: list[str], start_index: int) -> tuple[dict, int]:
                 j += lines_consumed
                 continue
 
+            # Check for @input directive inside loop
+            if stripped.startswith("@input"):
+                directive = parse_input_line(line)
+                if directive:
+                    loop["content"].append(directive)
+                j += 1
+                continue
+
+            # Check for @render directive inside loop
+            if stripped.startswith("@render"):
+                directive = parse_render_line(line)
+                if directive:
+                    loop["content"].append(directive)
+                j += 1
+                continue
+
             # Check for nested <<for>> loop
             if stripped.startswith("<<for "):
                 # Recursively extract nested loop from dedented context
@@ -650,6 +702,17 @@ def parse(source: str) -> Dict[str, Any]:
             directive = parse_render_line(line)
             if directive:
                 current_passage["content"].append(directive)
+            i += 1
+            continue
+
+        # Input directive: @input
+        if line.strip().startswith("@input"):
+            directive = parse_input_line(line)
+            if directive:
+                # Store in passage for later access by engine
+                if "input_directives" not in current_passage:
+                    current_passage["input_directives"] = []
+                current_passage["input_directives"].append(directive)
             i += 1
             continue
 
@@ -1218,3 +1281,56 @@ def extract_multiline_expression(
     lines_consumed = i - start_index
 
     return complete_expr, lines_consumed
+
+
+def parse_input_line(line: str) -> Optional[dict]:
+    """
+    Parse an @input directive for text input.
+
+    Syntax:
+        @input name="variable_name"
+        @input name="variable_name" placeholder="hint text"
+        @input name="variable_name" placeholder="hint" label="Display Label"
+
+    Args:
+        line: The full line containing @input directive
+
+    Returns:
+        Dict with type='input', name, optional placeholder and label, or None if invalid
+    """
+    # Must start with @input
+    if not line.strip().startswith("@input"):
+        return None
+
+    # Extract everything after "@input"
+    after_input = line.strip()[6:].strip()  # Skip '@input'
+
+    if not after_input:
+        print(f"Warning: Empty @input directive: {line.strip()}")
+        return None
+
+    # Parse name="value" style attributes
+    # Pattern: name="variable" placeholder="text" label="Label"
+    input_spec = {"type": "input"}
+
+    # Extract all key="value" pairs
+    attr_pattern = r'(\w+)="([^"]*)"'
+    matches = re.findall(attr_pattern, after_input)
+
+    for key, value in matches:
+        input_spec[key] = value
+
+    # Validate that 'name' is present (required)
+    if 'name' not in input_spec:
+        print(f"Warning: @input directive missing 'name' attribute: {line.strip()}")
+        return None
+
+    # Set defaults
+    if 'label' not in input_spec:
+        # Default label to capitalized name
+        input_spec['label'] = input_spec['name'].replace('_', ' ').title()
+
+    if 'placeholder' not in input_spec:
+        input_spec['placeholder'] = ''
+
+    return input_spec
