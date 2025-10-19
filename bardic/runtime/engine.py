@@ -360,15 +360,26 @@ class BardEngine:
             if self._is_choice_available(choice):
                 available_choices.append(choice)
 
-        # Get input directives from passage
-        input_directives = passage.get("input_directives", [])
+        # Separate input directives from render directives
+        # (both are collected in the directives list by _render_content)
+        input_directives = []
+        render_directives = []
+        for directive in directives:
+            if directive.get("type") == "input":
+                input_directives.append(directive)
+            else:
+                render_directives.append(directive)
+
+        # Also include passage-level input directives (for backwards compatibility)
+        passage_level_inputs = passage.get("input_directives", [])
+        input_directives.extend(passage_level_inputs)
 
         return PassageOutput(
             content=content,
             choices=available_choices,
             passage_id=passage_id,
             jump_target=jump_target,  # Just report it here, don't follow in this fn.
-            render_directives=directives,
+            render_directives=render_directives,
             input_directives=input_directives,
         )
 
@@ -801,6 +812,9 @@ class BardEngine:
                 # Process and collect directive (don't render as text)
                 processed = self._process_render_directive(token)
                 directives.append(processed)
+            elif token["type"] == "input":
+                # Collect input directive (don't render as text)
+                directives.append(token)
             elif token["type"] == "python_block":
                 # Execute Python block (modifies state, produces no text output)
                 # This happens during rendering, so it only runs if its branch/loop is active

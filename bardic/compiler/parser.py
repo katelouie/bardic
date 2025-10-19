@@ -321,14 +321,17 @@ def extract_conditional_block(lines: list[str], start_index: int) -> tuple[dict,
         """Helper to finalize current branch and start a new one."""
         nonlocal current_branch, current_branch_lines
 
-        # Finalize previous branch by dedenting its content
-        if current_branch and current_branch_lines:
-            dedented = detect_and_strip_indentation(current_branch_lines)
-            # Parse dedented content
-            for line in dedented:
-                content_tokens = parse_content_line(line)
-                current_branch["content"].extend(content_tokens)
-                current_branch["content"].append({"type": "text", "value": "\n"})
+        # Finalize previous branch
+        if current_branch:
+            # Process text lines if they exist
+            if current_branch_lines:
+                dedented = detect_and_strip_indentation(current_branch_lines)
+                # Parse dedented content
+                for line in dedented:
+                    content_tokens = parse_content_line(line)
+                    current_branch["content"].extend(content_tokens)
+                    current_branch["content"].append({"type": "text", "value": "\n"})
+            # Always append branch (even if it only has directives, no text)
             conditional["branches"].append(current_branch)
 
         # Start new branch
@@ -452,13 +455,15 @@ def extract_conditional_block(lines: list[str], start_index: int) -> tuple[dict,
             else:
                 # This closes OUR conditional
                 # Finalize current branch
-                if current_branch and current_branch_lines:
-                    dedented = detect_and_strip_indentation(current_branch_lines)
-                    for dedented_line in dedented:
-                        content_tokens = parse_content_line(dedented_line)
-                        current_branch["content"].extend(content_tokens)
-                        current_branch["content"].append({"type": "text", "value": "\n"})
                 if current_branch:
+                    # Process text lines if they exist
+                    if current_branch_lines:
+                        dedented = detect_and_strip_indentation(current_branch_lines)
+                        for dedented_line in dedented:
+                            content_tokens = parse_content_line(dedented_line)
+                            current_branch["content"].extend(content_tokens)
+                            current_branch["content"].append({"type": "text", "value": "\n"})
+                    # Always append branch (even if it only has directives, no text)
                     conditional["branches"].append(current_branch)
                 i += 1
                 break
