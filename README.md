@@ -103,7 +103,7 @@ bardic serve
 
 ### Templates
 
-**NiceGUI Template** (default)
+**NiceGUI Template:** (default)
 
 - Python-based UI framework
 - Save/load functionality
@@ -112,7 +112,7 @@ bardic serve
 - Single-file player
 - Best for: Rapid prototyping, Python-only projects
 
-**Web Template**
+**Web Template:**
 
 - FastAPI backend + React frontend
 - Full SPA architecture
@@ -121,7 +121,7 @@ bardic serve
 - Production-ready structure
 - Best for: Complex games, web deployment
 
-**Reflex Template**
+**Reflex Template:**
 
 - Reactive Reflex framework
 - Pure Python (no JavaScript)
@@ -150,7 +150,7 @@ python tests/test_parser.py
 
 ### Project Structure
 
-```
+```sh
 bardic/
 ├── bardic/
 │   ├── compiler/    # Parser and compiler

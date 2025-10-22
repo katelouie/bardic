@@ -342,6 +342,11 @@ def extract_conditional_block(lines: list[str], start_index: int) -> tuple[dict,
         line = lines[i]
         stripped = line.strip()
 
+        # Skip comment lines
+        if stripped.startswith("#"):
+            i += 1
+            continue
+
         # Check for Python block
         if stripped.startswith("<<py") and current_branch is not None:
             # Dedent lines collected so far before adding Python block
@@ -485,10 +490,30 @@ def extract_conditional_block(lines: list[str], start_index: int) -> tuple[dict,
 
         # Check for jump inside conditional
         if stripped.startswith("->"):
-            match = re.match(r"->\s*(\w+)", stripped)
+            match = re.match(r"->\s*([\w.]+)", stripped)
             if match and current_branch is not None:
                 target = match.group(1)
                 current_branch["content"].append({"type": "jump", "target": target})
+            i += 1
+            continue
+
+        # Check for choices inside conditional
+        if (stripped.startswith("+") or stripped.startswith("*")) and current_branch is not None:
+            # Dedent lines collected so far before adding choice
+            if current_branch_lines:
+                dedented = detect_and_strip_indentation(current_branch_lines)
+                for dedented_line in dedented:
+                    content_tokens = parse_content_line(dedented_line)
+                    current_branch["content"].extend(content_tokens)
+                    current_branch["content"].append({"type": "text", "value": "\n"})
+                current_branch_lines = []  # Reset
+
+            # Parse choice and add to conditional's branch
+            choice = parse_choice_line(line, {})  # Pass empty dict for passage (not used)
+            if choice:
+                if "choices" not in current_branch:
+                    current_branch["choices"] = []
+                current_branch["choices"].append(choice)
             i += 1
             continue
 
@@ -563,6 +588,11 @@ def extract_loop_block(lines: list[str], start_index: int) -> tuple[dict, int]:
             line = dedented_lines[j]
             stripped = line.strip()
 
+            # Skip comment lines
+            if stripped.startswith("#"):
+                j += 1
+                continue
+
             # Check for Python block
             if stripped.startswith("<<py"):
                 # Extract Python block and add it to loop content
@@ -608,10 +638,20 @@ def extract_loop_block(lines: list[str], start_index: int) -> tuple[dict, int]:
 
             # Check for jump inside loop
             if stripped.startswith("->"):
-                match = re.match(r"->\s*(\w+)", stripped)
+                match = re.match(r"->\s*([\w.]+)", stripped)
                 if match:
                     target = match.group(1)
                     loop["content"].append({"type": "jump", "target": target})
+                j += 1
+                continue
+
+            # Check for choices inside loop
+            if stripped.startswith("+") or stripped.startswith("*"):
+                choice = parse_choice_line(line, {})  # Pass empty dict for passage (not used)
+                if choice:
+                    if "choices" not in loop:
+                        loop["choices"] = []
+                    loop["choices"].append(choice)
                 j += 1
                 continue
 
@@ -681,6 +721,11 @@ def parse(source: str) -> Dict[str, Any]:
             i += 1
             continue
 
+        # Comment lines (start with #)
+        if line.strip().startswith("#"):
+            i += 1
+            continue
+
         # Python block: <<py
         if line.strip().startswith("<<py"):
             code, lines_consumed = extract_python_block(lines, i)
@@ -723,7 +768,7 @@ def parse(source: str) -> Dict[str, Any]:
 
         # Immediate jump to target
         if line.strip().startswith("->"):
-            match = re.match(r"->\s*(\w+)", line.strip())
+            match = re.match(r"->\s*([\w.]+)", line.strip())
             if match:
                 target = match.group(1)
                 current_passage["content"].append({"type": "jump", "target": target})
@@ -1022,13 +1067,13 @@ def parse_choice_line(line: str, passage: dict) -> Optional[dict]:
 
     # Check for condition
     if choice_line.startswith("{"):
-        match = re.match(r"\{([^}]+)\}\s*\[(.*?)\]\s*->\s*(\w+)", choice_line)
+        match = re.match(r"\{([^}]+)\}\s*\[(.*?)\]\s*->\s*([\w.]+)", choice_line)
         if match:
             condition, choice_text, target = match.groups()
         else:
             return None
     else:
-        match = re.match(r"\[(.*?)\]\s*->\s*(\w+)", choice_line)
+        match = re.match(r"\[(.*?)\]\s*->\s*([\w.]+)", choice_line)
         if match:
             choice_text, target = match.groups()
         else:
