@@ -348,6 +348,48 @@ def init(project_name: str, template: str, path: str):
 
 
 @cli.command()
+@click.argument("story_file", type=click.Path(exists=True))
+@click.option("--output", "-o", type=click.Path(), help="Output file (without extension, default: story_graph)")
+@click.option("--format", "-f", default="png", type=click.Choice(['png', 'svg', 'pdf']), help="Output format (default: png)")
+@click.option("--no-tags", is_flag=True, help="Hide passage tags in graph")
+def graph(story_file, output, format, no_tags):
+    """
+    Generate a visual graph of story structure.
+
+    Creates a flowchart showing all passages and their connections.
+    Missing passages are highlighted in red, orphaned passages are reported.
+
+    \b
+    Example:
+        bardic graph story.json
+        bardic graph story.json -o my_graph -f svg
+        bardic graph story.json --no-tags
+    """
+    from bardic.cli.graph import generate_graph
+
+    try:
+        # Determine output path
+        if not output:
+            # Default: same directory as story file, named "story_graph"
+            story_path = Path(story_file)
+            output = story_path.parent / "story_graph"
+        else:
+            output = Path(output)
+
+        # Generate the graph
+        generate_graph(
+            story_file=Path(story_file),
+            output_file=output,
+            format=format,
+            show_tags=not no_tags
+        )
+
+    except Exception as e:
+        click.echo(click.style("✗ Error: ", fg="red", bold=True) + str(e), err=True)
+        sys.exit(1)
+
+
+@cli.command()
 @click.option("--port", default=8000, help="Backend port (default: 8000)")
 @click.option("--frontend-port", default=5173, help="Frontend port (default: 5173)")
 @click.option("--no-browser", is_flag=True, help="Don't open browser automatically")
