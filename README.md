@@ -162,6 +162,16 @@ bardic/
 └── stories/        # Example stories
 ```
 
+### Security Model
+
+Bardic stories execute in a controlled Python environment:
+
+- Whitelisted builtins only (no open, exec, eval, etc.)
+- Controlled namespace (no globals/locals access)
+- Imports allowed (stories can import Python modules)
+
+Stories are trusted code. Only run `.bard` files you've written or reviewed, just like you'd only run `.py` files you trust.
+
 ## Architecture
 
 Bardic uses a three-layer architecture:
