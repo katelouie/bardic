@@ -370,11 +370,13 @@ class BardEngine:
         # Merge conditional/loop choices with passage-level choices
         all_choices = list(passage["choices"]) + choice_directives
 
-        # Filter merged choices based on conditions
+        # Filter merged choices based on conditions AND render text with interpolation
         available_choices = []
         for choice in all_choices:
             if self._is_choice_available(choice):
-                available_choices.append(choice)
+                # Render choice text (interpolates variables)
+                rendered_choice = self._render_choice_text(choice)
+                available_choices.append(rendered_choice)
 
         # Also include passage-level input directives (for backwards compatibility)
         passage_level_inputs = passage.get("input_directives", [])
@@ -388,6 +390,34 @@ class BardEngine:
             render_directives=render_directives,
             input_directives=input_directives,
         )
+
+    def _render_choice_text(self, choice: dict) -> dict:
+        """
+        Render a choice with interpolated text.
+
+        Handles both new format (tokenized text) and old format (string text)
+        for backward compatibility.
+
+        Args:
+            choice: Choice dict with text field (string or token list)
+
+        Returns:
+            Choice dict with rendered text as string
+        """
+        choice_text = choice["text"]
+
+        # Check if text is already a string (old format - backward compatible)
+        if isinstance(choice_text, str):
+            rendered_text = choice_text
+        else:
+            # New format - token list, render it
+            rendered_text, _, _ = self._render_content(choice_text)
+
+        # Return choice with rendered text
+        return {
+            **choice,
+            "text": rendered_text
+        }
 
     def _is_choice_available(self, choice: dict) -> bool:
         """Check if a choice should be shown based on its condition and if used (1-time).
@@ -915,9 +945,12 @@ class BardEngine:
                 all_directives.extend(iteration_directives)  # Collect directives
 
                 # Add loop choices for this iteration (if any)
+                # IMPORTANT: Render choice text NOW while loop variable is in scope!
                 if "choices" in loop:
                     for choice in loop["choices"]:
-                        all_directives.append({"type": "choice", **choice})
+                        # Render choice text with current loop variable
+                        rendered_choice = self._render_choice_text(choice)
+                        all_directives.append({"type": "choice", **rendered_choice})
 
                 # Restore original values
                 for var, original_value in original_values.items():

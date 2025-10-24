@@ -1080,7 +1080,7 @@ def parse_choice_line(line: str, passage: dict) -> Optional[dict]:
             return None
 
     return {
-        "text": choice_text,
+        "text": parse_content_line(choice_text),  # Tokenize for interpolation
         "target": target,
         "condition": condition,
         "sticky": sticky,
