@@ -328,9 +328,17 @@ def extract_conditional_block(lines: list[str], start_index: int) -> tuple[dict,
                 dedented = detect_and_strip_indentation(current_branch_lines)
                 # Parse dedented content
                 for line in dedented:
-                    content_tokens = parse_content_line(line)
-                    current_branch["content"].extend(content_tokens)
-                    current_branch["content"].append({"type": "text", "value": "\n"})
+                    # Check for glue operator <>
+                    if line.rstrip().endswith("<>"):
+                        # Remove <> and parse (glue: no newline after)
+                        content_line = line.rstrip()[:-2]
+                        content_tokens = parse_content_line(content_line)
+                        current_branch["content"].extend(content_tokens)
+                    else:
+                        # Normal: add newline after content
+                        content_tokens = parse_content_line(line)
+                        current_branch["content"].extend(content_tokens)
+                        current_branch["content"].append({"type": "text", "value": "\n"})
             # Always append branch (even if it only has directives, no text)
             conditional["branches"].append(current_branch)
 
@@ -465,9 +473,17 @@ def extract_conditional_block(lines: list[str], start_index: int) -> tuple[dict,
                     if current_branch_lines:
                         dedented = detect_and_strip_indentation(current_branch_lines)
                         for dedented_line in dedented:
-                            content_tokens = parse_content_line(dedented_line)
-                            current_branch["content"].extend(content_tokens)
-                            current_branch["content"].append({"type": "text", "value": "\n"})
+                            # Check for glue operator <>
+                            if dedented_line.rstrip().endswith("<>"):
+                                # Remove <> and parse (glue: no newline after)
+                                content_line = dedented_line.rstrip()[:-2]
+                                content_tokens = parse_content_line(content_line)
+                                current_branch["content"].extend(content_tokens)
+                            else:
+                                # Normal: add newline after content
+                                content_tokens = parse_content_line(dedented_line)
+                                current_branch["content"].extend(content_tokens)
+                                current_branch["content"].append({"type": "text", "value": "\n"})
                     # Always append branch (even if it only has directives, no text)
                     conditional["branches"].append(current_branch)
                 i += 1
@@ -656,10 +672,17 @@ def extract_loop_block(lines: list[str], start_index: int) -> tuple[dict, int]:
                 continue
 
             # Regular content line
-            content_tokens = parse_content_line(line)
-            loop["content"].extend(content_tokens)
-            # Add newline after content line
-            loop["content"].append({"type": "text", "value": "\n"})
+            # Check for glue operator <>
+            if line.rstrip().endswith("<>"):
+                # Remove <> and parse (glue: no newline after)
+                content_line = line.rstrip()[:-2]
+                content_tokens = parse_content_line(content_line)
+                loop["content"].extend(content_tokens)
+            else:
+                # Normal: add newline after content
+                content_tokens = parse_content_line(line)
+                loop["content"].extend(content_tokens)
+                loop["content"].append({"type": "text", "value": "\n"})
             j += 1
 
     # Calculate lines consumed
@@ -807,10 +830,17 @@ def parse(source: str) -> Dict[str, Any]:
 
         # Regular content line
         if line.strip() and current_passage:
-            content_tokens = parse_content_line(line)
-            current_passage["content"].extend(content_tokens)
-            # Add newline after content line
-            current_passage["content"].append({"type": "text", "value": "\n"})
+            # Check for glue operator <>
+            if line.rstrip().endswith("<>"):
+                # Remove <> and parse (glue: no newline after)
+                content_line = line.rstrip()[:-2]
+                content_tokens = parse_content_line(content_line)
+                current_passage["content"].extend(content_tokens)
+            else:
+                # Normal: add newline after content
+                content_tokens = parse_content_line(line)
+                current_passage["content"].extend(content_tokens)
+                current_passage["content"].append({"type": "text", "value": "\n"})
             i += 1
             continue
 
