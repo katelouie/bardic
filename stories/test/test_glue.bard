@@ -1,0 +1,52 @@
+:: Start
+~ count = 3
+~ style = "intuitive"
+
+Test 1: Glue with conditional
+
+The cards whisper<>
+<<if style == "intuitive">>
+, and you feel their meaning in your bones.
+<<elif style == "analytical">>
+, and you systematically decode each symbol.
+<<else>>
+, guiding you forward.
+<<endif>>
+
+---
+
+Test 2: Pluralization
+
+You have {count} item<>
+<<if count != 1>>
+s<>
+<<endif>>
+.
+
+---
+
+Test 3: Loop glue
+
+The spread contains<>
+<<for card in ["Fool", "Magician", "Priestess"]>>
+ {card}<>
+<<endfor>>
+.
+
+---
+
+Test 4: Empty lines (paragraph breaks)
+
+Paragraph 1.
+
+Paragraph 2.
+
+Paragraph 3.
+
+---
+
+Test 5: Literal <> in middle of line
+
+The formula is x <> y (this should show the <>).
+
++ [Restart] -> Start

@@ -1,0 +1,42 @@
+:: Start
+~ item_name = "Mysterious Key"
+~ count = 5
+~ price = 42.50
+~ inventory = ["Sword of Light", "Healing Potion", "Magic Rope"]
+
+Welcome to choice interpolation testing!
+
++ [Pick up the {item_name}] -> PickedUp
++ [Take {count} gold coins] -> TookGold
++ [Buy for {price:.2f} silver] -> Bought
++ [See inventory] -> ShowInventory
+
+:: PickedUp
+You picked up the {item_name}!
+
++ [Continue] -> Start
+
+:: TookGold
+You took {count} gold coins!
+
++ [Continue] -> Start
+
+:: Bought
+You bought something for {price:.2f} silver!
+
++ [Continue] -> Start
+
+:: ShowInventory
+Your inventory:
+
+<<for item in inventory>>
+  - {item}
+  + [Use {item}] -> UseItem
+<<endfor>>
+
++ [Back] -> Start
+
+:: UseItem
+You used the item!
+
++ [Continue] -> Start

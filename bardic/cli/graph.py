@@ -33,9 +33,9 @@ def extract_connections(story_data: dict) -> Tuple[Dict[str, List[str]], Set[str
                     choice_text = choice_text[:27] + "..."
                 connections[passage_id].append((target, choice_text, False))
 
-        # Extract jump targets from content
+        # Extract jump targets and choices from content
         def extract_jumps_from_content(content_tokens):
-            """Recursively extract jumps from content."""
+            """Recursively extract jumps and choices from content."""
             for token in content_tokens:
                 if isinstance(token, dict):
                     if token.get("type") == "jump":
@@ -43,11 +43,42 @@ def extract_connections(story_data: dict) -> Tuple[Dict[str, List[str]], Set[str
                         if target:
                             referenced_passages.add(target)
                             connections[passage_id].append((target, "→", True))
+
                     elif token.get("type") == "conditional":
-                        # Check branches
+                        # Check branches for choices AND content
                         for branch in token.get("branches", []):
+                            # Extract choices from this branch
+                            for choice in branch.get("choices", []):
+                                target = choice.get("target")
+                                if target:
+                                    referenced_passages.add(target)
+                                    # Handle choice text (string or token list)
+                                    choice_text = choice.get("text", "")
+                                    if isinstance(choice_text, list):
+                                        # New format: token list, use placeholder
+                                        choice_text = "[conditional]"
+                                    elif len(choice_text) > 30:
+                                        choice_text = choice_text[:27] + "..."
+                                    connections[passage_id].append((target, choice_text, False))
+
+                            # Recursively process branch content
                             extract_jumps_from_content(branch.get("content", []))
+
                     elif token.get("type") == "for_loop":
+                        # Extract choices from loop
+                        for choice in token.get("choices", []):
+                            target = choice.get("target")
+                            if target:
+                                referenced_passages.add(target)
+                                choice_text = choice.get("text", "")
+                                if isinstance(choice_text, list):
+                                    # New format: token list, use placeholder
+                                    choice_text = "[loop]"
+                                elif len(choice_text) > 30:
+                                    choice_text = choice_text[:27] + "..."
+                                connections[passage_id].append((target, choice_text, False))
+
+                        # Recursively process loop content
                         extract_jumps_from_content(token.get("content", []))
 
         content = passage_data.get("content", [])
