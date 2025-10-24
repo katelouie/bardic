@@ -39,6 +39,7 @@ Quick reference for all Bardic syntax elements:
 | `+` | Sticky choice | `+ [Text] -> Target` |
 | `*` | One-time choice | `* [Text] -> Target` |
 | `->` | Immediate jump | `-> Target` |
+| `<>` | Glue (suppress newline) | `Text<>` |
 | `#` | Comment | `# This is a comment` |
 | `[!tag]` | Custom markup | `[!whisper]text[/!whisper]` |
 
@@ -137,12 +138,12 @@ This is **bold** and _italic_.
 - Another item
 ```
 
-**Whitespace Rules (Like Ink):**
+**Whitespace Rules:**
 
-- Single newline = space (flow together)
-- Double newline = paragraph break
-- Logic blocks produce no whitespace
-- Leading/trailing whitespace trimmed
+- Empty line (blank line) = paragraph break (`\n\n`)
+- Content line = adds single newline after
+- Logic blocks (`<<if>>`, `<<for>>`) follow same rules
+- Use glue operator `<>` to suppress newlines (see below)
 
 **Text Formatting:**
 
@@ -191,7 +192,65 @@ You can sense her ~~fear~~ anxiety.
 
 - Basic text: ✅ Implemented (Week 1)
 - Markdown: 📅 Week 5
-- Whitespace perfection: 📅 Week 6
+- Whitespace & glue: ✅ Implemented
+
+---
+
+### Glue Operator `<>`
+
+The glue operator suppresses the automatic newline that normally follows a line of content. This allows you to combine content from multiple lines (including conditionals and loops) into a single continuous line.
+
+**Syntax:** End a line with `<>` to prevent adding a newline.
+
+**Basic Usage:**
+
+```bard
+The cards whisper<>
+<<if reader.style == "intuitive">>
+, and you feel their meaning in your bones.
+<<elif reader.style == "analytical">>
+, and you systematically decode each symbol.
+<<else>>
+, guiding you forward.
+<<endif>>
+```
+
+**Output:** `The cards whisper, and you feel their meaning in your bones.`
+
+**Pluralization:**
+
+```bard
+You have {count} item<>
+<<if count != 1>>
+s<>
+<<endif>>
+.
+```
+
+**Outputs:**
+- If `count = 1`: `You have 1 item.`
+- If `count = 3`: `You have 3 items.`
+
+**With Loops:**
+
+```bard
+The spread contains<>
+<<for card in [" the Fool", " the Magician", " the Priestess"]>>
+{card}<>
+<<endfor>>
+.
+```
+
+**Output:** `The spread contains the Fool the Magician the Priestess.`
+
+**Important Notes:**
+
+- Glue only works when `<>` appears at the **end of a line**
+- Literal `<>` in the middle of text is preserved: `x <> y` renders as `x <> y`
+- Works in passages, conditionals (`<<if>>`), and loops (`<<for>>`)
+- The glue operator is inspired by Ink's glue syntax
+
+**Status:** ✅ Implemented
 
 ---
 
