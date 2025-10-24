@@ -354,21 +354,27 @@ class BardEngine:
             jump_target = None
             directives = []
 
-        # Filter choices based on conditions
-        available_choices = []
-        for choice in passage["choices"]:
-            if self._is_choice_available(choice):
-                available_choices.append(choice)
-
-        # Separate input directives from render directives
-        # (both are collected in the directives list by _render_content)
+        # Separate choice/input directives from render directives
+        # (all are collected in the directives list by _render_content)
+        choice_directives = []
         input_directives = []
         render_directives = []
         for directive in directives:
-            if directive.get("type") == "input":
+            if directive.get("type") == "choice":
+                choice_directives.append(directive)
+            elif directive.get("type") == "input":
                 input_directives.append(directive)
             else:
                 render_directives.append(directive)
+
+        # Merge conditional/loop choices with passage-level choices
+        all_choices = list(passage["choices"]) + choice_directives
+
+        # Filter merged choices based on conditions
+        available_choices = []
+        for choice in all_choices:
+            if self._is_choice_available(choice):
+                available_choices.append(choice)
 
         # Also include passage-level input directives (for backwards compatibility)
         passage_level_inputs = passage.get("input_directives", [])
@@ -908,6 +914,11 @@ class BardEngine:
                 result.append(iteration_content)
                 all_directives.extend(iteration_directives)  # Collect directives
 
+                # Add loop choices for this iteration (if any)
+                if "choices" in loop:
+                    for choice in loop["choices"]:
+                        all_directives.append({"type": "choice", **choice})
+
                 # Restore original values
                 for var, original_value in original_values.items():
                     if original_value is not None:
@@ -956,7 +967,14 @@ class BardEngine:
 
                 if result:
                     # This branch is true -- render its content
-                    return self._render_content(branch["content"])
+                    content, jump_target, directives = self._render_content(branch["content"])
+
+                    # Add branch choices to directives (if any)
+                    if "choices" in branch:
+                        for choice in branch["choices"]:
+                            directives.append({"type": "choice", **choice})
+
+                    return content, jump_target, directives
 
             except Exception as e:
                 # If condition fails, skip this branch

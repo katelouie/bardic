@@ -1,0 +1,77 @@
+:: Start
+~ has_key = True
+~ has_flashlight = False
+~ inventory = ["sword", "potion", "rope"]
+
+Welcome to the conditional choices test!
+
++ [Test simple conditional] -> TestSimple
++ [Test nested conditionals] -> TestNested
++ [Test loop choices] -> TestLoop
++ [Test mixed choices] -> TestMixed
+
+:: TestSimple
+You approach the door.
+
+<<if has_key>>
+  You have a key!
+  + [Unlock the door] -> Success
+  + [Leave it locked] -> Start
+<<else>>
+  The door is locked.
+  + [Try to pick the lock] -> PickLock
+  + [Give up] -> Start
+<<endif>>
+
+:: TestNested
+You're in a dark room.
+
+<<if has_key>>
+  <<if has_flashlight>>
+    You have both!
+    + [Use flashlight and unlock] -> Success
+  <<else>>
+    You have the key but no light.
+    + [Unlock in darkness] -> Success
+    + [Wait for light] -> Start
+  <<endif>>
+<<else>>
+  You have neither.
+  + [Give up] -> Start
+<<endif>>
+
+:: TestLoop
+Your inventory:
+
+<<for item in inventory>>
+  - {item}
+  + [Use {item}] -> Use
+<<endfor>>
+
++ [Back] -> Start
+
+:: TestMixed
+You enter a room.
+
++ [Look around] -> Start
+
+<<if has_flashlight>>
+  + [Search dark corner] -> Success
+<<endif>>
+
++ [Leave] -> Start
+
+:: Use
+You used the item!
+
++ [Continue] -> Start
+
+:: PickLock
+You attempt to pick the lock...
+
++ [Continue] -> Start
+
+:: Success
+Success!
+
++ [Restart] -> Start

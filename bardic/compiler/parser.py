@@ -509,7 +509,7 @@ def extract_conditional_block(lines: list[str], start_index: int) -> tuple[dict,
                 current_branch_lines = []  # Reset
 
             # Parse choice and add to conditional's branch
-            choice = parse_choice_line(line, {})  # Pass empty dict for passage (not used)
+            choice = parse_choice_line(stripped, {})  # Use stripped line (no indentation)
             if choice:
                 if "choices" not in current_branch:
                     current_branch["choices"] = []
@@ -647,7 +647,7 @@ def extract_loop_block(lines: list[str], start_index: int) -> tuple[dict, int]:
 
             # Check for choices inside loop
             if stripped.startswith("+") or stripped.startswith("*"):
-                choice = parse_choice_line(line, {})  # Pass empty dict for passage (not used)
+                choice = parse_choice_line(stripped, {})  # Use stripped line (no indentation)
                 if choice:
                     if "choices" not in loop:
                         loop["choices"] = []
