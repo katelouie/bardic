@@ -31,17 +31,20 @@ Quick reference for all Bardic syntax elements:
 | `@section` / `@endsection` | Scoped section (future) | `@section Name` |
 | `@render` | Render directive | `@render render_spread(cards)` |
 | `@input` | Input directive | `@input name="player_name" label="Your Name"` |
-| `<<py>>` | Python code block | `<<py\ncode\n>>` |
-| `<<if>>` | Conditional | `<<if condition>>` |
-| `<<for>>` | Loop | `<<for item in list>>` |
+| `@py:` / `@endpy` | Python code block | `@py:\ncode\n@endpy` |
+| `@if:` / `@elif:` / `@else:` / `@endif` | Conditional | `@if condition:` |
+| `@for:` / `@endfor` | Loop | `@for item in list:` |
 | `~` | Variable assignment | `~ health = 100` |
 | `{}` | Expression | `{variable}` or `{function()}` or `{var:.2f}` |
 | `+` | Sticky choice | `+ [Text] -> Target` |
 | `*` | One-time choice | `* [Text] -> Target` |
 | `->` | Immediate jump | `-> Target` |
 | `<>` | Glue (suppress newline) | `Text<>` |
-| `#` | Comment | `# This is a comment` |
+| `#` | Full-line comment | `# This whole line is a comment` |
+| `//` | Inline comment | `Text here // rest is comment` |
 | `[!tag]` | Custom markup | `[!whisper]text[/!whisper]` |
+
+> **Legacy Syntax:** The `<<if>>`, `<<for>>`, and `<<py>>` syntax is still supported for backward compatibility, but may be deprecated in future versions. The `@` syntax with colons is recommended for new stories as it's more consistent with Python and other Bardic directives.
 
 **Import statements** use standard Python syntax with no prefix.
 
@@ -142,7 +145,7 @@ This is **bold** and _italic_.
 
 - Empty line (blank line) = paragraph break (`\n\n`)
 - Content line = adds single newline after
-- Logic blocks (`<<if>>`, `<<for>>`) follow same rules
+- Logic blocks (`@if`, `@for`) follow same rules
 - Use glue operator `<>` to suppress newlines (see below)
 
 **Text Formatting:**
@@ -206,13 +209,13 @@ The glue operator suppresses the automatic newline that normally follows a line 
 
 ```bard
 The cards whisper<>
-<<if reader.style == "intuitive">>
+@if reader.style == "intuitive":
 , and you feel their meaning in your bones.
-<<elif reader.style == "analytical">>
+@elif reader.style == "analytical":
 , and you systematically decode each symbol.
-<<else>>
+@else:
 , guiding you forward.
-<<endif>>
+@endif
 ```
 
 **Output:** `The cards whisper, and you feel their meaning in your bones.`
@@ -221,9 +224,9 @@ The cards whisper<>
 
 ```bard
 You have {count} item<>
-<<if count != 1>>
+@if count != 1:
 s<>
-<<endif>>
+@endif
 .
 ```
 
@@ -235,9 +238,9 @@ s<>
 
 ```bard
 The spread contains<>
-<<for card in [" the Fool", " the Magician", " the Priestess"]>>
+@for card in [" the Fool", " the Magician", " the Priestess"]:
 {card}<>
-<<endfor>>
+@endfor
 .
 ```
 
@@ -247,7 +250,7 @@ The spread contains<>
 
 - Glue only works when `<>` appears at the **end of a line**
 - Literal `<>` in the middle of text is preserved: `x <> y` renders as `x <> y`
-- Works in passages, conditionals (`<<if>>`), and loops (`<<for>>`)
+- Works in passages, conditionals (`@if`), and loops (`@for`)
 - The glue operator is inspired by Ink's glue syntax
 
 **Status:** ✅ Implemented
@@ -356,11 +359,11 @@ Percent: {ratio:.1%}          # Percentage (0.753 → 75.3%)
 
 Execute multi-line Python code in passages.
 
-**Syntax:** `<<py>> ... >>`
+**Syntax:** `@py: ... @endpy`
 
 ```bard
 :: Example
-<<py
+@py:
 # Multi-line Python code
 
 import random
@@ -377,15 +380,16 @@ if total > 20:
     outcome = "great"
 else:
     outcome = "okay"
->>
+@endpy
+
 Results: {total} (average: {average:.1f})
 Outcome: {outcome}
 ````
 
 **Rules:**
 
-- Opens with `<<py`
-- Closes with `>>`
+- Opens with `@py:` (colon required)
+- Closes with `@endpy` (no colon)
 - Can span multiple lines
 - Preserves Python indentation
 - Executes in order with other commands
@@ -426,10 +430,10 @@ engine = BardEngine(story, context=context)
 Then in stories:
 
 ```bard
-<<py
+@py:
 result = roll_dice(20)
 greeting = greet("Hero")
->>
+@endpy
 ```
 
 **Error Handling:**
@@ -590,76 +594,77 @@ Best: {max(clients.values(), key=lambda c: c.trust).name}
 Branch content based on conditions.
 
 ```bard
-<<if condition>>
+@if condition:
 Content if true.
-<<elif other_condition>>
+@elif other_condition:
 Content if other is true.
-<<else>>
+@else:
 Default content.
-<<endif>>
+@endif
 ```
 
 **Examples:**
 
 ```bard
-<<if health > 75>>
+@if health > 75:
 You feel strong and healthy.
-<<elif health > 25>>
+@elif health > 25:
 You're wounded but standing.
-<<else>>
+@else:
 You're barely conscious.
-<<endif>>
+@endif
 ```
 
 **Rules:**
 
 - Conditions are Python expressions
+- Colons (`:`) are required after `@if`, `@elif`, and `@else`
 - Can access all variables and functions
 - Can be nested
 - Produces no whitespace itself (only renders chosen branch)
-- Must close with `<<endif>>`
-- Multiple `<<elif>>` branches allowed
-- `<<else>>` is optional
+- Must close with `@endif` (no colon)
+- Multiple `@elif` branches allowed
+- `@else` is optional
 - First true condition wins (like Python if/elif/else)
 
 **Complex Conditions:**
 
 ```bard
-<<if gold > 100 and trust > 50>>
+@if gold > 100 and trust > 50:
 Wealthy and trusted!
-<<elif gold > 50 or has_key>>
+@elif gold > 50 or has_key:
 Have resources.
-<<elif not has_key and gold < 20>>
+@elif not has_key and gold < 20:
 Poor and locked out.
-<<else>>
+@else:
 Getting by.
-<<endif>>
+@endif
 ```
 
 **With Objects:**
 
 ```bard
-<<if client.trust_level > 75>>
+@if client.trust_level > 75:
 Deeply trusted.
-<<elif any(card.is_major_arcana() for card in cards)>>
+@elif any(card.is_major_arcana() for card in cards):
 Major arcana drawn!
-<<else>>
+@else:
 Standard reading.
-<<endif>>
+@endif
 ```
 
 **Nested Conditionals:**
 
 ```bard
-<<if player_class == "warrior">>
-  <<if health > 75>>
+@if player_class == "warrior":
+  @if health > 75:
   Strong warrior!
-  <<else>>
+  @else:
   Wounded warrior.
-  <<endif>>
-<<else>>
+  @endif
+@else:
   Not a warrior.
-<<endif>>
+@endif
 ```
 
 **Error Handling:**
@@ -667,7 +672,8 @@ Standard reading.
 - Failed conditions skip that branch
 - Warnings printed to console
 - Story continues with next branch
-- Missing `<<endif>>` causes parse error
+- Missing `@endif` causes parse error
+- Missing colon on `@if`, `@elif`, or `@else` causes helpful syntax error
 
 **Status:** ✅ Implemented (Week 3, Session 10)
 
@@ -678,48 +684,48 @@ Standard reading.
 Iterate over collections to generate dynamic content.
 
 ```bard
-<<for variable in collection>>
+@for variable in collection:
   content using {variable}
-<<endfor>>
+@endfor
 ```
 
 **Examples:**
 
 ```bard
 # Simple list
-<<for item in items>>
+@for item in items:
 - {item}
-<<endfor>>
+@endfor
 
 # Range
-<<for i in range(5)>>
+@for i in range(5):
 Number {i}
-<<endfor>>
+@endfor
 
 # Objects
-<<for card in cards>>
+@for card in cards:
 {card.name}: {card.get_display_name()}
-<<endfor>>
+@endfor
 
 # Enumerate
-<<for i, item in enumerate(items)>>
+@for i, item in enumerate(items):
 {i+1}. {item}
-<<endfor>>
+@endfor
 
 # With start index
-<<for i, item in enumerate(items, 5)>>
+@for i, item in enumerate(items, 5):
 {i}. {item}
-<<endfor>>
+@endfor
 ```
 
 ~~**Inline loops:**~~
 
 ```bard
-Cards drawn: <<for card in cards>>{card.name}, <<endfor>>
+Cards drawn: @for card in cards:{card.name}, @endfor
 ```
 
-- Opens with `<<for variable in collection>>`
-- Closes with `<<endfor>>`
+- Opens with `@for variable in collection:` (colon required)
+- Closes with `@endfor` (no colon)
 - Variable available in expressions within loop
 - Collection evaluated once before loop starts
 - Can iterate over: lists, tuples, ranges, dicts, etc.
@@ -730,34 +736,34 @@ Cards drawn: <<for card in cards>>{card.name}, <<endfor>>
 **Nested Loops:**
 
 ```bard
-<<for suit in suits>>
+@for suit in suits:
   Suit: {suit}
-  <<for rank in ranks>>
+  @for rank in ranks:
     {rank} of {suit}
-  <<endfor>>
-<<endfor>>
+  @endfor
+@endfor
 ```
 
 **With Conditionals:**
 
 ```bard
-<<for item in inventory>>
-  <<if item.power > 10>>
+@for item in inventory:
+  @if item.power > 10:
   - {item.name} (powerful!)
-  <<endif>>
-<<endfor>>
+  @endif
+@endfor
 ```
 
 **Tuple Unpacking:**
 
 ```bard
-<<for key, value in items.items()>>
+@for key, value in items.items():
 {key}: {value}
-<<endfor>>
+@endfor
 
-<<for i, card in enumerate(cards)>>
+@for i, card in enumerate(cards):
 Card {i+1}: {card.name}
-<<endfor>>
+@endfor
 ```
 
 **Status:** ✅ Implemented (Week 3, Session 11)
@@ -766,24 +772,69 @@ Card {i+1}: {card.name}
 
 ### Comments
 
-Document your story.
+Document your story with two types of comments.
+
+#### Full-Line Comments
 
 ```bard
-# This is a comment
-
-Text content. # Inline comment
-
-- [Choice] -> Target # This choice goes to Target
+# This entire line is a comment
 ```
+
+Lines starting with `#` are completely ignored by the parser.
+
+#### Inline Comments
+
+Add comments to the end of any line using `//`:
+
+```bard
+@if reader.trust_level > 75: // High trust branch
+  Deep reading. // Emotional, intuitive response
+  {render_card(spread[0])} // Special formatting
+@endif
+
+~ health = 100 // starting value
+
++ [Open door] -> Room // requires key
+
+Normal text here // this part is ignored
+```
+
+**Where Inline Comments Work:**
+
+- Content lines: `Text here // comment`
+- Conditionals: `@if condition: // comment`
+- Loops: `@for item in list: // comment`
+- Variables: `~ var = value // comment`
+- Choices: `+ [Text] -> Target // comment`
+- Directives: `@input name="x" // comment`
+
+**Escaping:**
+
+Use `\//` for literal slashes in your text:
+
+```bard
+URL: https:\//example.com // This is a comment
+```
+
+Output: `URL: https://example.com`
+
+**Important Notes:**
+
+- Everything after `//` is ignored
+- `\//` becomes literal `//`
+- Only first `//` on a line starts comment
+- Works everywhere except inside `@py:` blocks (use Python's `#` there)
+- Inside expressions `{}`, use Python syntax (Python handles it)
 
 **Rules:**
 
-- Start with `#`
-- Extend to end of line
+- `#` for full-line comments
+- `//` for inline comments
+- Both extend to end of line
 - Ignored by compiler
 - Not rendered in output
 
-**Status:** 📅 Week 5
+**Status:** ✅ Implemented
 
 ---
 

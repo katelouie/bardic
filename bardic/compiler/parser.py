@@ -121,6 +121,52 @@ def extract_metadata(source: str) -> tuple[dict[str, str], str]:
     return metadata, "\n".join(remaining_lines)
 
 
+def strip_inline_comment(line: str) -> tuple[str, str]:
+    """
+    Remove inline // comment from a line.
+
+    Handles escaped \\// (literal //).
+
+    Args:
+        line: The line to process
+
+    Returns:
+        Tuple of (content_without_comment, comment_text)
+
+    Examples:
+        >>> strip_inline_comment("text // comment")
+        ('text ', '// comment')
+        >>> strip_inline_comment("text \\\\// not")
+        ('text // not', '')
+        >>> strip_inline_comment("// just comment")
+        ('', '// just comment')
+    """
+    result = []
+    comment = ""
+    i = 0
+
+    while i < len(line):
+        # Check for escaped \\//
+        if i < len(line) - 2 and line[i:i+3] == '\\//':
+            # Escaped: add literal //
+            result.append('//')
+            i += 3
+            continue
+
+        # Check for comment start //
+        if i < len(line) - 1 and line[i:i+2] == '//':
+            # Found comment - rest of line is comment
+            comment = line[i:]
+            break
+
+        # Regular character
+        result.append(line[i])
+        i += 1
+
+    content = ''.join(result)
+    return content, comment
+
+
 def resolve_includes(source: str, base_path: str, seen: Optional[set] = None) -> str:
     """
     Resolve @include directives recursively.
@@ -244,15 +290,64 @@ def detect_and_strip_indentation(lines: list[str]) -> list[str]:
 
 def extract_python_block(lines: list[str], start_index: int) -> tuple[str, int]:
     """
-    Extract a <<py...>> block from lines.
+    Extract Python block - supports <<py>> or @py: syntax.
 
     Args:
         lines: List of all lines
-        start_index: Index of the <<py line
+        start_index: Index of the <<py or @py: line
 
     Returns:
         Tuple of (python code, lines consumed)
     """
+    line = lines[start_index]
+    stripped = line.strip()
+
+    # Detect which syntax
+    if stripped.startswith("<<py"):
+        # Old syntax: <<py ... >>
+        return _extract_py_old_syntax(lines, start_index)
+    elif stripped.startswith("@py"):
+        # New syntax: @py: ... @endpy
+        return _extract_py_new_syntax(lines, start_index)
+    else:
+        raise ValueError("extract_python_block called on non-python line")
+
+
+def _extract_py_new_syntax(lines: list[str], start_index: int) -> tuple[str, int]:
+    """Extract @py: ... @endpy block."""
+    line = lines[start_index]
+
+    # Validate @py: has colon
+    if line.strip() != "@py:":
+        raise SyntaxError(
+            f"Line {start_index}: @py statement missing colon\n"
+            f"  Expected: @py:\n"
+            f"  Got: {line.strip()}"
+        )
+
+    code_lines = []
+    i = start_index + 1
+
+    while i < len(lines):
+        line = lines[i]
+        if line.strip() == "@endpy":
+            # Found closer
+            code = "\n".join(code_lines)
+            lines_consumed = i - start_index + 1
+            return code, lines_consumed
+        else:
+            code_lines.append(line)
+            i += 1
+
+    # Reached end without finding @endpy
+    raise SyntaxError(
+        f"Line {start_index}: @py block not closed\n"
+        f"  Expected @endpy before end of passage"
+    )
+
+
+def _extract_py_old_syntax(lines: list[str], start_index: int) -> tuple[str, int]:
+    """Extract <<py ... >> block (existing logic)."""
     # Skip the opening <<py line
     i = start_index + 1
     code_lines = []
@@ -355,8 +450,8 @@ def extract_conditional_block(lines: list[str], start_index: int) -> tuple[dict,
             i += 1
             continue
 
-        # Check for Python block
-        if stripped.startswith("<<py") and current_branch is not None:
+        # Check for Python block (both syntaxes)
+        if (stripped.startswith("<<py") or stripped.startswith("@py")) and current_branch is not None:
             # Dedent lines collected so far before adding Python block
             if current_branch_lines:
                 dedented = detect_and_strip_indentation(current_branch_lines)
@@ -409,8 +504,8 @@ def extract_conditional_block(lines: list[str], start_index: int) -> tuple[dict,
             i += 1
             continue
 
-        # Check for nested <<if>> (not the opening one)
-        if stripped.startswith("<<if ") and i != start_index:
+        # Check for nested <<if>> or @if: (not the opening one)
+        if (stripped.startswith("<<if ") or stripped.startswith("@if ")) and i != start_index:
             # This is a nested conditional - recursively extract it
             if current_branch is not None:
                 # Dedent lines collected so far before adding nested structure
@@ -428,8 +523,8 @@ def extract_conditional_block(lines: list[str], start_index: int) -> tuple[dict,
                 i += nested_lines
                 continue
 
-        # Check for nested <<for>> loop
-        if stripped.startswith("<<for ") and current_branch is not None:
+        # Check for nested <<for>> or @for: loop
+        if (stripped.startswith("<<for ") or stripped.startswith("@for ")) and current_branch is not None:
             # Dedent lines collected so far before adding nested loop
             if current_branch_lines:
                 dedented = detect_and_strip_indentation(current_branch_lines)
@@ -445,18 +540,34 @@ def extract_conditional_block(lines: list[str], start_index: int) -> tuple[dict,
             i += nested_lines
             continue
 
-        # Check for opening <<if>> (only at start_index)
-        if stripped.startswith("<<if ") and i == start_index:
-            match = re.match(r"<<if\s+(.+?)>>", stripped)
-            if match:
+        # Check for opening <<if>> or @if: (only at start_index)
+        if (stripped.startswith("<<if ") or stripped.startswith("@if ")) and i == start_index:
+            if stripped.startswith("@if "):
+                # Strip inline comment first
+                stripped, _ = strip_inline_comment(stripped)
+                # New syntax: @if condition:
+                match = re.match(r"@if\s+(.+?):", stripped)
+                if not match:
+                    raise SyntaxError(
+                        f"Line {i}: @if statement missing colon\n"
+                        f"  Expected: @if condition:\n"
+                        f"  Got: {stripped}"
+                    )
                 condition = match.group(1).strip()
-                current_branch = {"condition": condition, "content": []}
-                current_branch_lines = []
+            else:
+                # Strip inline comment first
+                stripped, _ = strip_inline_comment(stripped)
+                # Old syntax: <<if condition>>
+                match = re.match(r"<<if\s+(.+?)>>", stripped)
+                if match:
+                    condition = match.group(1).strip()
+            current_branch = {"condition": condition, "content": []}
+            current_branch_lines = []
             i += 1
             continue
 
-        # Check for <<endif>> - might be closing nested or *this* conditional
-        if stripped.startswith("<<endif>>"):
+        # Check for <<endif>> or @endif - might be closing nested or *this* conditional
+        if stripped.startswith("<<endif>>") or stripped == "@endif":
             if nesting_level > 0:
                 # This closes a nested conditional, not ours
                 nesting_level -= 1
@@ -489,17 +600,43 @@ def extract_conditional_block(lines: list[str], start_index: int) -> tuple[dict,
                 i += 1
                 break
 
-        # Check for <<elif condition>> at our level
-        if stripped.startswith("<<elif ") and nesting_level == 0:
-            match = re.match(r"<<elif\s+(.+?)>>", stripped)
-            if match:
+        # Check for <<elif condition>> or @elif condition: at our level
+        if (stripped.startswith("<<elif ") or stripped.startswith("@elif ")) and nesting_level == 0:
+            if stripped.startswith("@elif "):
+                # Strip inline comment first
+                stripped, _ = strip_inline_comment(stripped)
+                # New syntax: @elif condition:
+                match = re.match(r"@elif\s+(.+?):", stripped)
+                if not match:
+                    raise SyntaxError(
+                        f"Line {i}: @elif statement missing colon\n"
+                        f"  Expected: @elif condition:\n"
+                        f"  Got: {stripped}"
+                    )
                 condition = match.group(1).strip()
-                finalize_and_start_new_branch(condition)
+            else:
+                # Strip inline comment first
+                stripped, _ = strip_inline_comment(stripped)
+                # Old syntax: <<elif condition>>
+                match = re.match(r"<<elif\s+(.+?)>>", stripped)
+                if match:
+                    condition = match.group(1).strip()
+            finalize_and_start_new_branch(condition)
             i += 1
             continue
 
-        # Check for <<else>> at our level
-        if stripped.startswith("<<else>>") and nesting_level == 0:
+        # Check for <<else>> or @else: at our level
+        if (stripped.startswith("<<else>>") or stripped.startswith("@else")) and nesting_level == 0:
+            if stripped.startswith("@else"):
+                # Strip inline comment first
+                stripped, _ = strip_inline_comment(stripped)
+                # New syntax: @else: (with colon)
+                if stripped.strip() != "@else:":
+                    raise SyntaxError(
+                        f"Line {i}: @else statement missing colon\n"
+                        f"  Expected: @else:\n"
+                        f"  Got: {stripped}"
+                    )
             finalize_and_start_new_branch("True")
             i += 1
             continue
@@ -568,23 +705,38 @@ def extract_loop_block(lines: list[str], start_index: int) -> tuple[dict, int]:
         line = lines[i]
         stripped = line.strip()
 
-        # Check for opening <<for>> (only at start_index)
-        if stripped.startswith("<<for ") and i == start_index:
-            # Parse: <<for variable in collection>>
-            match = re.match(r"<<for\s+(.+?)\s+in\s+(.+?)>>", stripped)
-
-            if match:
+        # Check for opening <<for>> or @for: (only at start_index)
+        if (stripped.startswith("<<for ") or stripped.startswith("@for ")) and i == start_index:
+            if stripped.startswith("@for "):
+                # Strip inline comment first
+                stripped, _ = strip_inline_comment(stripped)
+                # New syntax: @for variable in collection:
+                match = re.match(r"@for\s+(.+?)\s+in\s+(.+?):", stripped)
+                if not match:
+                    raise SyntaxError(
+                        f"Line {i}: @for statement missing colon\n"
+                        f"  Expected: @for item in list:\n"
+                        f"  Got: {stripped}"
+                    )
                 loop["variable"] = match.group(1).strip()
                 loop["collection"] = match.group(2).strip()
-                loop_started = True
             else:
-                raise ValueError(f"Invalid for loop syntax: {stripped}")
+                # Strip inline comment first
+                stripped, _ = strip_inline_comment(stripped)
+                # Old syntax: <<for variable in collection>>
+                match = re.match(r"<<for\s+(.+?)\s+in\s+(.+?)>>", stripped)
+                if match:
+                    loop["variable"] = match.group(1).strip()
+                    loop["collection"] = match.group(2).strip()
+                else:
+                    raise ValueError(f"Invalid for loop syntax: {stripped}")
 
+            loop_started = True
             i += 1
             continue
 
-        # Check for <<endfor>>
-        if stripped.startswith("<<endfor>>"):
+        # Check for <<endfor>> or @endfor
+        if stripped.startswith("<<endfor>>") or stripped == "@endfor":
             i += 1
             break
 
@@ -609,8 +761,8 @@ def extract_loop_block(lines: list[str], start_index: int) -> tuple[dict, int]:
                 j += 1
                 continue
 
-            # Check for Python block
-            if stripped.startswith("<<py"):
+            # Check for Python block (both syntaxes)
+            if stripped.startswith("<<py") or stripped.startswith("@py"):
                 # Extract Python block and add it to loop content
                 # It will be executed during rendering (for each iteration)
                 code, lines_consumed = extract_python_block(dedented_lines, j)
@@ -634,16 +786,16 @@ def extract_loop_block(lines: list[str], start_index: int) -> tuple[dict, int]:
                 j += 1
                 continue
 
-            # Check for nested <<for>> loop
-            if stripped.startswith("<<for "):
+            # Check for nested <<for>> or @for: loop
+            if stripped.startswith("<<for ") or stripped.startswith("@for "):
                 # Recursively extract nested loop from dedented context
                 nested_loop, nested_lines_consumed = extract_loop_block(dedented_lines, j)
                 loop["content"].append(nested_loop)
                 j += nested_lines_consumed
                 continue
 
-            # Check for nested <<if>> inside loop
-            if stripped.startswith("<<if "):
+            # Check for nested <<if>> or @if: inside loop
+            if stripped.startswith("<<if ") or stripped.startswith("@if "):
                 # Recursively extract nested conditional from dedented context
                 nested_conditional, nested_lines_consumed = extract_conditional_block(
                     dedented_lines, j
@@ -749,22 +901,22 @@ def parse(source: str) -> Dict[str, Any]:
             i += 1
             continue
 
-        # Python block: <<py
-        if line.strip().startswith("<<py"):
+        # Python block: <<py or @py:
+        if line.strip().startswith("<<py") or line.strip().startswith("@py"):
             code, lines_consumed = extract_python_block(lines, i)
             current_passage["execute"].append({"type": "python_block", "code": code})
             i += lines_consumed
             continue
 
-        # Conditional block: <<if
-        if line.strip().startswith("<<if "):
+        # Conditional block: <<if or @if:
+        if line.strip().startswith("<<if ") or line.strip().startswith("@if "):
             conditional, lines_consumed = extract_conditional_block(lines, i)
             current_passage["content"].append(conditional)
             i += lines_consumed
             continue
 
-        # Loop block: <<for
-        if line.strip().startswith("<<for "):
+        # Loop block: <<for or @for:
+        if line.strip().startswith("<<for ") or line.strip().startswith("@for "):
             loop, lines_consumed = extract_loop_block(lines, i)
             current_passage["content"].append(loop)
             i += lines_consumed
@@ -801,6 +953,8 @@ def parse(source: str) -> Dict[str, Any]:
         # Variable assignment: ~ var = value
         if line.startswith("~ ") and current_passage:
             assignment = line[2:].strip()
+            # Strip inline comment first
+            assignment, _ = strip_inline_comment(assignment)
             if "=" in assignment:
                 var_name, value_expr = assignment.split("=", 1)
                 var_name = var_name.strip()
@@ -1078,8 +1232,12 @@ def parse_choice_line(line: str, passage: dict) -> Optional[dict]:
     {condition} + [Text] -> Target (conditional sticky)
     {condition} * [Text] -> Target (conditional one-time)
     + [Text] -> Target ^TAG1 ^TAG2:param (with tags)
+    + [Text] -> Target // inline comment
     """
-    # Extract tags first
+    # Strip inline comment first (before any parsing!)
+    line, _ = strip_inline_comment(line)
+
+    # Extract tags
     line_without_tags, tags = parse_tags(line)
 
     # Determine if sticky ('+') or one-time ('*')
@@ -1145,8 +1303,12 @@ def parse_content_line(line: str) -> list[dict]:
 
     Returns list of content tokens (text and expressions).
     Tags are attached to the last token in the line.
+    Supports inline comments: text // comment
     """
-    # Extract tags first
+    # Strip inline comment first (before any parsing!)
+    line, _ = strip_inline_comment(line)
+
+    # Extract tags
     line_without_tags, tags = parse_tags(line)
 
     tokens = []
@@ -1214,6 +1376,7 @@ def parse_render_line(line: str) -> Optional[dict]:
         @render my_function(args)
         @render:react my_function(args)
         @render simple_function
+        @render my_function(args) // inline comment
 
     Args:
         line: The full line of the story file
@@ -1221,6 +1384,9 @@ def parse_render_line(line: str) -> Optional[dict]:
     Returns:
         Parsed directive dict, or None if invalid
     """
+    # Strip inline comment first
+    line, _ = strip_inline_comment(line)
+
     # Must start with @render
     if not line.strip().startswith("@render"):
         return None
@@ -1371,6 +1537,7 @@ def parse_input_line(line: str) -> Optional[dict]:
         @input name="variable_name"
         @input name="variable_name" placeholder="hint text"
         @input name="variable_name" placeholder="hint" label="Display Label"
+        @input name="variable_name" // inline comment
 
     Args:
         line: The full line containing @input directive
@@ -1378,6 +1545,9 @@ def parse_input_line(line: str) -> Optional[dict]:
     Returns:
         Dict with type='input', name, optional placeholder and label, or None if invalid
     """
+    # Strip inline comment first
+    line, _ = strip_inline_comment(line)
+
     # Must start with @input
     if not line.strip().startswith("@input"):
         return None
