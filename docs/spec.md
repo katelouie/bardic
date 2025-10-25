@@ -35,6 +35,7 @@ Quick reference for all Bardic syntax elements:
 | `@if:` / `@elif:` / `@else:` / `@endif` | Conditional | `@if condition:` |
 | `@for:` / `@endfor` | Loop | `@for item in list:` |
 | `~` | Variable assignment | `~ health = 100` |
+| `~ var += value` | Augmented assignment | `~ count += 1` |
 | `{}` | Expression | `{variable}` or `{function()}` or `{var:.2f}` |
 | `+` | Sticky choice | `+ [Text] -> Target` |
 | `*` | One-time choice | `* [Text] -> Target` |
@@ -349,6 +350,46 @@ Percent: {ratio:.1%}          # Percentage (0.753 → 75.3%)
 ```bard
 ~ health = health - 10
 ~ total = (gold * 2) + bonus
+```
+
+**Augmented Assignment:**
+
+Shorthand operators for updating variables:
+
+```bard
+~ count += 1              # Same as: count = count + 1
+~ health -= 10            # Same as: health = health - 10
+~ total *= 2              # Same as: total = total * 2
+~ price /= 1.5            # Same as: price = price / 1.5
+~ items //= 2             # Same as: items = items // 2 (floor division)
+~ remainder %= 10         # Same as: remainder = remainder % 10
+~ area **= 2              # Same as: area = area ** 2 (exponentiation)
+```
+
+**Supported Operators:**
+- `+=` (addition)
+- `-=` (subtraction)
+- `*=` (multiplication)
+- `/=` (division)
+- `//=` (floor division)
+- `%=` (modulo)
+- `**=` (exponentiation)
+
+**Works with complex expressions:**
+
+```bard
+~ total += (base * multiplier) + bonus
+~ score -= penalty_amount * difficulty
+```
+
+**Works with multiline expressions:**
+
+```bard
+~ total += (
+    item1 +
+    item2 +
+    item3
+)
 ```
 
 **Status:** ✅ Implemented (Week 2, Session 6)

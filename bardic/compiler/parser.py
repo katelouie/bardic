@@ -153,6 +153,13 @@ def strip_inline_comment(line: str) -> tuple[str, str]:
             i += 3
             continue
 
+        # Check for //= operator (NOT a comment!)
+        if i < len(line) - 2 and line[i:i+3] == '//=':
+            # Floor division assignment operator - not a comment
+            result.append('//=')
+            i += 3
+            continue
+
         # Check for comment start //
         if i < len(line) - 1 and line[i:i+2] == '//':
             # Found comment - rest of line is comment
@@ -952,12 +959,43 @@ def parse(source: str) -> Dict[str, Any]:
             i += 1
             continue
 
-        # Variable assignment: ~ var = value
+        # Variable assignment: ~ var = value or ~ var += value
         if line.startswith("~ ") and current_passage:
             assignment = line[2:].strip()
             # Strip inline comment first
             assignment, _ = strip_inline_comment(assignment)
-            if "=" in assignment:
+
+            # Check for augmented assignment operators (longest first to avoid false matches)
+            augmented_op = None
+            for op in ["//=", "**=", "+=", "-=", "*=", "/=", "%="]:
+                if op in assignment:
+                    augmented_op = op
+                    break
+
+            if augmented_op:
+                # Augmented assignment: expand to regular form
+                # Example: count += 1  →  count = count + (1)
+                var_name, value_expr = assignment.split(augmented_op, 1)
+                var_name = var_name.strip()
+                value_expr = value_expr.strip()
+
+                # Check if the VALUE expression is multi-line (before expansion)
+                complete_value_expr, lines_consumed = extract_multiline_expression(
+                    lines, i, value_expr
+                )
+
+                # NOW expand to regular assignment with parentheses for safety
+                base_op = augmented_op[:-1]  # Remove trailing '='
+                expanded_expr = f"{var_name} {base_op} ({complete_value_expr})"
+
+                # Store as execution command
+                current_passage["execute"].append(
+                    {"type": "set_var", "var": var_name, "expression": expanded_expr}
+                )
+                i += lines_consumed
+
+            elif "=" in assignment:
+                # Regular assignment (existing logic)
                 var_name, value_expr = assignment.split("=", 1)
                 var_name = var_name.strip()
                 value_expr = value_expr.strip()
