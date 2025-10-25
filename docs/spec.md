@@ -801,6 +801,7 @@ Normal text here // this part is ignored
 
 **Where Inline Comments Work:**
 
+- Passage headers: `:: PassageName // comment about this passage`
 - Content lines: `Text here // comment`
 - Conditionals: `@if condition: // comment`
 - Loops: `@for item in list: // comment`

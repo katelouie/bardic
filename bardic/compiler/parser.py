@@ -878,6 +878,8 @@ def parse(source: str) -> Dict[str, Any]:
         # Passage Header: :: PassageName ^TAG1 ^TAG2
         if line.startswith(":: "):
             passage_header = line[3:].strip()
+            # Strip inline comment first
+            passage_header, _ = strip_inline_comment(passage_header)
             # Extract tags from passage header
             passage_name, passage_tags = parse_tags(passage_header)
             current_passage = {
