@@ -9,8 +9,73 @@ Supports:
 
 import re
 from pathlib import Path
-from typing import Dict, Optional, Any
+from typing import Dict, Optional, Any, List
 import sys
+
+
+def format_error(
+    error_type: str,
+    line_num: int,
+    lines: List[str],
+    message: str,
+    pointer_col: int = 0,
+    pointer_length: int = None,
+    suggestion: str = None,
+    filename: str = None
+) -> str:
+    """
+    Format a beautiful error message with context.
+
+    Args:
+        error_type: Type of error (e.g., "Syntax Error", "Unclosed Block")
+        line_num: Line number where error occurred (0-indexed)
+        lines: All source lines
+        message: Main error message
+        pointer_col: Column where error starts (for pointer alignment)
+        pointer_length: Length of pointer (defaults to rest of line)
+        suggestion: Optional hint for how to fix
+        filename: Optional filename to include in error
+
+    Returns:
+        Formatted error string with context and visual pointer
+    """
+    # Build header
+    parts = []
+    parts.append(f"✗ {error_type}")
+    if filename:
+        parts.append(f" in {filename}")
+    parts.append(f" on line {line_num + 1}:")
+    parts.append(f"  {message}")
+    parts.append("")
+
+    # Get context lines (±2 around error)
+    start = max(0, line_num - 2)
+    end = min(len(lines), line_num + 3)
+
+    # Show context
+    for i in range(start, end):
+        if i >= len(lines):
+            break
+        line = lines[i]
+        line_marker = f"  {i + 1:4} | "
+        parts.append(line_marker + line)
+
+        # Add pointer under error line
+        if i == line_num:
+            if pointer_length is None:
+                # Point to rest of line from pointer_col
+                pointer_length = len(line.strip()) - pointer_col
+            indent = len(line_marker) + pointer_col
+            pointer = " " * indent + "^" * max(1, pointer_length)
+            parts.append(pointer)
+
+    parts.append("")
+
+    if suggestion:
+        parts.append(f"  Hint: {suggestion}")
+        parts.append("")
+
+    return "\n".join(parts)
 
 
 def extract_imports(source: str) -> tuple[list[str], str]:
@@ -573,6 +638,17 @@ def extract_conditional_block(lines: list[str], start_index: int) -> tuple[dict,
             i += 1
             continue
 
+        # Check for common typo: @endif: (with colon)
+        if stripped == "@endif:":
+            raise SyntaxError(format_error(
+                error_type="Syntax Error",
+                line_num=i,
+                lines=lines,
+                message="@endif should not have a colon",
+                pointer_length=7,
+                suggestion="Only opening tags (@if, @elif, @else) use colons. Closing tags (@endif, @endfor, @endpy) do not."
+            ))
+
         # Check for <<endif>> or @endif - might be closing nested or *this* conditional
         if stripped.startswith("<<endif>>") or stripped == "@endif":
             if nesting_level > 0:
@@ -741,6 +817,17 @@ def extract_loop_block(lines: list[str], start_index: int) -> tuple[dict, int]:
             loop_started = True
             i += 1
             continue
+
+        # Check for common typo: @endfor: (with colon)
+        if stripped == "@endfor:":
+            raise SyntaxError(format_error(
+                error_type="Syntax Error",
+                line_num=i,
+                lines=lines,
+                message="@endfor should not have a colon",
+                pointer_length=8,
+                suggestion="Only opening tags (@for) use colons. Closing tags (@endfor) do not."
+            ))
 
         # Check for <<endfor>> or @endfor
         if stripped.startswith("<<endfor>>") or stripped == "@endfor":
@@ -1043,6 +1130,22 @@ def parse(source: str) -> Dict[str, Any]:
             current_passage["content"].append({"type": "text", "value": "\n"})
             i += 1
             continue
+
+        # Unrecognized syntax - likely a typo in a directive
+        # Check for common directive-like patterns that don't match known syntax
+        if current_passage and line.strip():
+            stripped = line.strip()
+            # Check for @-directives that look wrong
+            if stripped.startswith("@") and not stripped.startswith("@include"):
+                # Might be a typo like @iff, @elseif, @endif:, @endfor:, etc.
+                raise SyntaxError(format_error(
+                    error_type="Syntax Error",
+                    line_num=i,
+                    lines=lines,
+                    message=f"Unrecognized directive: {stripped.split()[0] if ' ' in stripped else stripped}",
+                    pointer_length=len(stripped.split()[0] if ' ' in stripped else stripped),
+                    suggestion="Check for typos in directives. Valid directives: @if, @elif, @else, @endif, @for, @endfor, @py, @endpy, @include, @render, @input"
+                ))
 
         i += 1
 
