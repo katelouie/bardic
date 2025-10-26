@@ -28,8 +28,12 @@ def extract_connections(story_data: dict) -> Tuple[Dict[str, List[str]], Set[str
             if target:
                 referenced_passages.add(target)
                 choice_text = choice.get("text", "")
-                # Truncate long choice text
-                if len(choice_text) > 30:
+                # Handle both string and list-based choice text
+                if isinstance(choice_text, list):
+                    # Token-based choice text (new format)
+                    choice_text = "[choice]"
+                elif len(choice_text) > 30:
+                    # Truncate long choice text
                     choice_text = choice_text[:27] + "..."
                 connections[passage_id].append((target, choice_text, False))
 
