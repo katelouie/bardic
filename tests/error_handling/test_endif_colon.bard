@@ -1,0 +1,8 @@
+:: Start
+
+@if True:
+    This content should work fine.
+@endif:
+
+:: NextPassage
+This passage should never be reached because @endif: should error.

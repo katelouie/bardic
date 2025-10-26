@@ -1,0 +1,5 @@
+:: Start
+
+@iff condition:
+    This should error because @iff is not a valid directive.
+@endif

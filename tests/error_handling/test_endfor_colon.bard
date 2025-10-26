@@ -1,0 +1,8 @@
+:: Start
+
+@for item in [1, 2, 3]:
+    Item: {item}
+@endfor:
+
+:: NextPassage
+This should never be reached.
