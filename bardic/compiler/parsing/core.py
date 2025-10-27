@@ -9,6 +9,7 @@ from .blocks import extract_python_block, extract_conditional_block, extract_loo
 from .content import parse_content_line, parse_choice_line, parse_tags
 from .directives import parse_render_line, parse_input_line, extract_multiline_expression
 from .validation import (
+    BlockStack,
     _cleanup_whitespace,
     _trim_trailing_newlines,
     _determine_initial_passage,
@@ -35,6 +36,7 @@ def parse(source: str) -> Dict[str, Any]:
     passages = {}
     current_passage = None
     explicit_start = None
+    block_stack = BlockStack()  # Track open control blocks
 
     lines = remaining_source.split("\n")
     i = 0
@@ -55,6 +57,10 @@ def parse(source: str) -> Dict[str, Any]:
             passage_header, _ = strip_inline_comment(passage_header)
             # Extract tags from passage header
             passage_name, passage_tags = parse_tags(passage_header)
+
+            # Check that all blocks are closed before starting new passage
+            block_stack.check_empty(passage_name, i)
+
             current_passage = {
                 "id": passage_name,
                 "content": [],

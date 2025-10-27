@@ -39,6 +39,7 @@ from .directives import (
 
 # Validation and cleanup
 from .validation import (
+    BlockStack,
     check_duplicate_passages,
     _cleanup_whitespace,
     _trim_trailing_newlines,
@@ -77,6 +78,7 @@ __all__ = [
     'parse_input_line',
     'extract_multiline_expression',
     # Validation
+    'BlockStack',
     'check_duplicate_passages',
     # IO
     'parse_file',

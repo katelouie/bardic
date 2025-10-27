@@ -1,0 +1,40 @@
+{
+  "version": "0.1.0",
+  "initial_passage": "Start",
+  "metadata": {},
+  "imports": [],
+  "passages": {
+    "Start": {
+      "id": "Start",
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Some content here."
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "conditional",
+          "branches": []
+        }
+      ],
+      "choices": [],
+      "execute": [],
+      "tags": []
+    }
+  }
+}

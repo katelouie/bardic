@@ -1,0 +1,10 @@
+:: Start
+
+Some content here.
+
+@if True:
+    This block is never closed!
+
+:: NextPassage
+
+This should error because the @if block was never closed before the new passage.

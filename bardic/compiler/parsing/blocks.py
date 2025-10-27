@@ -133,6 +133,7 @@ def extract_conditional_block(lines: list[str], start_index: int) -> tuple[dict,
     current_branch_lines = []  # Collect content lines for this branch
     i = start_index
     nesting_level = 0  # Track nested <<if>> blocks
+    found_closer = False  # Track whether we found @endif
 
     def finalize_and_start_new_branch(condition_str):
         """Helper to finalize current branch and start a new one."""
@@ -330,6 +331,7 @@ def extract_conditional_block(lines: list[str], start_index: int) -> tuple[dict,
                                 current_branch["content"].append({"type": "text", "value": "\n"})
                     # Always append branch (even if it only has directives, no text)
                     conditional["branches"].append(current_branch)
+                found_closer = True
                 i += 1
                 break
 
@@ -409,6 +411,15 @@ def extract_conditional_block(lines: list[str], start_index: int) -> tuple[dict,
 
         i += 1
 
+    # Check that we found the closing @endif
+    if not found_closer:
+        raise SyntaxError(
+            f"Line {start_index + 1}: Unclosed @if block\n"
+            f"  Block started on line {start_index + 1} but never closed\n"
+            f"  Expected @endif before end of passage\n"
+            f"  Hint: Every @if must have a matching @endif"
+        )
+
     # Calculate lines consumed
     lines_consumed = i - start_index
 
@@ -433,6 +444,7 @@ def extract_loop_block(lines: list[str], start_index: int) -> tuple[dict, int]:
     loop_raw_lines = []  # Collect raw lines for dedenting
     i = start_index
     loop_started = False
+    found_closer = False  # Track whether we found @endfor
 
     while i < len(lines):
         line = lines[i]
@@ -481,6 +493,7 @@ def extract_loop_block(lines: list[str], start_index: int) -> tuple[dict, int]:
 
         # Check for <<endfor>> or @endfor
         if stripped.startswith("<<endfor>>") or stripped == "@endfor":
+            found_closer = True
             i += 1
             break
 
@@ -580,6 +593,15 @@ def extract_loop_block(lines: list[str], start_index: int) -> tuple[dict, int]:
                 loop["content"].extend(content_tokens)
                 loop["content"].append({"type": "text", "value": "\n"})
             j += 1
+
+    # Check that we found the closing @endfor
+    if not found_closer:
+        raise SyntaxError(
+            f"Line {start_index + 1}: Unclosed @for block\n"
+            f"  Block started on line {start_index + 1} but never closed\n"
+            f"  Expected @endfor before end of passage\n"
+            f"  Hint: Every @for must have a matching @endfor"
+        )
 
     # Calculate lines consumed
     lines_consumed = i - start_index

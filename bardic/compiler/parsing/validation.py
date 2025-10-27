@@ -1,7 +1,76 @@
 """Post-processing validation and cleanup."""
 
 import sys
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List, Tuple
+
+
+class BlockStack:
+    """
+    Track open control flow blocks for validation.
+
+    Ensures all @if/@for/@py blocks are properly closed and matched.
+    """
+
+    def __init__(self):
+        """Initialize empty block stack."""
+        self.stack: List[Tuple[str, int]] = []  # [(block_type, line_number), ...]
+
+    def push(self, block_type: str, line_num: int) -> None:
+        """
+        Push a new block onto the stack when opening.
+
+        Args:
+            block_type: Type of block ('if', 'for', 'py')
+            line_num: Line number where block opens
+        """
+        self.stack.append((block_type, line_num))
+
+    def pop(self, expected_type: str, line_num: int) -> None:
+        """
+        Pop a block from the stack when closing.
+
+        Args:
+            expected_type: Expected block type ('if', 'for', 'py')
+            line_num: Line number where block closes
+
+        Raises:
+            SyntaxError: If no matching opening or wrong block type
+        """
+        if not self.stack:
+            raise SyntaxError(
+                f"Line {line_num + 1}: Unexpected @end{expected_type}\n"
+                f"  No matching @{expected_type} found.\n"
+                f"  Hint: Every @end{expected_type} must have a matching @{expected_type}."
+            )
+
+        block_type, start_line = self.stack.pop()
+        if block_type != expected_type:
+            raise SyntaxError(
+                f"Line {line_num + 1}: Block mismatch\n"
+                f"  Expected @end{block_type} (opened on line {start_line + 1})\n"
+                f"  Got: @end{expected_type}\n"
+                f"  Hint: Blocks must be closed in the reverse order they were opened."
+            )
+
+    def check_empty(self, passage_name: str, line_num: int) -> None:
+        """
+        Check that all blocks are closed before starting a new passage.
+
+        Args:
+            passage_name: Name of the new passage being started
+            line_num: Line number of the passage header
+
+        Raises:
+            SyntaxError: If there are unclosed blocks
+        """
+        if self.stack:
+            block_type, start_line = self.stack[-1]
+            raise SyntaxError(
+                f"Line {line_num + 1}: Unclosed @{block_type} block\n"
+                f"  Block started on line {start_line + 1}\n"
+                f"  Must close with @end{block_type} before new passage ':: {passage_name}'\n"
+                f"  Hint: All control blocks must be closed within their passage."
+            )
 
 
 def _cleanup_whitespace(passage: dict[str, Any]) -> None:
