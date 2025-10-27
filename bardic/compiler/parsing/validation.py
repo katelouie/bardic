@@ -208,20 +208,53 @@ def _determine_initial_passage(
 
 
 def check_duplicate_passages(
-    passages: dict[str, Any], filepath: Optional[str] = None
+    passage_locations: Dict[str, List[int]],
+    lines: List[str],
+    filename: Optional[str] = None
 ) -> None:
-    """Check for duplicate passage names.
-
-    This is called after parsing to ensure no passages are defined twice.
+    """
+    Check for duplicate passage names and error with complete summary.
 
     Args:
-        passages: Dictionary of parsed passages
-        filepath: Optional filepath for error context
+        passage_locations: Dict mapping passage names to list of line numbers where defined
+        lines: Source code lines (for context in error message)
+        filename: Optional filename for error context
 
     Raises:
-        ValueError: If duplicate passages found
+        ValueError: If any duplicates found, with summary of ALL duplicates
     """
-    # In the current implementation, the dict naturally prevents duplicates
-    # But we could track source files for better error messages
-    # For now, this is a placeholder for future enhancement
-    pass
+    # Find all duplicates (passages defined more than once)
+    duplicates = {
+        name: locations
+        for name, locations in passage_locations.items()
+        if len(locations) > 1
+    }
+
+    if not duplicates:
+        return  # No duplicates, all good!
+
+    # Build comprehensive error message
+    error_parts = []
+    error_parts.append("✗ Duplicate Passage Error")
+    if filename:
+        error_parts.append(f" in {filename}")
+    error_parts.append(":\n")
+    error_parts.append(f"  Found {len(duplicates)} passage(s) defined multiple times\n")
+    error_parts.append("\n")
+
+    # List each duplicate with all its locations
+    for passage_name, locations in sorted(duplicates.items()):
+        error_parts.append(f"  Passage '{passage_name}' defined {len(locations)} times:\n")
+        for i, line_num in enumerate(locations):
+            # Show snippet of that line
+            line_content = lines[line_num - 1].strip() if line_num - 1 < len(lines) else ""
+            if i == 0:
+                error_parts.append(f"    Line {line_num:4}: {line_content}  ← First definition\n")
+            else:
+                error_parts.append(f"    Line {line_num:4}: {line_content}  ← Duplicate!\n")
+        error_parts.append("\n")
+
+    error_parts.append("  Hint: Each passage must have a unique name.\n")
+    error_parts.append("        Consider renaming duplicates or removing redundant definitions.\n")
+
+    raise ValueError("".join(error_parts))

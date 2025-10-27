@@ -25,5 +25,5 @@ def parse_file(filepath: str) -> Dict[str, Any]:
     # Resolve any includes first
     resolved_source = resolve_includes(source, filepath)
 
-    # Then parse everything else normally
-    return parse(resolved_source)
+    # Then parse everything else normally (pass filename for better error messages)
+    return parse(resolved_source, filename=filepath)

@@ -1,0 +1,23 @@
+:: Start
+This is the start passage.
+
+:: MyPassage
+First definition of MyPassage.
+This content should be overwritten by the duplicate.
+
+:: AnotherPassage
+This one is fine - no duplicates here.
+
+:: MyPassage
+Second definition - this is a duplicate!
+This will silently replace the first one without our new error handling.
+
+:: YetAnother
+Also fine, unique passage.
+
+:: MyPassage
+Third definition - also duplicate!
+Now we have THREE definitions of the same passage.
+
+:: FinalPassage
+End of test file.

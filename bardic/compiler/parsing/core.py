@@ -1,7 +1,7 @@
 """Main parse() orchestrator - coordinates the entire parsing process."""
 
 import re
-from typing import Dict, Any
+from typing import Dict, Any, Optional, List
 
 from .errors import format_error
 from .preprocessing import extract_imports, extract_metadata, strip_inline_comment
@@ -17,12 +17,13 @@ from .validation import (
 )
 
 
-def parse(source: str) -> Dict[str, Any]:
+def parse(source: str, filename: Optional[str] = None) -> Dict[str, Any]:
     """
     Parse a .bard source string into structured data.
 
     Args:
         source: The .bard file content as a string
+        filename: Optional filename for better error messages
 
     Returns:
         Dict containing version, initial_passage, metadata, and passages
@@ -34,6 +35,7 @@ def parse(source: str) -> Dict[str, Any]:
     metadata, remaining_source = extract_metadata(remaining_source)
 
     passages = {}
+    passage_locations = {}  # Track where each passage is defined (for duplicate detection)
     current_passage = None
     explicit_start = None
     block_stack = BlockStack()  # Track open control blocks
@@ -57,6 +59,11 @@ def parse(source: str) -> Dict[str, Any]:
             passage_header, _ = strip_inline_comment(passage_header)
             # Extract tags from passage header
             passage_name, passage_tags = parse_tags(passage_header)
+
+            # Track passage location for duplicate detection
+            if passage_name not in passage_locations:
+                passage_locations[passage_name] = []
+            passage_locations[passage_name].append(i + 1)  # Store 1-indexed line number
 
             # Check that all blocks are closed before starting new passage
             block_stack.check_empty(passage_name, i)
@@ -239,14 +246,11 @@ def parse(source: str) -> Dict[str, Any]:
         _cleanup_whitespace(passage)
         _trim_trailing_newlines(passage)
 
+    # Detect duplicate passages (errors if any found)
+    check_duplicate_passages(passage_locations, lines, filename)
+
     # Determine initial passage (priority order)
     initial_passage = _determine_initial_passage(passages, explicit_start)
-
-    # Detect duplicate passages
-    check_duplicate_passages(passages)
-    # This is optional - just noting where we'd add this
-    # We'd need to track source file in the token stream
-    # For now, duplicates are naturally prevented by dict keys
 
     # Build final structure
     return {
