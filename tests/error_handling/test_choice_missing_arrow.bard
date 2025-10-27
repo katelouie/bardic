@@ -1,0 +1,6 @@
+:: Start
+This choice is missing the arrow.
+
++ [Choice text]
+
+This should error.

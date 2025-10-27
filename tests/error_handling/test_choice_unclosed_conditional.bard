@@ -1,0 +1,6 @@
+:: Start
+This choice has an unclosed conditional.
+
++ {health > 0 [Victory!] -> Win
+
+This should error - missing closing brace.

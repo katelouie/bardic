@@ -10,6 +10,8 @@ from .content import parse_content_line, parse_choice_line, parse_tags
 from .directives import parse_render_line, parse_input_line, extract_multiline_expression
 from .validation import (
     BlockStack,
+    validate_passage_name,
+    validate_choice_syntax,
     _cleanup_whitespace,
     _trim_trailing_newlines,
     _determine_initial_passage,
@@ -59,6 +61,9 @@ def parse(source: str, filename: Optional[str] = None) -> Dict[str, Any]:
             passage_header, _ = strip_inline_comment(passage_header)
             # Extract tags from passage header
             passage_name, passage_tags = parse_tags(passage_header)
+
+            # Validate passage name (strict rules for navigation targets)
+            validate_passage_name(passage_name, i, lines, filename)
 
             # Track passage location for duplicate detection
             if passage_name not in passage_locations:
@@ -195,9 +200,26 @@ def parse(source: str, filename: Optional[str] = None) -> Dict[str, Any]:
 
         # Choice: +/* [Text] -> Target or +/* {condition} [Text] -> Target
         if line.startswith("+ ") or line.startswith("* "):
+            # Validate choice syntax first (errors if malformed)
+            validate_choice_syntax(line, i, lines, filename)
+
+            # Now parse (should always succeed if validation passed)
             choice = parse_choice_line(line, current_passage)
             if choice:
                 current_passage["choices"].append(choice)
+            else:
+                # This should never happen after validation, but just in case
+                raise SyntaxError(
+                    format_error(
+                        error_type="Internal Error",
+                        line_num=i,
+                        lines=lines,
+                        message="Choice validation passed but parsing failed",
+                        pointer_length=len(line.strip()),
+                        suggestion="This is a bug in the parser. Please report it.",
+                        filename=filename,
+                    )
+                )
             i += 1
             continue
 

@@ -1,7 +1,307 @@
 """Post-processing validation and cleanup."""
 
 import sys
+import re
 from typing import Dict, Any, Optional, List, Tuple
+
+from .errors import format_error
+
+
+def validate_choice_syntax(
+    line: str, line_num: int, lines: List[str], filename: Optional[str] = None
+) -> None:
+    """
+    Validate choice line syntax before parsing.
+
+    Checks for common syntax errors:
+    - Missing brackets
+    - Missing arrow
+    - Unclosed conditionals
+    - Invalid targets
+
+    Args:
+        line: The choice line to validate (starts with + or *)
+        line_num: Line number (0-indexed) for error reporting
+        lines: Source lines for error context
+        filename: Optional filename for error context
+
+    Raises:
+        SyntaxError: If choice syntax is malformed
+    """
+    from .preprocessing import strip_inline_comment
+
+    # Strip comments and whitespace for analysis
+    clean_line, _ = strip_inline_comment(line.strip())
+
+    # Check 1: Must have arrow
+    if " -> " not in clean_line:
+        raise SyntaxError(
+            format_error(
+                error_type="Malformed Choice",
+                line_num=line_num,
+                lines=lines,
+                message="Missing arrow '->'",
+                pointer_length=len(line.strip()),
+                suggestion="Choices must specify a target passage with ->\nExpected format: + [Choice text] -> Target",
+                filename=filename,
+            )
+        )
+
+    # Split on arrow to get left side (choice) and right side (target)
+    parts = clean_line.split(" -> ", 1)
+    choice_part = parts[0]
+    target_part = parts[1].strip() if len(parts) > 1 else ""
+
+    # Check 2: Must have opening bracket
+    if "[" not in choice_part:
+        raise SyntaxError(
+            format_error(
+                error_type="Malformed Choice",
+                line_num=line_num,
+                lines=lines,
+                message="Missing opening bracket '['",
+                pointer_length=len(line.strip()),
+                suggestion="Expected format: + [Choice text] -> Target",
+                filename=filename,
+            )
+        )
+
+    # Check 3: Must have closing bracket
+    if "]" not in choice_part:
+        raise SyntaxError(
+            format_error(
+                error_type="Malformed Choice",
+                line_num=line_num,
+                lines=lines,
+                message="Missing closing bracket ']'",
+                pointer_length=len(line.strip()),
+                suggestion="Expected format: + [Choice text] -> Target",
+                filename=filename,
+            )
+        )
+
+    # Check 4: Check for conditionals FIRST (to handle nested brackets like {cards[0]})
+    # If conditional present, find its boundaries first
+    cond_start = -1
+    cond_end = -1
+
+    if "{" in choice_part:
+        if "}" not in choice_part:
+            raise SyntaxError(
+                format_error(
+                    error_type="Malformed Choice",
+                    line_num=line_num,
+                    lines=lines,
+                    message="Unclosed conditional - missing '}'",
+                    pointer_length=len(line.strip()),
+                    suggestion="Expected format: + {condition} [Choice text] -> Target\nConditional choices must have matching { and } before the bracket",
+                    filename=filename,
+                )
+            )
+
+        # Find matching braces (handle nesting)
+        cond_start = choice_part.index("{")
+        depth = 0
+        for i in range(cond_start, len(choice_part)):
+            if choice_part[i] == "{":
+                depth += 1
+            elif choice_part[i] == "}":
+                depth -= 1
+                if depth == 0:
+                    cond_end = i
+                    break
+
+    # Check 5: If } present without {, error
+    if "}" in choice_part and "{" not in choice_part:
+        raise SyntaxError(
+            format_error(
+                error_type="Malformed Choice",
+                line_num=line_num,
+                lines=lines,
+                message="Found '}' without matching '{'",
+                pointer_length=len(line.strip()),
+                suggestion="Expected format: + {condition} [Choice text] -> Target",
+                filename=filename,
+            )
+        )
+
+    # Check 6: Find choice text brackets (AFTER conditional if present)
+    # Look for brackets that are NOT inside the conditional
+    search_start = cond_end + 1 if cond_end >= 0 else 0
+    remaining = choice_part[search_start:]
+
+    if "[" not in remaining:
+        # No bracket after conditional (or at all)
+        raise SyntaxError(
+            format_error(
+                error_type="Malformed Choice",
+                line_num=line_num,
+                lines=lines,
+                message="Missing opening bracket '['",
+                pointer_length=len(line.strip()),
+                suggestion="Expected format: + [Choice text] -> Target",
+                filename=filename,
+            )
+        )
+
+    if "]" not in remaining:
+        raise SyntaxError(
+            format_error(
+                error_type="Malformed Choice",
+                line_num=line_num,
+                lines=lines,
+                message="Missing closing bracket ']'",
+                pointer_length=len(line.strip()),
+                suggestion="Expected format: + [Choice text] -> Target",
+                filename=filename,
+            )
+        )
+
+    # Check 7: Brackets must be in correct order (in remaining part)
+    bracket_open = remaining.index("[") + search_start
+    bracket_close = remaining.index("]") + search_start
+    if bracket_close < bracket_open:
+        raise SyntaxError(
+            format_error(
+                error_type="Malformed Choice",
+                line_num=line_num,
+                lines=lines,
+                message="Closing bracket ']' appears before opening bracket '['",
+                pointer_length=len(line.strip()),
+                suggestion="Expected format: + [Choice text] -> Target",
+                filename=filename,
+            )
+        )
+
+    # Check 8: Target must not be empty
+    if not target_part:
+        raise SyntaxError(
+            format_error(
+                error_type="Malformed Choice",
+                line_num=line_num,
+                lines=lines,
+                message="Missing target passage name",
+                pointer_length=len(line.strip()),
+                suggestion="Expected format: + [Choice text] -> Target\nTarget passage name is required after ->",
+                filename=filename,
+            )
+        )
+
+    # Check 8: Extract target (before any tags/comments)
+    # Target is the first word after ->
+    target_name = target_part.split()[0] if target_part.split() else ""
+
+    # Check 9: Target should follow passage naming rules (no spaces, etc)
+    if " " in target_name:
+        raise SyntaxError(
+            format_error(
+                error_type="Malformed Choice",
+                line_num=line_num,
+                lines=lines,
+                message=f"Invalid target '{target_name}' contains spaces",
+                pointer_length=len(line.strip()),
+                suggestion=f"Target names can't contain spaces. Use '{target_name.replace(' ', '_')}' instead.",
+                filename=filename,
+            )
+        )
+
+    # Check 10: Empty choice text
+    text_start = bracket_open + 1
+    text_end = bracket_close
+    choice_text = choice_part[text_start:text_end].strip()
+
+    if not choice_text:
+        raise SyntaxError(
+            format_error(
+                error_type="Malformed Choice",
+                line_num=line_num,
+                lines=lines,
+                message="Empty choice text - brackets contain nothing",
+                pointer_length=len(line.strip()),
+                suggestion="Expected format: + [Choice text] -> Target\nChoice text cannot be empty",
+                filename=filename,
+            )
+        )
+
+
+def validate_passage_name(
+    passage_name: str, line_num: int, lines: List[str], filename: Optional[str] = None
+) -> None:
+    """
+    Validate that a passage name follows strict naming rules.
+
+    Rules:
+    - Must start with letter (a-z, A-Z) or underscore (_)
+    - Can contain: letters, numbers, underscores, dots
+    - Cannot contain: spaces, hyphens, or special characters
+    - Cannot start with a number
+
+    Args:
+        passage_name: The passage name to validate
+        line_num: Line number (0-indexed) for error reporting
+        lines: Source lines for error context
+        filename: Optional filename for error context
+
+    Raises:
+        SyntaxError: If passage name violates naming rules
+    """
+    # Check for empty name
+    if not passage_name or passage_name.isspace():
+        raise SyntaxError(
+            format_error(
+                error_type="Invalid Passage Name",
+                line_num=line_num,
+                lines=lines,
+                message="Passage name cannot be empty",
+                pointer_length=2,  # Point at ::
+                suggestion="Provide a passage name after :: (e.g., :: MyPassage)",
+                filename=filename,
+            )
+        )
+
+    # Valid pattern: starts with letter or underscore, contains letters/numbers/underscores/dots
+    valid_pattern = re.compile(r"^[a-zA-Z_][a-zA-Z0-9_.]*$")
+
+    if not valid_pattern.match(passage_name):
+        # Detect specific problems for helpful error messages
+        suggestion = None
+        fixed_name = None
+
+        if " " in passage_name:
+            # Spaces in name
+            fixed_name = passage_name.replace(" ", "_")
+            suggestion = f'Replace spaces with underscores: ":: {fixed_name}"'
+        elif "-" in passage_name:
+            # Hyphens in name
+            fixed_name = passage_name.replace("-", "_")
+            suggestion = f'Replace hyphens with underscores: ":: {fixed_name}"'
+        elif passage_name[0].isdigit():
+            # Starts with number
+            fixed_name = f"_{passage_name}"
+            suggestion = f'Passage names must start with a letter or underscore: ":: {fixed_name}"'
+        else:
+            # Generic special character error
+            # Find the first invalid character
+            for i, char in enumerate(passage_name):
+                if not (char.isalnum() or char in "_."):
+                    suggestion = (
+                        f"Invalid character '{char}' at position {i+1}. "
+                        f"Passage names can only contain letters, numbers, underscores, and dots."
+                    )
+                    break
+
+        raise SyntaxError(
+            format_error(
+                error_type="Invalid Passage Name",
+                line_num=line_num,
+                lines=lines,
+                message=f"'{passage_name}' is not a valid passage name",
+                pointer_length=len(passage_name) + 3,  # Include ":: "
+                suggestion=suggestion
+                or "Passage names must start with a letter or underscore, and contain only letters, numbers, underscores, and dots.",
+                filename=filename,
+            )
+        )
 
 
 class BlockStack:

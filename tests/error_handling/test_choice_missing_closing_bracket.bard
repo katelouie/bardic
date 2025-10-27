@@ -1,0 +1,6 @@
+:: Start
+This choice is missing the closing bracket.
+
++ [Choice text -> Target
+
+This should error.
