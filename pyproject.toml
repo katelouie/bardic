@@ -1,13 +1,49 @@
 [build-system]
-requires = ["setuptools>=45", "wheel"]
+requires = ["setuptools>=61", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "bardic"
 version = "0.1.0"
+authors = [{ name = "Kate Louie", email = "katehlouie@gmail.com" }]
 description = "Python-first interactive fiction engine"
-requires-python = ">=3.12"
-dependencies = ["click>=8.0"]
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "MIT" }
+keywords = [
+    "interactive fiction",
+    "if",
+    "dsl",
+    "narrative",
+    "gamedev",
+    "ink",
+    "twine",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Topic :: Games/Entertainment",
+    "Topic :: Software Development :: Libraries :: Application Frameworks",
+    "Topic :: Text Processing :: Markup",
+]
+dependencies = ["click>=8.0", "graphviz"]
+
+[project.urls]
+Homepage = "https://github.com/katelouie/bardic"
+Issues = "https://github.com/katelouie/bardic/issues"
+Documentation = "https://github.com/katelouie/bardic/blob/main/docs/spec.md"
+
+[project.optional-dependencies]
+nicegui = ["nicegui", "markdown"]
+web = ["fastapi", "uvicorn[standard]"]
+reflex = ["reflex"]
 
 [project.scripts]
 bardic = "bardic.cli.main:cli"
@@ -15,4 +51,12 @@ bardic = "bardic.cli.main:cli"
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["bardic*"]
-exclude = ["stories*", "claude_info*", "claude_guides*", "compiled_stories*", "tests*"]
+exclude = ["stories*", "compiled_stories*", "tests*", "CLAUDE.md"]
+
+[tool.setuptools.package-data]
+bardic = [
+    "templates/**",
+    "templates/**/**",
+    "templates/**/**/**",
+    "templates/**/**/**/**",
+]
