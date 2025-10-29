@@ -1,0 +1,9 @@
+:: Start
+@if True:
+  New syntax in outer block
+  <<if True>>
+    Old syntax in inner block
+  <<endif>>
+@endif
+
++ [Continue] -> Start

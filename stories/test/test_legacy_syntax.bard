@@ -1,0 +1,10 @@
+:: Start
+<<if True>>
+  Legacy syntax works!
+<<endif>>
+
+<<for i in range(3)>>
+  Item {i}
+<<endfor>>
+
++ [Continue] -> Start

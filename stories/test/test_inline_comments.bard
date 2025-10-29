@@ -1,0 +1,43 @@
+:: Start
+~ health = 60 // set health
+~ variable = "test" // set variable
+~ items = ["Sword", "Shield"] // set items
+
+# Full-line comment still works
+
+Normal text with inline comment // this is ignored
+
+{variable} // expression works with comment
+
+URL: https:\//example.com // literal slashes
+
+Multiple slashes // first one // second one
+
+Just comment: // nothing else
+
+Empty line comment:
+//
+
+@if health > 50: // high health check
+  You feel strong! // inline in content
+@elif health > 25: // medium health
+  You're wounded. // more content
+@else: // low health
+  Barely conscious.
+@endif
+
+@for item in items: // loop comment
+  - {item} // render item
+@endfor
+
+~ count = 5 // starting value
+~ name = "Player" // player name
+
++ [Open door] -> Room // requires key
+* [Use potion] -> Start // one-time action
+
+@input name="test" // input directive
+@render component() // render directive
+
+:: Room
+End of test.

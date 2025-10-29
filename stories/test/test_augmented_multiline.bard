@@ -1,0 +1,19 @@
+:: Start
+~ total = 0
+
+Multi-line addition:
+~ total += (
+    10 +
+    20 +
+    30
+)
+Total is now {total}
+
+Multi-line complex:
+~ total *= (
+    2 +
+    3
+)
+Total is now {total}
+
+All multiline tests complete!

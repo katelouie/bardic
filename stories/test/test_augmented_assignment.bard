@@ -1,0 +1,35 @@
+:: Start
+~ count = 0
+~ health = 100
+~ multiplier = 2
+~ price = 100.0
+
+Basic increment:
+~ count += 1
+Count is now {count}
+
+Subtraction:
+~ health -= 25
+Health is now {health}
+
+Multiplication:
+~ multiplier *= 3
+Multiplier is now {multiplier}
+
+Division:
+~ price /= 4
+Price is now {price}
+
+Floor division:
+~ count //= 2
+Count is now {count}
+
+Modulo:
+~ health %= 10
+Remainder is now {health}
+
+Exponentiation:
+~ multiplier **= 2
+Multiplier is now {multiplier}
+
+All tests complete!

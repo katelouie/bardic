@@ -1,0 +1,22 @@
+:: Start
+~ base = 10
+~ bonus = 5
+~ penalty = 3
+
+Complex right side:
+~ base += (bonus * 2) + penalty
+Base is now {base}
+
+With operator precedence:
+~ base += bonus * 2
+Base is now {base}
+
+Chained operations:
+~ base -= penalty + bonus
+Base is now {base}
+
+With parentheses:
+~ base *= (2 + 1)
+Base is now {base}
+
+All complex tests complete!

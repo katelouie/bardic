@@ -1,0 +1,31 @@
+:: Start
+~ count = 3
+
+Test 1: @if syntax
+
+@if count > 1:
+  You have multiple items.
+@else:
+  You have one item.
+@endif
+
+---
+
+Test 2: @for syntax
+
+@for i in range(count):
+  Item {i + 1}
+@endfor
+
+---
+
+Test 3: @py syntax
+
+@py:
+items = ["sword", "shield", "potion"]
+total = len(items)
+@endpy
+
+You have {total} items.
+
++ [Continue] -> Start

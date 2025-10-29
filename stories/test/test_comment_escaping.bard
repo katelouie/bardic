@@ -1,0 +1,10 @@
+:: Start
+This is a URL: https:\//example.com
+
+Not a URL: \// just slashes
+
+Multiple escapes: \// and \// and \\//
+
+Comment after escape: \// literal // actual comment
+
++ [Continue] -> Start
