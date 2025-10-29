@@ -61,6 +61,7 @@ Meaning: {card.meaning()}
 ### 3. It Just Works! ✨
 
 That's it! Your `Card` objects will automatically:
+
 - ✅ Be usable in your story
 - ✅ Serialize correctly when saving
 - ✅ Deserialize correctly when loading
@@ -75,17 +76,20 @@ That's it! Your `Card` objects will automatically:
 Bardic automatically saves and loads simple classes by:
 
 1. **On Save**: Converting object attributes to a dictionary
+
    ```python
    card = Card("The Fool", 0, True)
    # Saves as: {"_type": "Card", "_data": {"name": "The Fool", "number": 0, "is_reversed": True}}
    ```
 
 2. **On Load**: Reconstructing the object from the dictionary
+
    ```python
    # Loads back as: Card instance with all attributes restored
    ```
 
 **Requirements for auto-serialization:**
+
 - Class must have a `__dict__` (most classes do by default)
 - Attributes should be JSON-serializable types (strings, numbers, lists, other custom classes)
 - No special `__slots__` or complex metaclasses
@@ -131,6 +135,7 @@ Cards drawn: {spread.card_count()}
 ```
 
 **This works automatically!** Bardic's serialization recursively handles:
+
 - Lists of objects
 - Objects with list attributes
 - Objects containing other objects
@@ -145,6 +150,7 @@ For classes with validation, computed properties, or complex initialization, you
 ### When You Need Custom Serialization
 
 **Simple class (auto-serialization works)**:
+
 ```python
 class Card:
     def __init__(self, name, number):
@@ -153,6 +159,7 @@ class Card:
 ```
 
 **Complex class (needs custom serialization)**:
+
 ```python
 class Card:
     def __init__(self, name, number):
@@ -216,6 +223,7 @@ class Card:
 4. **Explicit is better than implicit**: You know exactly what's being saved
 
 **Example with version migration**:
+
 ```python
 @classmethod
 def from_save_dict(cls, data):
@@ -487,6 +495,7 @@ class Character:
 **Problem**: Your class isn't being recognized on load.
 
 **Solution**: Make sure the class is imported in your .bard file:
+
 ```bard
 from game_logic.mymodule import MyClass
 ```
@@ -498,6 +507,7 @@ Classes must be imported to be auto-registered for save/load.
 **Problem**: Your `from_save_dict()` method has an error.
 
 **Solution**: Check that:
+
 1. You're returning a proper instance: `return cls(...)`
 2. All required fields are in the data dict
 3. You provide defaults for optional fields: `data.get("field", default_value)`
@@ -507,6 +517,7 @@ Classes must be imported to be auto-registered for save/load.
 **Problem**: Objects are loading as plain dictionaries.
 
 **Solution**: This happens when the class isn't imported. Add the import to your .bard file:
+
 ```bard
 from game_logic.mymodule import MyClass
 ```
@@ -521,15 +532,18 @@ from game_logic.mymodule import MyClass
 
 ## Progressive Disclosure Summary
 
-**Level 1: Just Works**
+**Level 1: Just Works:**
+
 ```python
 class Card:
     def __init__(self, name):
         self.name = name
 ```
+
 → Auto-serialization handles everything
 
-**Level 2: Add Behavior**
+**Level 2: Add Behavior:**
+
 ```python
 class Card:
     def __init__(self, name):
@@ -538,9 +552,11 @@ class Card:
     def flip(self):
         self.is_reversed = not self.is_reversed
 ```
+
 → Still auto-serialization, now with methods
 
-**Level 3: Custom Serialization**
+**Level 3: Custom Serialization:**
+
 ```python
 class Card:
     def __init__(self, name):
@@ -555,6 +571,7 @@ class Card:
     def from_save_dict(cls, data):
         return cls(data["name"])
 ```
+
 → Full control over save/load
 
 Start simple. Add complexity only when needed.
@@ -563,5 +580,5 @@ Start simple. Add complexity only when needed.
 
 ## See Also
 
-- [Engine API Reference](../engine-api.md) - How the runtime engine works
-- [Bard Language Spec](../../spec.md) - Full language syntax reference
+- [Engine API Reference](../api/engine-api.md) - How the runtime engine works
+- [Bard Language Spec](../spec.md) - Full language syntax reference

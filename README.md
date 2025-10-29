@@ -1,206 +1,130 @@
 # Bardic
 
-A Python-first interactive fiction engine for modern web applications.
+**Bardic is a Python-first interactive fiction engine for modern web applications.**
 
-## Features
+Write your branching narrative in a clean, simple syntax (inspired by Ink), and when you need complex logic, just use Python. Bardic is designed to be the "story layer" for games that need rich data models, complex state, and custom UIs.
 
-- 📝 **Clean Syntax** - Python-like `.bard` files that feel natural to write
-- 🐍 **Python Integration** - Full Python code blocks, custom classes, and objects
-- 💾 **Save/Load** - Built-in serialization for complex game state
-- 🎨 **UI Flexible** - Works with NiceGUI, React, terminal, or any UI framework
-- 🚀 **Fast Development** - Compile stories to JSON, run anywhere
+## Why Bardic? A New Choice for Writers and Developers
 
-## Quick Start
+You have great tools like Twine, Ink, and Ren'Py. So, why did I create Bardic?
 
-### Installation
+Bardic is built for stories that get *complex*.
+
+- **Twine** is fantastic for building "Choose Your Own Adventure" style branching stories.
+- **Ink** is a brilliant, elegant language for managing branching state (like `GOTO`s and `GATHER`s).
+- **Bardic** is for when your "state" isn't just a number or a string, but a complex Python object. It's for when you want to write:
+  - "I want this character to have an inventory, which is a **list of `Item` objects**."
+  - "I need to **import my `Player` class** and call `player.take_damage(10)`."
+  - "I want to simulate a full tarot deck, with 78 **`Card` objects**, each with its own properties and methods."
+
+Have you ever been writing and thought, "I wish I could just `import` my custom class and use it"? **That's what Bardic does.**
+
+It bridges the gap between simple, text-based branching logic and the full power of a programming language, letting you use both in the same file.
+
+## A Quick Example
+
+Bardic syntax is designed to be simple and stay out of your way. Here's a small story that shows off the core features:
+
+```bard
+# Import your own Python classes, just like in a .py file
+from my_game.character import Player
+
+:: Start
+# Create a new Player object
+~ hero = Player("Hero")
+
+Welcome to your adventure, {hero.name}!
+You have {hero.health} health.
+
++ [Look around] -> Forest
++ [Check your bag] -> Inventory
+
+:: Forest
+The forest is dark and spooky.
+~ hero.sprint() # Call a method on your object
+You feel a bit tired.
+
++ [Go back] -> Start
+
+:: Inventory
+# Use Python blocks for complex logic
+@py:
+  if not hero.inventory:
+    bag_contents = "Your bag is empty."
+  else:
+    # Use list comprehensions, f-strings...
+    item_names = [item.name for item in hero.inventory]
+    bag_contents = f"You have: {', '.join(item_names)}"
+@endpy
+
+{bag_contents}
+
++ [Go back] -> Start
+```
+
+## ✨ Core Features
+
+- **Write Python, Natively:** Use `~` for simple variable assignments or drop into full `@py:` blocks for complex logic.
+- **Use Your Own Objects:** `import` your custom Python classes (like `Player`, `Card`, or `Client`) and use them directly in your story.
+- **Complex State, Solved:** Bardic's engine can save and load your *entire game state*, including all your custom Python objects, right out of the box.
+- **You Write the Story, Not the UI:** Bardic doesn't care if you use React, NiceGUI, or a terminal. It produces structured data for any UI.
+  - Use the **NiceGUI** template for a pure-Python, single-file game.
+  - Use the **Web** template (FastAPI + React) for a production-ready, highly custom web game.
+- **Clean, Writer-First Syntax:** Focus on your story with a minimal, line-based syntax for passages (`::`), choices (`+`), and text.
+- **Visualize Your Story:** Automatically generate a flowchart of your entire story to find dead ends or orphaned passages with the `bardic graph` command.
+
+## Quick Start (in 4 Steps)
+
+Get a new game running in under 60 seconds.
+
+**1. Install Bardic:**
 
 ```bash
 pip install bardic
 ```
 
-### Create a New Project
+**2. Create a New Project:**
+This creates a new folder with a full example game, ready to run.
 
 ```bash
 bardic init my-game
 cd my-game
+```
+
+**3. Install Dependencies:**
+The default template uses NiceGUI.
+
+```bash
 pip install -r requirements.txt
 ```
 
-### Write Your Story
-
-Edit `example.bard`:
-
-```bard
-@metadata
-  title: My Adventure
-  author: Your Name
-  story_id: my_adventure
-
-:: Start
-Welcome to my interactive story!
-
-~ player_name = "Hero"
-
-+ [Begin adventure] -> Chapter1
-
-:: Chapter1
-Hello, {player_name}! Your journey begins...
-```
-
-### Compile and Run
+**4. Compile & Run!**
 
 ```bash
-# Compile story to JSON
+# 1. Compile your story from .bard to .json
 bardic compile example.bard -o compiled_stories/example.json
 
-# Run the player
+# 2. Run the game player
 python player.py
 ```
 
-Open `http://localhost:8080` and play your game!
+Your game is now running at `http://localhost:8080`!
 
-## Example Game
+## The Bardic Toolkit (CLI)
 
-Check out [Arcanum](https://github.com/katelouie/arcanum-game) - a complete tarot reading game built with Bardic. It demonstrates:
+Bardic comes with a command-line interface to help you build your game.
 
-- Custom Python classes (Card, Client objects)
-- Dynamic UI with passage tags
-- Save/load functionality
-- Dashboard systems
-- NiceGUI integration
+- `bardic init my-game`: Creates a new project from a template.
+- `bardic compile story.bard`: Compiles your `.bard` file into a `.json` file that the engine can read.
+- `bardic play story.json`: Plays your game directly in your terminal.
+- `bardic graph story.json`: Generates a visual flowchart of your story (as a `.png` or `.svg`).
 
-## Documentation
+## 🎮 Example Game: *Arcanum*
 
-### Language Features
+Need to see a large-scale project? The [Arcanum](https://github.com/katelouie/arcanum-game) cozy tarot reading game is built with Bardic. It's an example of using Bardic with custom Python classes, complex state, and a NiceGUI frontend.
 
-- **Passages** - Organize your story into named sections
-- **Choices** - Player decisions with conditional visibility
-- **Variables** - Store and track game state
-- **Python Blocks** - Execute Python code for complex logic
-- **Conditionals** - Branch narrative based on state
-- **Loops** - Iterate over collections
-- **Custom Objects** - Use Python classes in your stories
-- **Metadata** - Story information for save/load
+## 🧭 Where to Go Next?
 
-See [docs/spec.md](docs/spec.md) for complete language documentation. See also the [implementation status doc](docs/IMPLEMENTATION_STATUS.md) for current progress on planned language features.
-
-### CLI Commands
-
-```bash
-# Initialize new project
-bardic init my-game
-
-# Compile story
-bardic compile story.bard
-bardic compile story.bard -o output.json
-
-# Play in terminal
-bardic play story.json
-
-# Start web runtime (if available)
-bardic serve
-```
-
-### Templates
-
-**NiceGUI Template:** (default)
-
-- Python-based UI framework
-- Save/load functionality
-- Story selection
-- Clean, customizable interface
-- Single-file player
-- Best for: Rapid prototyping, Python-only projects
-
-**Web Template:**
-
-- FastAPI backend + React frontend
-- Full SPA architecture
-- @render directives for custom React components
-- Extensions system (custom context + API routes)
-- Production-ready structure
-- Best for: Complex games, web deployment
-
-**Reflex Template:**
-
-- Reactive Reflex framework
-- Pure Python (no JavaScript)
-- Simple state management
-- Note: Save/load coming soon
-- Best for: Python devs who want reactivity without React
-
-Choose with: `bardic init my-game --template [nicegui|web|reflex]`
-
-## Development
-
-### Installing from Source
-
-```bash
-git clone https://github.com/katelouie/bardic.git
-cd bardic
-pip install -e .
-```
-
-### Running Tests
-
-```bash
-pyenv activate bardic
-python tests/test_parser.py
-```
-
-### Project Structure
-
-```sh
-bardic/
-├── bardic/
-│   ├── compiler/    # Parser and compiler
-│   ├── runtime/     # BardEngine execution
-│   ├── cli/         # Command-line interface
-│   └── templates/   # Project templates
-├── tests/           # Test files
-├── docs/           # Documentation
-└── stories/        # Example stories
-```
-
-### Security Model
-
-Bardic stories execute in a controlled Python environment:
-
-- Whitelisted builtins only (no open, exec, eval, etc.)
-- Controlled namespace (no globals/locals access)
-- Imports allowed (stories can import Python modules)
-
-Stories are trusted code. Only run `.bard` files you've written or reviewed, just like you'd only run `.py` files you trust.
-
-## Architecture
-
-Bardic uses a three-layer architecture:
-
-1. **Compiler** - Parses `.bard` files to JSON
-2. **Runtime** - BardEngine executes compiled stories
-3. **UI Layer** - Your choice of interface (NiceGUI, React, etc.)
-
-Stories compile to platform-independent JSON that runs anywhere.
-
-## Contributing
-
-Contributions welcome! Please:
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
-
-## License
-
-MIT License - see LICENSE file for details
-
-## Links
-
-- [Documentation](https://github.com/katelouie/bardic/wiki)
-- [Example Game: Arcanum](https://github.com/katelouie/arcanum-game)
-- [Report Issues](https://github.com/katelouie/bardic/issues)
-
-## Status
-
-Bardic is in early development (MVP stage). Core features are working, but the API may change as the project evolves.
+- **New to Bardic?** Start by opening `example.bard` in your new project. Try changing some text and recompiling\!
+- **Want to see all the syntax?** Check out the [Language Specification](https://github.com/katelouie/bardic/blob/main/docs/spec.md) for the full list of features, from loops to render directives.
+- **Want to build the engine?** See our [`CONTRIBUTING.md`](CONTRIBUTING.md) for details on the architecture and development setup.
