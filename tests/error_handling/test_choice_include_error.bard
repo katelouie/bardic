@@ -1,0 +1,6 @@
+:: IncludedPassage
+This passage has a bad choice!
+
++ [Missing arrow] NotATarget
+
+This should error showing the correct file and line.

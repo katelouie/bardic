@@ -1,0 +1,52 @@
+:: Start
+
+# Test 1: Basic inline conditionals
+~ health = 75
+~ alive = True
+~ has_key = False
+
+Test 1 - Basic: {health > 50 ? Healthy | Wounded}
+Test 1 - Boolean: {alive ? You're alive | You're dead}
+Test 1 - Negation: {has_key ? You have a key | You don't have a key}
+
+# Test 2: With nested expressions
+~ inventory = ["sword", "shield"]
+~ price = 100
+~ on_sale = True
+
+Test 2 - Expression in truthy: {inventory ? {", ".join(inventory)} | Empty}
+Test 2 - Expression in falsy: {has_key ? Has key | {price} gold needed}
+Test 2 - Format spec: {on_sale ? {price * 0.8:.2f} | {price:.2f}}
+
+# Test 3: Empty branches
+~ locked = True
+
+Test 3 - Empty falsy: {has_key ? You unlock the door. | }
+Test 3 - Empty truthy: {locked ? | The door is already open.}
+
+# Test 4: Nested conditionals
+~ outer = True
+~ inner = False
+
+Test 4 - Nested: {outer ? {inner ? Both true | Outer only} | Neither true}
+
+# Test 5: In flowing text
+You walk through the {locked ? locked | unlocked} door and see {inventory ? your items | nothing}.
+Status: You are {health > 50 ? healthy | wounded} and {alive ? breathing | dead}.
+
+# Test 6: Python ternary still works (no breaking changes)
+~ python_test = "works" if True else "broken"
+Test 6 - Python ternary: {python_test}
+
+# Test 7: Format specs still work
+~ test_num = 123.456
+Test 7 - Format spec: {test_num:.2f}
+
+# Test 8: Regular expressions still work
+~ name = "Test"
+Test 8 - Expression: {name.upper()}
+
++ [Continue] -> End
+
+:: End
+All tests complete!

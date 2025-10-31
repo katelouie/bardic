@@ -98,6 +98,150 @@ def parse_choice_line(line: str, passage: dict) -> Optional[dict]:
     }
 
 
+def find_pipe_separator(text: str, start: int = 0) -> int:
+    """
+    Find the | separator in an inline conditional, accounting for nested {}.
+
+    Args:
+        text: The text to search (after the ?)
+        start: Where to start searching
+
+    Returns:
+        Index of the | separator, or -1 if not found
+
+    Example:
+        "{func()} | text" -> returns 9 (the | at top level)
+        "{a ? {b | c} | d} | text" -> returns 14 (skips nested |)
+    """
+    depth = 0  # Track {} nesting depth
+
+    for i in range(start, len(text)):
+        char = text[i]
+
+        if char == '{':
+            depth += 1
+        elif char == '}':
+            depth -= 1
+        elif char == '|' and depth == 0:
+            # Found separator at top level (not inside nested {})
+            return i
+
+    return -1  # No separator found
+
+
+def split_expressions_with_depth(text: str) -> list[str]:
+    """
+    Split text on {expressions}, handling nested braces correctly.
+
+    Returns alternating list of [text, {expr}, text, {expr}, ...]
+    Preserves empty strings where appropriate.
+
+    Examples:
+        "Hello {name}" -> ["Hello ", "{name}", ""]
+        "{a ? {b} | c}" -> ["", "{a ? {b} | c}", ""]
+        "text {x} more {y} end" -> ["text ", "{x}", " more ", "{y}", " end"]
+    """
+    result = []
+    current = []
+    depth = 0
+
+    for char in text:
+        if char == '{':
+            if depth == 0:
+                # Save text before expression (even if empty)
+                result.append(''.join(current))
+                current = ['{']
+            else:
+                current.append(char)
+            depth += 1
+        elif char == '}':
+            depth -= 1
+            current.append(char)
+            if depth == 0:
+                # Complete expression
+                result.append(''.join(current))
+                current = []
+        else:
+            current.append(char)
+
+    # Add remaining text (even if empty)
+    if current or (result and not text.endswith('}')):
+        result.append(''.join(current))
+
+    return result
+
+
+def parse_inline_conditional(expr: str) -> Optional[dict]:
+    """
+    Parse inline conditional: {condition ? truthy | falsy}
+
+    Args:
+        expr: The expression content (without outer {})
+
+    Returns:
+        dict with type='inline_conditional', condition, truthy, falsy
+        or None if this is not an inline conditional
+
+    Examples:
+        "health > 50 ? Healthy | Wounded"
+        -> {
+            "type": "inline_conditional",
+            "condition": "health > 50",
+            "truthy": "Healthy",
+            "falsy": "Wounded"
+        }
+
+        "inventory ? {', '.join(inventory)} | Empty"
+        -> {
+            "type": "inline_conditional",
+            "condition": "inventory",
+            "truthy": "{', '.join(inventory)}",
+            "falsy": "Empty"
+        }
+    """
+    # Check if this looks like an inline conditional
+    # Must have both ? and | to be unambiguous
+    if '?' not in expr:
+        return None
+
+    # Find the ? (condition separator)
+    # Use first ? at top level (not inside nested {})
+    q_idx = -1
+    depth = 0
+    for i, char in enumerate(expr):
+        if char == '{':
+            depth += 1
+        elif char == '}':
+            depth -= 1
+        elif char == '?' and depth == 0:
+            q_idx = i
+            break
+
+    if q_idx == -1:
+        return None  # No top-level ?
+
+    # Split at the ?
+    condition = expr[:q_idx].strip()
+    rest = expr[q_idx + 1:]  # Everything after ?
+
+    # Find the | separator (accounting for nested {})
+    pipe_idx = find_pipe_separator(rest)
+
+    if pipe_idx == -1:
+        return None  # No | found, not an inline conditional
+
+    # Split at the |
+    truthy = rest[:pipe_idx].strip()
+    falsy = rest[pipe_idx + 1:].strip()
+
+    return {
+        "type": "inline_conditional",
+        "condition": condition,
+        "truthy": truthy,
+        "falsy": falsy
+    }
+
+
 def parse_content_line(line: str) -> list[dict]:
     """
     Parse a content line with {variable} interpolation and optional tags.
@@ -114,14 +258,21 @@ def parse_content_line(line: str) -> list[dict]:
 
     tokens = []
 
-    # Split on {expressions}
-    parts = re.split(r"(\{[^}]+\})", line_without_tags)
+    # Split on {expressions} with depth-tracking for nested braces
+    parts = split_expressions_with_depth(line_without_tags)
 
     for part in parts:
         if part.startswith("{") and part.endswith("}"):
-            # This is an expression
+            # This is an expression - check if it's an inline conditional first
             expr = part[1:-1]  # Remove { and }
-            tokens.append({"type": "expression", "code": expr})
+
+            # Try to parse as inline conditional
+            inline_cond = parse_inline_conditional(expr)
+            if inline_cond:
+                tokens.append(inline_cond)
+            else:
+                # Regular expression
+                tokens.append({"type": "expression", "code": expr})
         elif part:
             # Regular text
             tokens.append({"type": "text", "value": part})

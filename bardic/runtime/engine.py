@@ -844,6 +844,56 @@ class BardEngine:
                     result.append(
                         f"{{ERROR: {token['code']} - {type(e).__name__}: {e}}}"
                     )
+            elif token["type"] == "inline_conditional":
+                # Evaluate inline conditional: {condition ? truthy | falsy}
+                try:
+                    eval_context = {**self.context, **self.state}
+                    safe_builtins = self._get_safe_builtins()
+
+                    # Evaluate the condition
+                    condition_result = eval(
+                        token["condition"],
+                        {"__builtins__": safe_builtins},
+                        eval_context
+                    )
+
+                    # Choose branch based on condition (truthy or falsy)
+                    branch_text = token["truthy"] if condition_result else token["falsy"]
+
+                    # The branch might be:
+                    # 1. Plain text: "Healthy"
+                    # 2. An expression: "{func()}"
+                    # 3. Empty: ""
+
+                    if not branch_text:
+                        # Empty branch - add nothing
+                        pass
+                    elif branch_text.startswith("{") and branch_text.endswith("}"):
+                        # Branch contains an expression - evaluate it
+                        branch_expr = branch_text[1:-1]  # Remove { }
+
+                        # Check for format spec in the branch expression
+                        if ":" in branch_expr and not any(
+                            op in branch_expr for op in ["==", "!=", "<=", ">=", "::"]
+                        ):
+                            # Has format spec
+                            colon_idx = branch_expr.find(":")
+                            expr = branch_expr[:colon_idx].strip()
+                            format_spec = branch_expr[colon_idx + 1:].strip()
+
+                            value = eval(expr, {"__builtins__": safe_builtins}, eval_context)
+                            result.append(format(value, format_spec))
+                        else:
+                            # No format spec
+                            value = eval(branch_expr, {"__builtins__": safe_builtins}, eval_context)
+                            result.append(str(value))
+                    else:
+                        # Plain text - add as-is
+                        result.append(branch_text)
+
+                except Exception as e:
+                    # Error evaluating inline conditional
+                    result.append(f"{{ERROR: inline conditional - {e}}}")
             elif token["type"] == "render_directive":
                 # Process and collect directive (don't render as text)
                 processed = self._process_render_directive(token)

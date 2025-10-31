@@ -720,6 +720,101 @@ Standard reading.
 
 ---
 
+### Inline Conditionals
+
+Choose between two text options inline using ternary-style syntax.
+
+```bard
+{condition ? truthy_text | falsy_text}
+```
+
+**Basic Examples:**
+
+```bard
+You are {health > 50 ? healthy | wounded} right now.
+Status: {alive ? breathing | deceased}
+The door is {locked ? locked | unlocked}.
+```
+
+**With Expressions:**
+
+```bard
+Inventory: {inventory ? {", ".join(inventory)} | Empty}
+Price: {on_sale ? {price * 0.8:.2f} | {price:.2f}} gold
+Items: {items ? You have {len(items)} items | You have nothing}
+```
+
+**Empty Branches:**
+
+```bard
+{has_key ? You unlock the door. | }
+{locked ? | The door is already open.}
+```
+
+**Why Use Inline Conditionals:**
+
+Inline conditionals are cleaner than Python's ternary for text-heavy content:
+
+```bard
+# Inline conditional (clean, no quote escaping!)
+{inventory ? {", ".join(inventory)} | Empty}
+
+# Python ternary (quote hell)
+{", ".join(inventory) if inventory else "Empty"}
+```
+
+**Rules:**
+
+- Syntax: `{condition ? truthy | falsy}`
+- Uses `?` and `|` operators (not `:` to avoid format spec collision)
+- Both branches are optional (can be empty)
+- Condition is any Python expression
+- Branches can contain expressions: `{condition ? {func()} | text}`
+- Branches can use format specs: `{condition ? {price:.2f} | free}`
+- Works inline within flowing text
+- Python ternary still works (backwards compatible)
+- Nested conditionals are NOT supported (by design - use multi-line `@if` for complex logic)
+
+**Format Specs in Branches:**
+
+```bard
+~ discount = 0.2
+~ price = 100
+
+Regular: {price:.2f} gold
+On sale: {on_sale ? {price * (1 - discount):.2f} | {price:.2f}} gold
+```
+
+**Multiple in One Line:**
+
+```bard
+You walk through the {locked ? locked | unlocked} door and see {inventory ? your items | nothing}.
+```
+
+**Common Patterns:**
+
+```bard
+# Boolean checks
+{has_item ? "You have it." | "You don't have it."}
+
+# Numeric comparisons
+{health > 75 ? Healthy | {health > 25 ? Wounded | Critical}}
+
+# Empty collections
+{cards ? {len(cards)} cards | No cards}
+
+# Existence checks
+{player_name ? Hello, {player_name}! | Hello, stranger!}
+```
+
+**Design Philosophy:**
+
+Inline conditionals are for **simple, readable text choices**. For complex nested logic or multiple conditions, use multi-line `@if/@elif/@else` blocks instead. This keeps your story text maintainable and easy to read.
+
+**Status:** ✅ Implemented (Week 4, Session 11)
+
+---
+
 ### Loops
 
 Iterate over collections to generate dynamic content.

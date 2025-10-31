@@ -8,7 +8,8 @@ from .errors import format_error
 
 
 def validate_choice_syntax(
-    line: str, line_num: int, lines: List[str], filename: Optional[str] = None
+    line: str, line_num: int, lines: List[str], filename: Optional[str] = None,
+    line_map: Optional[List] = None
 ) -> None:
     """
     Validate choice line syntax before parsing.
@@ -44,6 +45,7 @@ def validate_choice_syntax(
                 pointer_length=len(line.strip()),
                 suggestion="Choices must specify a target passage with ->\nExpected format: + [Choice text] -> Target",
                 filename=filename,
+                line_map=line_map,
             )
         )
 
@@ -63,6 +65,7 @@ def validate_choice_syntax(
                 pointer_length=len(line.strip()),
                 suggestion="Expected format: + [Choice text] -> Target",
                 filename=filename,
+                line_map=line_map,
             )
         )
 
@@ -77,6 +80,7 @@ def validate_choice_syntax(
                 pointer_length=len(line.strip()),
                 suggestion="Expected format: + [Choice text] -> Target",
                 filename=filename,
+                line_map=line_map,
             )
         )
 
@@ -96,6 +100,7 @@ def validate_choice_syntax(
                     pointer_length=len(line.strip()),
                     suggestion="Expected format: + {condition} [Choice text] -> Target\nConditional choices must have matching { and } before the bracket",
                     filename=filename,
+                    line_map=line_map,
                 )
             )
 
@@ -122,6 +127,7 @@ def validate_choice_syntax(
                 pointer_length=len(line.strip()),
                 suggestion="Expected format: + {condition} [Choice text] -> Target",
                 filename=filename,
+                line_map=line_map,
             )
         )
 
@@ -141,6 +147,7 @@ def validate_choice_syntax(
                 pointer_length=len(line.strip()),
                 suggestion="Expected format: + [Choice text] -> Target",
                 filename=filename,
+                line_map=line_map,
             )
         )
 
@@ -154,6 +161,7 @@ def validate_choice_syntax(
                 pointer_length=len(line.strip()),
                 suggestion="Expected format: + [Choice text] -> Target",
                 filename=filename,
+                line_map=line_map,
             )
         )
 
@@ -170,6 +178,7 @@ def validate_choice_syntax(
                 pointer_length=len(line.strip()),
                 suggestion="Expected format: + [Choice text] -> Target",
                 filename=filename,
+                line_map=line_map,
             )
         )
 
@@ -184,6 +193,7 @@ def validate_choice_syntax(
                 pointer_length=len(line.strip()),
                 suggestion="Expected format: + [Choice text] -> Target\nTarget passage name is required after ->",
                 filename=filename,
+                line_map=line_map,
             )
         )
 
@@ -202,6 +212,7 @@ def validate_choice_syntax(
                 pointer_length=len(line.strip()),
                 suggestion=f"Target names can't contain spaces. Use '{target_name.replace(' ', '_')}' instead.",
                 filename=filename,
+                line_map=line_map,
             )
         )
 
@@ -220,6 +231,7 @@ def validate_choice_syntax(
                 pointer_length=len(line.strip()),
                 suggestion="Expected format: + [Choice text] -> Target\nChoice text cannot be empty",
                 filename=filename,
+                line_map=line_map,
             )
         )
 
@@ -517,7 +529,8 @@ def _determine_initial_passage(
 def check_duplicate_passages(
     passage_locations: Dict[str, List[int]],
     lines: List[str],
-    filename: Optional[str] = None
+    filename: Optional[str] = None,
+    line_map: Optional[List] = None
 ) -> None:
     """
     Check for duplicate passage names and error with complete summary.
@@ -553,12 +566,25 @@ def check_duplicate_passages(
     for passage_name, locations in sorted(duplicates.items()):
         error_parts.append(f"  Passage '{passage_name}' defined {len(locations)} times:\n")
         for i, line_num in enumerate(locations):
-            # Show snippet of that line
-            line_content = lines[line_num - 1].strip() if line_num - 1 < len(lines) else ""
-            if i == 0:
-                error_parts.append(f"    Line {line_num:4}: {line_content}  ← First definition\n")
+            # line_num is 1-indexed, convert to 0-indexed for line_map lookup
+            line_idx = line_num - 1
+
+            # Resolve source location
+            if line_map and line_idx < len(line_map):
+                loc = line_map[line_idx]
+                display_file = loc.file_path
+                display_line = loc.line_num + 1  # Convert to 1-indexed
+                file_prefix = f" in {display_file}" if display_file != filename else ""
             else:
-                error_parts.append(f"    Line {line_num:4}: {line_content}  ← Duplicate!\n")
+                display_line = line_num
+                file_prefix = ""
+
+            # Show snippet of that line
+            line_content = lines[line_idx].strip() if line_idx < len(lines) else ""
+            if i == 0:
+                error_parts.append(f"    Line {display_line:4}{file_prefix}: {line_content}  ← First definition\n")
+            else:
+                error_parts.append(f"    Line {display_line:4}{file_prefix}: {line_content}  ← Duplicate!\n")
         error_parts.append("\n")
 
     error_parts.append("  Hint: Each passage must have a unique name.\n")

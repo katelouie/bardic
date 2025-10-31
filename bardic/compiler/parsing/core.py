@@ -158,14 +158,14 @@ def parse(
 
         # Conditional block: <<if or @if:
         if line.strip().startswith("<<if ") or line.strip().startswith("@if "):
-            conditional, lines_consumed = extract_conditional_block(lines, i)
+            conditional, lines_consumed = extract_conditional_block(lines, i, filename, line_map)
             current_passage["content"].append(conditional)
             i += lines_consumed
             continue
 
         # Loop block: <<for or @for:
         if line.strip().startswith("<<for ") or line.strip().startswith("@for "):
-            loop, lines_consumed = extract_loop_block(lines, i)
+            loop, lines_consumed = extract_loop_block(lines, i, filename, line_map)
             current_passage["content"].append(loop)
             i += lines_consumed
             continue
@@ -256,7 +256,7 @@ def parse(
         # Choice: +/* [Text] -> Target or +/* {condition} [Text] -> Target
         if line.startswith("+ ") or line.startswith("* "):
             # Validate choice syntax first (errors if malformed)
-            validate_choice_syntax(line, i, lines, filename)
+            validate_choice_syntax(line, i, lines, filename, line_map)
 
             # Now parse (should always succeed if validation passed)
             choice = parse_choice_line(line, current_passage)
@@ -326,7 +326,7 @@ def parse(
         _trim_trailing_newlines(passage)
 
     # Detect duplicate passages (errors if any found)
-    check_duplicate_passages(passage_locations, lines, filename)
+    check_duplicate_passages(passage_locations, lines, filename, line_map)
 
     # Determine initial passage (priority order)
     initial_passage = _determine_initial_passage(passages, explicit_start)

@@ -1,0 +1,9 @@
+:: Start
+This is the main file.
+
+@include test_choice_include_error.bard
+
++ [Continue] -> End
+
+:: End
+Done!

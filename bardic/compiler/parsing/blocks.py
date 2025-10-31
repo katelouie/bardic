@@ -1,7 +1,7 @@
 """Block extraction: conditionals, loops, and Python code blocks."""
 
 import re
-from typing import Tuple
+from typing import Tuple, Optional
 
 from .errors import format_error
 from .indentation import detect_and_strip_indentation
@@ -114,7 +114,12 @@ def _extract_py_old_syntax(lines: list[str], start_index: int) -> tuple[str, int
     return code, lines_consumed
 
 
-def extract_conditional_block(lines: list[str], start_index: int) -> tuple[dict, int]:
+def extract_conditional_block(
+    lines: list[str],
+    start_index: int,
+    filename: Optional[str] = None,
+    line_map: Optional[list] = None
+) -> tuple[dict, int]:
     """
     Extract a <<if>>...<<endif>> block from lines.
 
@@ -241,7 +246,7 @@ def extract_conditional_block(lines: list[str], start_index: int) -> tuple[dict,
                     current_branch_lines = []  # Reset
 
                 # Now extract nested conditional
-                nested_conditional, nested_lines = extract_conditional_block(lines, i)
+                nested_conditional, nested_lines = extract_conditional_block(lines, i, filename, line_map)
                 current_branch["content"].append(nested_conditional)
                 i += nested_lines
                 continue
@@ -258,7 +263,7 @@ def extract_conditional_block(lines: list[str], start_index: int) -> tuple[dict,
                 current_branch_lines = []  # Reset
 
             # Extract nested loop
-            nested_loop, nested_lines = extract_loop_block(lines, i)
+            nested_loop, nested_lines = extract_loop_block(lines, i, filename, line_map)
             current_branch["content"].append(nested_loop)
             i += nested_lines
             continue
@@ -297,7 +302,9 @@ def extract_conditional_block(lines: list[str], start_index: int) -> tuple[dict,
                 lines=lines,
                 message="@endif should not have a colon",
                 pointer_length=7,
-                suggestion="Only opening tags (@if, @elif, @else) use colons. Closing tags (@endif, @endfor, @endpy) do not."
+                suggestion="Only opening tags (@if, @elif, @else) use colons. Closing tags (@endif, @endfor, @endpy) do not.",
+                filename=filename,
+                line_map=line_map,
             ))
 
         # Check for <<endif>> or @endif - might be closing nested or *this* conditional
@@ -413,12 +420,16 @@ def extract_conditional_block(lines: list[str], start_index: int) -> tuple[dict,
 
     # Check that we found the closing @endif
     if not found_closer:
-        raise SyntaxError(
-            f"Line {start_index + 1}: Unclosed @if block\n"
-            f"  Block started on line {start_index + 1} but never closed\n"
-            f"  Expected @endif before end of passage\n"
-            f"  Hint: Every @if must have a matching @endif"
-        )
+        raise SyntaxError(format_error(
+            error_type="Unclosed Block",
+            line_num=start_index,
+            lines=lines,
+            message="@if block never closed",
+            pointer_length=len(lines[start_index].strip()) if start_index < len(lines) else 1,
+            suggestion="Every @if must have a matching @endif before the end of the passage",
+            filename=filename,
+            line_map=line_map,
+        ))
 
     # Calculate lines consumed
     lines_consumed = i - start_index
@@ -426,7 +437,12 @@ def extract_conditional_block(lines: list[str], start_index: int) -> tuple[dict,
     return conditional, lines_consumed
 
 
-def extract_loop_block(lines: list[str], start_index: int) -> tuple[dict, int]:
+def extract_loop_block(
+    lines: list[str],
+    start_index: int,
+    filename: Optional[str] = None,
+    line_map: Optional[list] = None
+) -> tuple[dict, int]:
     """
     Extract a <<for>> ... <<endfor>> block from lines.
 
@@ -488,7 +504,9 @@ def extract_loop_block(lines: list[str], start_index: int) -> tuple[dict, int]:
                 lines=lines,
                 message="@endfor should not have a colon",
                 pointer_length=8,
-                suggestion="Only opening tags (@for) use colons. Closing tags (@endfor) do not."
+                suggestion="Only opening tags (@for) use colons. Closing tags (@endfor) do not.",
+                filename=filename,
+                line_map=line_map,
             ))
 
         # Check for <<endfor>> or @endfor
@@ -546,7 +564,8 @@ def extract_loop_block(lines: list[str], start_index: int) -> tuple[dict, int]:
             # Check for nested <<for>> or @for: loop
             if stripped.startswith("<<for ") or stripped.startswith("@for "):
                 # Recursively extract nested loop from dedented context
-                nested_loop, nested_lines_consumed = extract_loop_block(dedented_lines, j)
+                # NOTE: dedented_lines is a subset, can't use line_map directly
+                nested_loop, nested_lines_consumed = extract_loop_block(dedented_lines, j, filename, None)
                 loop["content"].append(nested_loop)
                 j += nested_lines_consumed
                 continue
@@ -554,8 +573,9 @@ def extract_loop_block(lines: list[str], start_index: int) -> tuple[dict, int]:
             # Check for nested <<if>> or @if: inside loop
             if stripped.startswith("<<if ") or stripped.startswith("@if "):
                 # Recursively extract nested conditional from dedented context
+                # NOTE: dedented_lines is a subset, can't use line_map directly
                 nested_conditional, nested_lines_consumed = extract_conditional_block(
-                    dedented_lines, j
+                    dedented_lines, j, filename, None
                 )
                 loop["content"].append(nested_conditional)
                 j += nested_lines_consumed
@@ -596,12 +616,16 @@ def extract_loop_block(lines: list[str], start_index: int) -> tuple[dict, int]:
 
     # Check that we found the closing @endfor
     if not found_closer:
-        raise SyntaxError(
-            f"Line {start_index + 1}: Unclosed @for block\n"
-            f"  Block started on line {start_index + 1} but never closed\n"
-            f"  Expected @endfor before end of passage\n"
-            f"  Hint: Every @for must have a matching @endfor"
-        )
+        raise SyntaxError(format_error(
+            error_type="Unclosed Block",
+            line_num=start_index,
+            lines=lines,
+            message="@for block never closed",
+            pointer_length=len(lines[start_index].strip()) if start_index < len(lines) else 1,
+            suggestion="Every @for must have a matching @endfor before the end of the passage",
+            filename=filename,
+            line_map=line_map,
+        ))
 
     # Calculate lines consumed
     lines_consumed = i - start_index
