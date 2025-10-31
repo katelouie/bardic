@@ -3,7 +3,7 @@
 import re
 from typing import Dict, Any, Optional, List
 
-from .errors import format_error
+from .errors import format_error, SourceLocation
 from .preprocessing import extract_imports, extract_metadata, strip_inline_comment
 from .blocks import extract_python_block, extract_conditional_block, extract_loop_block
 from .content import parse_content_line, parse_choice_line, parse_tags
@@ -19,22 +19,28 @@ from .validation import (
 )
 
 
-def parse(source: str, filename: Optional[str] = None) -> Dict[str, Any]:
+def parse(
+    source: str,
+    filename: Optional[str] = None,
+    line_map: Optional[List[SourceLocation]] = None
+) -> Dict[str, Any]:
     """
     Parse a .bard source string into structured data.
 
     Args:
         source: The .bard file content as a string
         filename: Optional filename for better error messages
+        line_map: Optional source mapping for @include files
 
     Returns:
         Dict containing version, initial_passage, metadata, and passages
     """
-    # Extract imports first
-    import_statements, remaining_source = extract_imports(source)
+    # Split source directly (no preprocessing - keeps line numbers aligned with line_map)
+    lines = source.split("\n")
 
-    # Extract metadata second (after imports, before passages)
-    metadata, remaining_source = extract_metadata(remaining_source)
+    # Will collect these as we parse
+    import_statements = []
+    metadata = {}
 
     passages = {}
     passage_locations = {}  # Track where each passage is defined (for duplicate detection)
@@ -42,14 +48,63 @@ def parse(source: str, filename: Optional[str] = None) -> Dict[str, Any]:
     explicit_start = None
     block_stack = BlockStack()  # Track open control blocks
 
-    lines = remaining_source.split("\n")
+    # State for inline preprocessing
+    in_imports_section = True  # True at start, becomes False after first non-import line
+    in_metadata_block = False  # True when we see @metadata, False when block ends
+
     i = 0
 
     while i < len(lines):
         line = lines[i]
+        stripped = line.strip()
+
+        # Handle imports section (must be at very top of file)
+        if in_imports_section:
+            # Empty lines and comments are allowed in import section
+            if not stripped or stripped.startswith("#"):
+                import_statements.append(line)
+                i += 1
+                continue
+
+            # Import statements
+            if stripped.startswith(("import ", "from ")):
+                import_statements.append(line)
+                i += 1
+                continue
+
+            # First non-import, non-empty, non-comment line - end of import section
+            in_imports_section = False
+            # Fall through to rest of parsing
+
+        # Handle @metadata directive
+        if stripped == "@metadata":
+            in_metadata_block = True
+            i += 1
+            continue
+
+        # Handle metadata block content
+        if in_metadata_block:
+            # Empty lines are allowed in metadata block
+            if not stripped:
+                i += 1
+                continue
+
+            # Check if this line looks like a key-value pair (indented, has colon)
+            if line.startswith((" ", "\t")) and ":" in stripped:
+                # Parse key: value
+                key, value = stripped.split(":", 1)
+                key = key.strip()
+                value = value.strip()
+                metadata[key] = value
+                i += 1
+                continue
+            else:
+                # Non-indented line or no colon - end of metadata block
+                in_metadata_block = False
+                # Fall through to normal parsing
 
         # @start directive (optional override)
-        if line.strip().startswith("@start "):
+        if stripped.startswith("@start "):
             explicit_start = line.strip()[7:].strip()
             i += 1
             continue
@@ -63,7 +118,7 @@ def parse(source: str, filename: Optional[str] = None) -> Dict[str, Any]:
             passage_name, passage_tags = parse_tags(passage_header)
 
             # Validate passage name (strict rules for navigation targets)
-            validate_passage_name(passage_name, i, lines, filename)
+            validate_passage_name(passage_name, i, lines, filename, line_map)
 
             # Track passage location for duplicate detection
             if passage_name not in passage_locations:
@@ -218,6 +273,7 @@ def parse(source: str, filename: Optional[str] = None) -> Dict[str, Any]:
                         pointer_length=len(line.strip()),
                         suggestion="This is a bug in the parser. Please report it.",
                         filename=filename,
+                        line_map=line_map,
                     )
                 )
             i += 1
@@ -258,7 +314,8 @@ def parse(source: str, filename: Optional[str] = None) -> Dict[str, Any]:
                     lines=lines,
                     message=f"Unrecognized directive: {stripped.split()[0] if ' ' in stripped else stripped}",
                     pointer_length=len(stripped.split()[0] if ' ' in stripped else stripped),
-                    suggestion="Check for typos in directives. Valid directives: @if, @elif, @else, @endif, @for, @endfor, @py, @endpy, @include, @render, @input"
+                    suggestion="Check for typos in directives. Valid directives: @if, @elif, @else, @endif, @for, @endfor, @py, @endpy, @include, @render, @input",
+                    line_map=line_map,
                 ))
 
         i += 1

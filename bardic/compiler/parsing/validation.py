@@ -225,7 +225,11 @@ def validate_choice_syntax(
 
 
 def validate_passage_name(
-    passage_name: str, line_num: int, lines: List[str], filename: Optional[str] = None
+    passage_name: str,
+    line_num: int,
+    lines: List[str],
+    filename: Optional[str] = None,
+    line_map: Optional[List] = None
 ) -> None:
     """
     Validate that a passage name follows strict naming rules.
@@ -241,6 +245,7 @@ def validate_passage_name(
         line_num: Line number (0-indexed) for error reporting
         lines: Source lines for error context
         filename: Optional filename for error context
+        line_map: Optional source mapping for @include files
 
     Raises:
         SyntaxError: If passage name violates naming rules
@@ -256,6 +261,7 @@ def validate_passage_name(
                 pointer_length=2,  # Point at ::
                 suggestion="Provide a passage name after :: (e.g., :: MyPassage)",
                 filename=filename,
+                line_map=line_map,
             )
         )
 
@@ -300,6 +306,7 @@ def validate_passage_name(
                 suggestion=suggestion
                 or "Passage names must start with a letter or underscore, and contain only letters, numbers, underscores, and dots.",
                 filename=filename,
+                line_map=line_map,
             )
         )
 

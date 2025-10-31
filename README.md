@@ -1,8 +1,8 @@
 # Bardic
 
-**Bardic is a Python-first interactive fiction engine for modern web applications.**
+**Bardic is a Python-first interactive fiction engine that lets you import your own classes and use real Python in your stories. It's built for modern Python web applications. It's also for people who want to make narrative games without learning web dev.**
 
-Write your branching narrative in a clean, simple syntax (inspired by Ink), and when you need complex logic, just use Python. Bardic is designed to be the "story layer" for games that need rich data models, complex state, and custom UIs.
+Write your branching narrative in a clean, simple syntax (inspired by Ink), and when you need complex logic, just use Python. Bardic is designed to be the "story layer" for games that need rich data models, complex state, and custom UIs. Bardic is frontend-agnostic and works with NiceGUI, Reflex, React+FastAPI, or any other frontend layer you want to build with. It compiles stories to JSON and is portable and versatile.
 
 ## Why Bardic? A New Choice for Writers and Developers
 
@@ -62,7 +62,7 @@ You feel a bit tired.
 + [Go back] -> Start
 ```
 
-## ✨ Core Features
+## Core Features
 
 - **Write Python, Natively:** Use `~` for simple variable assignments or drop into full `@py:` blocks for complex logic.
 - **Use Your Own Objects:** `import` your custom Python classes (like `Player`, `Card`, or `Client`) and use them directly in your story.
@@ -119,12 +119,12 @@ Bardic comes with a command-line interface to help you build your game.
 - `bardic play story.json`: Plays your game directly in your terminal.
 - `bardic graph story.json`: Generates a visual flowchart of your story (as a `.png` or `.svg`).
 
-## 🎮 Example Game: *Arcanum*
+## Example Game: *Arcanum*
 
 Need to see a large-scale project? The [Arcanum](https://github.com/katelouie/arcanum-game) cozy tarot reading game is built with Bardic. It's an example of using Bardic with custom Python classes, complex state, and a NiceGUI frontend.
 
-## 🧭 Where to Go Next?
+## Where to Go Next?
 
-- **New to Bardic?** Start by opening `example.bard` in your new project. Try changing some text and recompiling\!
+- **New to Bardic?** Start by opening `example.bard` in your new project. Try changing some text and recompiling!
 - **Want to see all the syntax?** Check out the [Language Specification](https://github.com/katelouie/bardic/blob/main/docs/spec.md) for the full list of features, from loops to render directives.
 - **Want to build the engine?** See our [`CONTRIBUTING.md`](CONTRIBUTING.md) for details on the architecture and development setup.

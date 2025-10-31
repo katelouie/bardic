@@ -22,8 +22,8 @@ def parse_file(filepath: str) -> Dict[str, Any]:
     with open(filepath, "r", encoding="utf-8") as f:
         source = f.read()
 
-    # Resolve any includes first
-    resolved_source = resolve_includes(source, filepath)
+    # Resolve any includes first (get both source and line mapping)
+    resolved_source, line_map = resolve_includes(source, filepath)
 
-    # Then parse everything else normally (pass filename for better error messages)
-    return parse(resolved_source, filename=filepath)
+    # Then parse everything else normally (pass filename and line_map for better error messages)
+    return parse(resolved_source, filename=filepath, line_map=line_map)

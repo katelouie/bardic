@@ -1,0 +1,9 @@
+:: Start
+This is the main file.
+
++ [Go to included passage] -> IncludedPassage
+
+@include test_include_included.bard
+
+:: End
+The end.

@@ -3,6 +3,8 @@
 from pathlib import Path
 from typing import Optional
 
+from .errors import SourceLocation
+
 
 def extract_imports(source: str) -> tuple[list[str], str]:
     """
@@ -165,9 +167,11 @@ def strip_inline_comment(line: str) -> tuple[str, str]:
     return content, comment
 
 
-def resolve_includes(source: str, base_path: str, seen: Optional[set] = None) -> str:
+def resolve_includes(
+    source: str, base_path: str, seen: Optional[set] = None
+) -> tuple[str, list[SourceLocation]]:
     """
-    Resolve @include directives recursively.
+    Resolve @include directives recursively and build source line mapping.
 
     Args:
         source: The source text with potential @include directives
@@ -175,7 +179,8 @@ def resolve_includes(source: str, base_path: str, seen: Optional[set] = None) ->
         seen: Set of already-included files (to detect circular includes)
 
     Returns:
-        Source text with all includes expanded
+        Tuple of (resolved_source, line_map) where line_map[i] maps concatenated
+        line i to its original source file and line number
 
     Raises:
         ValueError: If circular include detected
@@ -195,8 +200,9 @@ def resolve_includes(source: str, base_path: str, seen: Optional[set] = None) ->
 
     lines = source.split("\n")
     result = []
+    line_map = []
 
-    for line in lines:
+    for line_idx, line in enumerate(lines):
         # Check for @include directive
         if line.strip().startswith("@include "):
             # Extract the include path
@@ -212,14 +218,15 @@ def resolve_includes(source: str, base_path: str, seen: Optional[set] = None) ->
                     included_content = f.read()
 
                 # Recursively resolve includes in the included file
-                resolved_content = resolve_includes(
+                resolved_content, included_map = resolve_includes(
                     included_content,
                     str(full_path),
                     seen.copy(),  # Pass a copy so each branch tracks separately
                 )
 
-                # Add the resolved content
+                # Add the resolved content and its line mappings
                 result.append(resolved_content)
+                line_map.extend(included_map)
 
             except FileNotFoundError:
                 raise FileNotFoundError(
@@ -229,7 +236,11 @@ def resolve_includes(source: str, base_path: str, seen: Optional[set] = None) ->
                 )
 
         else:
-            # Regular line -- keep it
+            # Regular line -- keep it and track its source location
             result.append(line)
+            line_map.append(SourceLocation(
+                file_path=base_path,
+                line_num=line_idx  # 0-indexed
+            ))
 
-    return "\n".join(result)
+    return "\n".join(result), line_map

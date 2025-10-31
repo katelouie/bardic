@@ -1,0 +1,9 @@
+:: IncludedPassage
+This passage is fine.
+
++ [Continue] -> Another-Passage
+
+:: Another-Passage
+This passage name has a hyphen, which should error!
+
++ [Back] -> Start
