@@ -620,14 +620,47 @@ class BardEngine:
         self.state['_inputs'].update(input_data)
 
     def _execute_commands(self, commands: list[dict]) -> None:
-        """Execute passage commands (variable assignments, python blocks, etc)"""
+        """Execute passage commands (python statements, python blocks, etc)"""
         for cmd in commands:
-            if cmd["type"] == "set_var":
+            if cmd["type"] == "python_statement":
+                self._execute_python_statement(cmd)
+            elif cmd["type"] == "python_block":
+                self._execute_python_block(cmd)
+            # Backward compatibility (deprecated)
+            elif cmd["type"] == "set_var":
                 self._execute_set_var(cmd)
             elif cmd["type"] == "expression_statement":
                 self._execute_expression_statement(cmd)
-            elif cmd["type"] == "python_block":
-                self._execute_python_block(cmd)
+
+    def _execute_python_statement(self, cmd: dict) -> None:
+        """
+        Execute a Python statement (unified handler for all ~ statements).
+
+        Handles assignments, expressions, function calls - any valid Python statement.
+        Uses exec() for maximum flexibility.
+        """
+        code = cmd["code"]
+
+        try:
+            # Create evaluation context with context and state
+            eval_context = {**self.context, **self.state}
+            safe_builtins = self._get_safe_builtins()
+
+            # Execute the statement
+            exec(code, {"__builtins__": safe_builtins}, eval_context)
+
+            # Sync any new/modified variables back to state
+            # Skip private vars (starting with _) and context vars (read-only)
+            for key, value in eval_context.items():
+                if not key.startswith("_") and key not in self.context:
+                    self.state[key] = value
+
+        except Exception as e:
+            raise RuntimeError(
+                f"Python statement failed: {code}\n"
+                f"  Error: {e}\n"
+                f"  Current state: {list(self.state.keys())}"
+            )
 
     def _execute_set_var(self, cmd: dict) -> None:
         """Execute a variable assignment."""
@@ -941,16 +974,17 @@ class BardEngine:
             elif token["type"] == "input":
                 # Collect input directive (don't render as text)
                 directives.append(token)
+            elif token["type"] == "python_statement":
+                # Execute Python statement (modifies state, produces no text output)
+                # This happens during rendering, so it only runs if its branch/loop is active
+                self._execute_python_statement(token)
+                # Don't append anything to result - Python statements don't generate text
             elif token["type"] == "set_var":
-                # Execute variable assignment (modifies state, produces no text output)
-                # This happens during rendering, so it only runs if its branch/loop is active
+                # Backward compatibility: Execute variable assignment
                 self._execute_set_var(token)
-                # Don't append anything to result - assignments don't generate text
             elif token["type"] == "expression_statement":
-                # Execute expression statement (modifies state, produces no text output)
-                # This happens during rendering, so it only runs if its branch/loop is active
+                # Backward compatibility: Execute expression statement
                 self._execute_expression_statement(token)
-                # Don't append anything to result - expression statements don't generate text
             elif token["type"] == "python_block":
                 # Execute Python block (modifies state, produces no text output)
                 # This happens during rendering, so it only runs if its branch/loop is active

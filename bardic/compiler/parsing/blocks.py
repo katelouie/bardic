@@ -6,7 +6,7 @@ from typing import Tuple, Optional
 from .errors import format_error
 from .indentation import detect_and_strip_indentation
 from .content import parse_content_line, parse_choice_line
-from .directives import parse_input_line, parse_render_line
+from .directives import parse_input_line, parse_render_line, extract_multiline_expression
 from .preprocessing import strip_inline_comment
 
 
@@ -232,7 +232,7 @@ def extract_conditional_block(
             i += 1
             continue
 
-        # Check for expression statement (~ var = value) inside conditional
+        # Check for Python statement (~ <any Python code>) inside conditional
         if stripped.startswith("~ ") and current_branch is not None:
             # Dedent lines collected so far
             if current_branch_lines:
@@ -243,49 +243,23 @@ def extract_conditional_block(
                     current_branch["content"].append({"type": "text", "value": "\n"})
                 current_branch_lines = []  # Reset
 
-            # Parse the assignment (use stripped since line may be indented)
-            assignment = stripped[2:].strip()
+            # Extract Python code (use stripped since line may be indented)
+            code = stripped[2:].strip()
             # Strip inline comment first
-            assignment, _ = strip_inline_comment(assignment)
+            code, _ = strip_inline_comment(code)
 
-            # Check for augmented assignment operators
-            augmented_op = None
-            for op in ["//=", "**=", "+=", "-=", "*=", "/=", "%="]:
-                if op in assignment:
-                    augmented_op = op
-                    break
+            # Check if this is a multi-line statement
+            # Note: We need to look ahead in the original lines, not stripped ones
+            complete_code, lines_consumed = extract_multiline_expression(
+                lines, i, code
+            )
 
-            if augmented_op:
-                # Augmented assignment: expand to regular form
-                var_name, value_expr = assignment.split(augmented_op, 1)
-                var_name = var_name.strip()
-                value_expr = value_expr.strip()
+            # Add as Python statement token
+            current_branch["content"].append(
+                {"type": "python_statement", "code": complete_code}
+            )
 
-                # Expand to regular assignment
-                base_op = augmented_op[:-1]
-                expanded_expr = f"{var_name} {base_op} ({value_expr})"
-
-                # Add as set_var token
-                current_branch["content"].append(
-                    {"type": "set_var", "var": var_name, "expression": expanded_expr}
-                )
-            elif "=" in assignment:
-                # Regular assignment
-                var_name, value_expr = assignment.split("=", 1)
-                var_name = var_name.strip()
-                value_expr = value_expr.strip()
-
-                # Add as set_var token
-                current_branch["content"].append(
-                    {"type": "set_var", "var": var_name, "expression": value_expr}
-                )
-            else:
-                # Expression statement without assignment (like function call)
-                current_branch["content"].append(
-                    {"type": "expression_statement", "code": assignment}
-                )
-
-            i += 1
+            i += lines_consumed
             continue
 
         # Check for nested <<if>> or @if: (not the opening one)
@@ -617,51 +591,24 @@ def extract_loop_block(
                 j += 1
                 continue
 
-            # Check for expression statement (~ var = value) inside loop
+            # Check for Python statement (~ <any Python code>) inside loop
             if line.startswith("~ "):
-                # Parse the assignment
-                assignment = line[2:].strip()
+                # Extract Python code
+                code = line[2:].strip()
                 # Strip inline comment first
-                assignment, _ = strip_inline_comment(assignment)
+                code, _ = strip_inline_comment(code)
 
-                # Check for augmented assignment operators
-                augmented_op = None
-                for op in ["//=", "**=", "+=", "-=", "*=", "/=", "%="]:
-                    if op in assignment:
-                        augmented_op = op
-                        break
+                # Check if this is a multi-line statement
+                complete_code, lines_consumed = extract_multiline_expression(
+                    dedented_lines, j, code
+                )
 
-                if augmented_op:
-                    # Augmented assignment: expand to regular form
-                    var_name, value_expr = assignment.split(augmented_op, 1)
-                    var_name = var_name.strip()
-                    value_expr = value_expr.strip()
+                # Add as Python statement token
+                loop["content"].append(
+                    {"type": "python_statement", "code": complete_code}
+                )
 
-                    # Expand to regular assignment
-                    base_op = augmented_op[:-1]
-                    expanded_expr = f"{var_name} {base_op} ({value_expr})"
-
-                    # Add as set_var token
-                    loop["content"].append(
-                        {"type": "set_var", "var": var_name, "expression": expanded_expr}
-                    )
-                elif "=" in assignment:
-                    # Regular assignment
-                    var_name, value_expr = assignment.split("=", 1)
-                    var_name = var_name.strip()
-                    value_expr = value_expr.strip()
-
-                    # Add as set_var token
-                    loop["content"].append(
-                        {"type": "set_var", "var": var_name, "expression": value_expr}
-                    )
-                else:
-                    # Expression statement without assignment (like function call)
-                    loop["content"].append(
-                        {"type": "expression_statement", "code": assignment}
-                    )
-
-                j += 1
+                j += lines_consumed
                 continue
 
             # Check for nested <<for>> or @for: loop

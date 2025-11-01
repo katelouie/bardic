@@ -198,63 +198,22 @@ def parse(
             i += 1
             continue
 
-        # Variable assignment: ~ var = value or ~ var += value
+        # Python statement: ~ <any Python code>
         if line.startswith("~ ") and current_passage:
-            assignment = line[2:].strip()
+            code = line[2:].strip()
             # Strip inline comment first
-            assignment, _ = strip_inline_comment(assignment)
+            code, _ = strip_inline_comment(code)
 
-            # Check for augmented assignment operators (longest first to avoid false matches)
-            augmented_op = None
-            for op in ["//=", "**=", "+=", "-=", "*=", "/=", "%="]:
-                if op in assignment:
-                    augmented_op = op
-                    break
+            # Check if this is a multi-line statement
+            complete_code, lines_consumed = extract_multiline_expression(
+                lines, i, code
+            )
 
-            if augmented_op:
-                # Augmented assignment: expand to regular form
-                # Example: count += 1  →  count = count + (1)
-                var_name, value_expr = assignment.split(augmented_op, 1)
-                var_name = var_name.strip()
-                value_expr = value_expr.strip()
-
-                # Check if the VALUE expression is multi-line (before expansion)
-                complete_value_expr, lines_consumed = extract_multiline_expression(
-                    lines, i, value_expr
-                )
-
-                # NOW expand to regular assignment with parentheses for safety
-                base_op = augmented_op[:-1]  # Remove trailing '='
-                expanded_expr = f"{var_name} {base_op} ({complete_value_expr})"
-
-                # Store as execution command
-                current_passage["execute"].append(
-                    {"type": "set_var", "var": var_name, "expression": expanded_expr}
-                )
-                i += lines_consumed
-
-            elif "=" in assignment:
-                # Regular assignment (existing logic)
-                var_name, value_expr = assignment.split("=", 1)
-                var_name = var_name.strip()
-                value_expr = value_expr.strip()
-
-                # Check if this is a multi-line expression
-                complete_expr, lines_consumed = extract_multiline_expression(
-                    lines, i, value_expr
-                )
-
-                # Store as execution command
-                current_passage["execute"].append(
-                    {"type": "set_var", "var": var_name, "expression": complete_expr}
-                )
-                i += lines_consumed
-            else:
-                # Expression statement without assignment (like clients.append(nyx))
-                current_passage["execute"].append(
-                    {"type": "expression_statement", "code": assignment}
-                )
-                i += 1
+            # Store as Python statement (executed via exec)
+            current_passage["execute"].append(
+                {"type": "python_statement", "code": complete_code}
+            )
+            i += lines_consumed
             continue
 
         # Choice: +/* [Text] -> Target or +/* {condition} [Text] -> Target
