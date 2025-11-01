@@ -250,6 +250,10 @@ def parse(
                 )
                 i += lines_consumed
             else:
+                # Expression statement without assignment (like clients.append(nyx))
+                current_passage["execute"].append(
+                    {"type": "expression_statement", "code": assignment}
+                )
                 i += 1
             continue
 

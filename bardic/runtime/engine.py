@@ -624,6 +624,8 @@ class BardEngine:
         for cmd in commands:
             if cmd["type"] == "set_var":
                 self._execute_set_var(cmd)
+            elif cmd["type"] == "expression_statement":
+                self._execute_expression_statement(cmd)
             elif cmd["type"] == "python_block":
                 self._execute_python_block(cmd)
 
@@ -641,8 +643,15 @@ class BardEngine:
             # Evaluate the expression
             value = eval(expression, {"__builtins__": safe_builtins}, eval_context)
 
-            # Store in state
-            self.state[var_name] = value
+            # Check if var_name contains a dot (attribute assignment like reader.background)
+            if "." in var_name:
+                # Use exec for attribute assignments
+                assignment_code = f"{var_name} = __value__"
+                eval_context["__value__"] = value
+                exec(assignment_code, {"__builtins__": safe_builtins}, eval_context)
+            else:
+                # Simple variable - store in state
+                self.state[var_name] = value
 
         except NameError as e:
             # Variable doesn't exist
@@ -658,13 +667,44 @@ class BardEngine:
             try:
                 # Try to parse as literal
                 value = self._parse_literal(expression)
-                self.state[var_name] = value
+
+                # Check if var_name contains a dot (attribute assignment)
+                if "." in var_name:
+                    # Use exec for attribute assignments
+                    eval_context = {**self.context, **self.state}
+                    safe_builtins = self._get_safe_builtins()
+                    assignment_code = f"{var_name} = __value__"
+                    eval_context["__value__"] = value
+                    exec(assignment_code, {"__builtins__": safe_builtins}, eval_context)
+                else:
+                    # Simple variable - store in state
+                    self.state[var_name] = value
             except Exception as e:
                 raise RuntimeError(
                     f"Variable assignment failed: {var_name} = {expression}\n"
                     f"  Error: {e}\n"
                     f"  Expression could not be evaluated or parsed as literal"
                 )
+
+    def _execute_expression_statement(self, cmd: dict) -> None:
+        """Execute an expression statement (like a function call) without assignment."""
+        code = cmd["code"]
+
+        # Try to evaluate the expression for its side effects
+        try:
+            # Create evaluation context with context and state
+            eval_context = {**self.context, **self.state}
+            safe_builtins = self._get_safe_builtins()
+
+            # Evaluate the expression (result is discarded, we only care about side effects)
+            eval(code, {"__builtins__": safe_builtins}, eval_context)
+
+        except Exception as e:
+            raise RuntimeError(
+                f"Expression statement failed: {code}\n"
+                f"  Error: {e}\n"
+                f"  Current state: {list(self.state.keys())}"
+            )
 
     def _get_safe_builtins(self) -> dict[str, Any]:
         """
@@ -901,6 +941,16 @@ class BardEngine:
             elif token["type"] == "input":
                 # Collect input directive (don't render as text)
                 directives.append(token)
+            elif token["type"] == "set_var":
+                # Execute variable assignment (modifies state, produces no text output)
+                # This happens during rendering, so it only runs if its branch/loop is active
+                self._execute_set_var(token)
+                # Don't append anything to result - assignments don't generate text
+            elif token["type"] == "expression_statement":
+                # Execute expression statement (modifies state, produces no text output)
+                # This happens during rendering, so it only runs if its branch/loop is active
+                self._execute_expression_statement(token)
+                # Don't append anything to result - expression statements don't generate text
             elif token["type"] == "python_block":
                 # Execute Python block (modifies state, produces no text output)
                 # This happens during rendering, so it only runs if its branch/loop is active

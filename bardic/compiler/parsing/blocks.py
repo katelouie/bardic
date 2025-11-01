@@ -232,6 +232,62 @@ def extract_conditional_block(
             i += 1
             continue
 
+        # Check for expression statement (~ var = value) inside conditional
+        if stripped.startswith("~ ") and current_branch is not None:
+            # Dedent lines collected so far
+            if current_branch_lines:
+                dedented = detect_and_strip_indentation(current_branch_lines)
+                for dedented_line in dedented:
+                    content_tokens = parse_content_line(dedented_line)
+                    current_branch["content"].extend(content_tokens)
+                    current_branch["content"].append({"type": "text", "value": "\n"})
+                current_branch_lines = []  # Reset
+
+            # Parse the assignment (use stripped since line may be indented)
+            assignment = stripped[2:].strip()
+            # Strip inline comment first
+            assignment, _ = strip_inline_comment(assignment)
+
+            # Check for augmented assignment operators
+            augmented_op = None
+            for op in ["//=", "**=", "+=", "-=", "*=", "/=", "%="]:
+                if op in assignment:
+                    augmented_op = op
+                    break
+
+            if augmented_op:
+                # Augmented assignment: expand to regular form
+                var_name, value_expr = assignment.split(augmented_op, 1)
+                var_name = var_name.strip()
+                value_expr = value_expr.strip()
+
+                # Expand to regular assignment
+                base_op = augmented_op[:-1]
+                expanded_expr = f"{var_name} {base_op} ({value_expr})"
+
+                # Add as set_var token
+                current_branch["content"].append(
+                    {"type": "set_var", "var": var_name, "expression": expanded_expr}
+                )
+            elif "=" in assignment:
+                # Regular assignment
+                var_name, value_expr = assignment.split("=", 1)
+                var_name = var_name.strip()
+                value_expr = value_expr.strip()
+
+                # Add as set_var token
+                current_branch["content"].append(
+                    {"type": "set_var", "var": var_name, "expression": value_expr}
+                )
+            else:
+                # Expression statement without assignment (like function call)
+                current_branch["content"].append(
+                    {"type": "expression_statement", "code": assignment}
+                )
+
+            i += 1
+            continue
+
         # Check for nested <<if>> or @if: (not the opening one)
         if (stripped.startswith("<<if ") or stripped.startswith("@if ")) and i != start_index:
             # This is a nested conditional - recursively extract it
@@ -558,6 +614,53 @@ def extract_loop_block(
                 directive = parse_render_line(line)
                 if directive:
                     loop["content"].append(directive)
+                j += 1
+                continue
+
+            # Check for expression statement (~ var = value) inside loop
+            if line.startswith("~ "):
+                # Parse the assignment
+                assignment = line[2:].strip()
+                # Strip inline comment first
+                assignment, _ = strip_inline_comment(assignment)
+
+                # Check for augmented assignment operators
+                augmented_op = None
+                for op in ["//=", "**=", "+=", "-=", "*=", "/=", "%="]:
+                    if op in assignment:
+                        augmented_op = op
+                        break
+
+                if augmented_op:
+                    # Augmented assignment: expand to regular form
+                    var_name, value_expr = assignment.split(augmented_op, 1)
+                    var_name = var_name.strip()
+                    value_expr = value_expr.strip()
+
+                    # Expand to regular assignment
+                    base_op = augmented_op[:-1]
+                    expanded_expr = f"{var_name} {base_op} ({value_expr})"
+
+                    # Add as set_var token
+                    loop["content"].append(
+                        {"type": "set_var", "var": var_name, "expression": expanded_expr}
+                    )
+                elif "=" in assignment:
+                    # Regular assignment
+                    var_name, value_expr = assignment.split("=", 1)
+                    var_name = var_name.strip()
+                    value_expr = value_expr.strip()
+
+                    # Add as set_var token
+                    loop["content"].append(
+                        {"type": "set_var", "var": var_name, "expression": value_expr}
+                    )
+                else:
+                    # Expression statement without assignment (like function call)
+                    loop["content"].append(
+                        {"type": "expression_statement", "code": assignment}
+                    )
+
                 j += 1
                 continue
 
