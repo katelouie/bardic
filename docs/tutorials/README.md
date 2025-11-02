@@ -137,9 +137,9 @@ If you want to leverage Python's full capabilities:
 
 ## Optional Materials
 
-- **[Custom Classes Deep Dive](custom-classes.md)** - Advanced guide to serialization and best practices
+- **[Custom Classes Deep Dive](../cookbook/custom-classes.md)** - Advanced guide to serialization and best practices
 - **[Language Specification](../spec.md)** - Complete syntax reference
-- **[Example Games](https://github.com/bardic-lang/examples)** - See Bardic in action
+- **[Example Games](https://github.com/katelouie/arcanum-game)** - See Bardic in action
 
 ---
 
