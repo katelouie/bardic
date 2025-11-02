@@ -211,4 +211,4 @@ What if your hero dictionary could have its own functions? What if, instead of w
 
 For that, we need to promote our "filing cabinet" (`dict`) into a "thinking machine" (`class`).
 
-**[Continue to Part 3: The Python-First Promise (Classes!)](./03_python_first.md)**
+**[Continue to Part 3: The Python-First Promise (Classes!)](./03a_objects_superpowers.md)**
