@@ -619,6 +619,32 @@ You learned that:
 
 Most importantly: **You've been using objects this whole time!** Now you're just making that knowledge explicit.
 
-Ready to create your own? Let's go!
+---
+
+## 🎓 Congratulations! You're a Bardic Writer
+
+You've completed the core tutorial. At this point, you can:
+
+- ✅ Build complex branching narratives
+- ✅ Track inventory and character stats
+- ✅ Use conditionals and loops
+- ✅ Create full interactive fiction games
+
+**You don't need to continue.** The remaining parts are optional
+advanced features for power users.
+
+### Ready to Build Your Game?
+
+Stop here and start your project! Or...
+
+### Want More Power?
+
+Continue to Part 3B to learn about custom Python objects.
+This unlocks even more possibilities but isn't required
+for most stories.
+
+---
+
+Ready to create your own objects? Let's go!
 
 **[Continue to Part 3B: Creating Your Own Objects →](03b_creating_objects.md)**
