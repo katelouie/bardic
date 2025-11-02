@@ -213,4 +213,4 @@ But what if you wanted *more than one* key? What if you wanted an inventory, a l
 
 For that, we need to go one step further. It's time to unlock Bardic's most powerful feature.
 
-**[Continue to Part 3: The Python-First Promise](./03_python_first.md)**
+**[Continue to Part 2.5: Complex State (Lists and Dictionaries)](02_5_complex_state.md)**
