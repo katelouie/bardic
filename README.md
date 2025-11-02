@@ -71,7 +71,9 @@ You feel a bit tired.
   - Use the **NiceGUI** template for a pure-Python, single-file game.
   - Use the **Web** template (FastAPI + React) for a production-ready, highly custom web game.
 - **Clean, Writer-First Syntax:** Focus on your story with a minimal, line-based syntax for passages (`::`), choices (`+`), and text.
-- **Visualize Your Story:** Automatically generate a flowchart of your entire story to find dead ends or orphaned passages with the `bardic graph` command.
+- **Visualize Your Story:** Automatically generate a flowchart of your entire story to find highlighted dead ends or orphaned passages with the `bardic graph` command.
+- **Instant Start-Up:** Get a working game in 60 seconds with `bardic init`. It comes with a browser-based frontend pre-configured and ready to run with a single command. (NiceGUI, Reflex, or React -- take your pick.)
+- **VS Code Integration:** You can install the [Bardic VS Code extension](https://github.com/katelouie/bardic-vscode) to get full syntax highlighting, code snippets and code folding in your IDE.
 
 ## Quick Start (in 4 Steps)
 
@@ -84,7 +86,7 @@ pip install bardic
 ```
 
 **2. Create a New Project:**
-This creates a new folder with a full example game, ready to run.
+This creates a new folder with a full example game, ready to run in a pre-made frontend in your browser.
 
 ```bash
 bardic init my-game
@@ -125,7 +127,7 @@ Need to see a large-scale project? The [Arcanum](https://github.com/katelouie/ar
 
 ## Where to Go Next?
 
-- **New to Bardic?** Start by opening `example.bard` in your new project. Try changing some text and recompiling!
+- **New to Bardic?** I've put together a short [tutorial course](docs/tutorials/README.md) that walks you through all of the syntax and features of Bardic, from beginner to advanced.
 - **Want to see all the syntax?** Check out the [Language Specification](https://github.com/katelouie/bardic/blob/main/docs/spec.md) for the full list of features, from loops to render directives.
 - **Want to build the engine?** See our [`CONTRIBUTING.md`](CONTRIBUTING.md) for details on the architecture and development setup.
-- **Want VS Code integration?** Download the [Bardic VS Code extension](https://github.com/katelouie/bardic-vscode) with full syntax highlighting and snippets.
+- **Want VS Code integration?** Download the [Bardic VS Code extension](https://github.com/katelouie/bardic-vscode) with full syntax highlighting, snippets and code folding.
