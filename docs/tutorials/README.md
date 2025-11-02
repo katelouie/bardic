@@ -12,6 +12,12 @@ No matter your skill level, start at Part 1. Each lesson builds on the last.
 
 ## The Tutorial Series
 
+### Phase 0: Getting Set Up
+
+- **[Part 0: Downloading Bardic (and Python) - Choose Your Path](00_installation_choice.md)**
+  - Get set up with Bardic and Python. I promise it's simple and fast!
+  - **You'll create:** A Python install with Bardic included
+
 ### Phase 1: The Writer (Start Here!)
 
 - **[Part 1: Your First Branching Story](01_first_story.md)**
