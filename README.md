@@ -83,6 +83,12 @@ Get a new game running in under 60 seconds.
 
 ```bash
 pip install bardic
+
+# Or with NiceGUI template support
+pip install bardic[nicegui]
+
+# Or with other optional dependencies, if you want them
+pip install bardic[nicegui,reflex,web,dev]
 ```
 
 **2. Create a New Project:**
@@ -94,7 +100,7 @@ cd my-game
 ```
 
 **3. Install Dependencies:**
-The default template uses NiceGUI.
+The default template uses NiceGUI. If you didn't install with `[nicegui]`, install the project dependencies:
 
 ```bash
 pip install -r requirements.txt
@@ -111,6 +117,24 @@ python player.py
 ```
 
 Your game is now running at `http://localhost:8080`!
+
+### Installation Options
+
+Bardic supports multiple UI frameworks. Choose the one you prefer:
+
+| Framework | Install Command | Best For |
+|-----------|----------------|----------|
+| NiceGUI | `pip install bardic[nicegui]` | Pure Python, single-file games |
+| FastAPI + React | `pip install bardic[web]` | Production web apps |
+| Reflex | `pip install bardic[reflex]` | Python → React compilation |
+
+Or install the core engine and add dependencies manually:
+
+```bash
+bardic init my-game
+cd my-game
+pip install -r requirements.txt
+```
 
 ## The Bardic Toolkit (CLI)
 
