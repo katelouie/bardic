@@ -1,5 +1,9 @@
 # Bardic
 
+[![PyPI version](https://badge.fury.io/py/bardic.svg)](https://badge.fury.io/py/bardic)
+[![Python Version](https://img.shields.io/pypi/pyversions/bardic.svg)](https://pypi.org/project/bardic/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 **Bardic is a Python-first interactive fiction engine that lets you import your own classes and use real Python in your stories. It's built for modern Python web applications. It's also for people who want to make narrative games without learning web dev.**
 
 Write your branching narrative in a clean, simple syntax (inspired by Ink), and when you need complex logic, just use Python. Bardic is designed to be the "story layer" for games that need rich data models, complex state, and custom UIs. Bardic is frontend-agnostic and works with NiceGUI, Reflex, React+FastAPI, or any other frontend layer you want to build with. It compiles stories to JSON and is portable and versatile.
