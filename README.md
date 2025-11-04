@@ -2,6 +2,7 @@
 
 [![PyPI version](https://badge.fury.io/py/bardic.svg)](https://badge.fury.io/py/bardic)
 [![Python Version](https://img.shields.io/pypi/pyversions/bardic.svg)](https://pypi.org/project/bardic/)
+[![VSCode Marketplace](https://img.shields.io/visual-studio-marketplace/v/katehlouie.bardic)](https://marketplace.visualstudio.com/items?itemName=katehlouie.bardic)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 **Bardic is a Python-first interactive fiction engine that lets you import your own classes and use real Python in your stories. It's built for modern Python web applications. It's also for people who want to make narrative games without learning web dev.**
