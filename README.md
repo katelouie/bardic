@@ -167,10 +167,10 @@ Get syntax highlighting and code snippets:
 Or install from command line:
 
 ```bash
-code --install-extension katehlouie.bardic
+code --install-extension katelouie.bardic
 ```
 
-[View on VSCode Marketplace](https://marketplace.visualstudio.com/items?itemName=katehlouie.bardic)
+[View on VSCode Marketplace](https://marketplace.visualstudio.com/items?itemName=katelouie.bardic)
 
 ## Where to Go Next?
 
