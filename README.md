@@ -153,6 +153,24 @@ Bardic comes with a command-line interface to help you build your game.
 
 Need to see a large-scale project? The [Arcanum](https://github.com/katelouie/arcanum-game) cozy tarot reading game is built with Bardic. It's an example of using Bardic with custom Python classes, complex state, and a NiceGUI frontend.
 
+## Editor Support
+
+**VSCode Extension:**
+
+Get syntax highlighting and code snippets:
+
+1. Open VSCode
+2. Search "Bardic" in Extensions
+3. Install
+
+Or install from command line:
+
+```bash
+code --install-extension katehlouie.bardic
+```
+
+[View on VSCode Marketplace](https://marketplace.visualstudio.com/items?itemName=katehlouie.bardic)
+
 ## Where to Go Next?
 
 - **New to Bardic?** I've put together a short [tutorial course](docs/tutorials/README.md) that walks you through all of the syntax and features of Bardic, from beginner to advanced.
