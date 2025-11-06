@@ -1,0 +1,9 @@
+:: Start
+
+@py:
+    x = 5
+    y = 10
+    # Missing @endpy!
+
+:: NextPassage
+This passage won't be reached because the @py block wasn't closed.

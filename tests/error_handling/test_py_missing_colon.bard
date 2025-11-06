@@ -1,0 +1,8 @@
+:: Start
+
+@py
+    x = 5
+    y = 10
+@endpy
+
+Content after the Python block.

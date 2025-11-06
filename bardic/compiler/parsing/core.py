@@ -151,7 +151,7 @@ def parse(
 
         # Python block: <<py or @py:
         if line.strip().startswith("<<py") or line.strip().startswith("@py"):
-            code, lines_consumed = extract_python_block(lines, i)
+            code, lines_consumed = extract_python_block(lines, i, filename, line_map)
             current_passage["execute"].append({"type": "python_block", "code": code})
             i += lines_consumed
             continue

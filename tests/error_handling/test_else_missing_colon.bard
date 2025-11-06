@@ -1,0 +1,9 @@
+:: Start
+
+@if x > 5:
+    You have more than 5.
+@else
+    You have 5 or less.
+@endif
+
+Content after conditional.

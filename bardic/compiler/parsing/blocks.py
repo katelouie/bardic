@@ -1,22 +1,29 @@
 """Block extraction: conditionals, loops, and Python code blocks."""
 
 import re
-from typing import Tuple, Optional
+from typing import Tuple, Optional, List
 
-from .errors import format_error
+from .errors import format_error, SourceLocation
 from .indentation import detect_and_strip_indentation
 from .content import parse_content_line, parse_choice_line
 from .directives import parse_input_line, parse_render_line, extract_multiline_expression
 from .preprocessing import strip_inline_comment
 
 
-def extract_python_block(lines: list[str], start_index: int) -> tuple[str, int]:
+def extract_python_block(
+    lines: list[str],
+    start_index: int,
+    filename: Optional[str] = None,
+    line_map: Optional[List[SourceLocation]] = None
+) -> tuple[str, int]:
     """
     Extract Python block - supports <<py>> or @py: syntax.
 
     Args:
         lines: List of all lines
         start_index: Index of the <<py or @py: line
+        filename: Optional filename for error context
+        line_map: Optional source line mapping for @include
 
     Returns:
         Tuple of (python code, lines consumed)
@@ -30,22 +37,32 @@ def extract_python_block(lines: list[str], start_index: int) -> tuple[str, int]:
         return _extract_py_old_syntax(lines, start_index)
     elif stripped.startswith("@py"):
         # New syntax: @py: ... @endpy
-        return _extract_py_new_syntax(lines, start_index)
+        return _extract_py_new_syntax(lines, start_index, filename, line_map)
     else:
         raise ValueError("extract_python_block called on non-python line")
 
 
-def _extract_py_new_syntax(lines: list[str], start_index: int) -> tuple[str, int]:
+def _extract_py_new_syntax(
+    lines: list[str],
+    start_index: int,
+    filename: Optional[str] = None,
+    line_map: Optional[List[SourceLocation]] = None
+) -> tuple[str, int]:
     """Extract @py: ... @endpy block."""
     line = lines[start_index]
 
     # Validate @py: has colon
     if line.strip() != "@py:":
-        raise SyntaxError(
-            f"Line {start_index}: @py statement missing colon\n"
-            f"  Expected: @py:\n"
-            f"  Got: {line.strip()}"
-        )
+        raise SyntaxError(format_error(
+            error_type="Syntax Error",
+            line_num=start_index + 1,
+            lines=lines,
+            message="@py statement missing colon",
+            pointer_length=len(line.strip()),
+            suggestion="Python blocks must have the format: @py:",
+            filename=filename,
+            line_map=line_map
+        ))
 
     code_lines = []
     i = start_index + 1
@@ -62,10 +79,16 @@ def _extract_py_new_syntax(lines: list[str], start_index: int) -> tuple[str, int
             i += 1
 
     # Reached end without finding @endpy
-    raise SyntaxError(
-        f"Line {start_index}: @py block not closed\n"
-        f"  Expected @endpy before end of passage"
-    )
+    raise SyntaxError(format_error(
+        error_type="Unclosed Block Error",
+        line_num=start_index + 1,
+        lines=lines,
+        message="@py block not closed",
+        pointer_length=len("@py:"),
+        suggestion=f"Add @endpy to close the Python block started on line {start_index + 1}",
+        filename=filename,
+        line_map=line_map
+    ))
 
 
 def _extract_py_old_syntax(lines: list[str], start_index: int) -> tuple[str, int]:
@@ -191,7 +214,7 @@ def extract_conditional_block(
 
             # Extract Python block and add it to branch content
             # It will be executed during rendering (when this branch is evaluated)
-            code, lines_consumed = extract_python_block(lines, i)
+            code, lines_consumed = extract_python_block(lines, i, filename, line_map)
             current_branch["content"].append({"type": "python_block", "code": code})
             i += lines_consumed
             continue
@@ -306,11 +329,16 @@ def extract_conditional_block(
                 # New syntax: @if condition:
                 match = re.match(r"@if\s+(.+?):", stripped)
                 if not match:
-                    raise SyntaxError(
-                        f"Line {i}: @if statement missing colon\n"
-                        f"  Expected: @if condition:\n"
-                        f"  Got: {stripped}"
-                    )
+                    raise SyntaxError(format_error(
+                        error_type="Syntax Error",
+                        line_num=i + 1,
+                        lines=lines,
+                        message="@if statement missing colon",
+                        pointer_length=len(stripped),
+                        suggestion="Conditional blocks require colons. Use: @if condition:",
+                        filename=filename,
+                        line_map=line_map
+                    ))
                 condition = match.group(1).strip()
             else:
                 # Strip inline comment first
@@ -380,11 +408,16 @@ def extract_conditional_block(
                 # New syntax: @elif condition:
                 match = re.match(r"@elif\s+(.+?):", stripped)
                 if not match:
-                    raise SyntaxError(
-                        f"Line {i}: @elif statement missing colon\n"
-                        f"  Expected: @elif condition:\n"
-                        f"  Got: {stripped}"
-                    )
+                    raise SyntaxError(format_error(
+                        error_type="Syntax Error",
+                        line_num=i + 1,
+                        lines=lines,
+                        message="@elif statement missing colon",
+                        pointer_length=len(stripped),
+                        suggestion="Conditional blocks require colons. Use: @elif condition:",
+                        filename=filename,
+                        line_map=line_map
+                    ))
                 condition = match.group(1).strip()
             else:
                 # Strip inline comment first
@@ -404,11 +437,16 @@ def extract_conditional_block(
                 stripped, _ = strip_inline_comment(stripped)
                 # New syntax: @else: (with colon)
                 if stripped.strip() != "@else:":
-                    raise SyntaxError(
-                        f"Line {i}: @else statement missing colon\n"
-                        f"  Expected: @else:\n"
-                        f"  Got: {stripped}"
-                    )
+                    raise SyntaxError(format_error(
+                        error_type="Syntax Error",
+                        line_num=i + 1,
+                        lines=lines,
+                        message="@else statement missing colon",
+                        pointer_length=len(stripped),
+                        suggestion="Conditional blocks require colons. Use: @else:",
+                        filename=filename,
+                        line_map=line_map
+                    ))
             finalize_and_start_new_branch("True")
             i += 1
             continue
@@ -504,11 +542,16 @@ def extract_loop_block(
                 # New syntax: @for variable in collection:
                 match = re.match(r"@for\s+(.+?)\s+in\s+(.+?):", stripped)
                 if not match:
-                    raise SyntaxError(
-                        f"Line {i}: @for statement missing colon\n"
-                        f"  Expected: @for item in list:\n"
-                        f"  Got: {stripped}"
-                    )
+                    raise SyntaxError(format_error(
+                        error_type="Syntax Error",
+                        line_num=i + 1,
+                        lines=lines,
+                        message="@for statement missing colon",
+                        pointer_length=len(stripped),
+                        suggestion="Loop blocks require colons. Use: @for item in list:",
+                        filename=filename,
+                        line_map=line_map
+                    ))
                 loop["variable"] = match.group(1).strip()
                 loop["collection"] = match.group(2).strip()
             else:
@@ -520,7 +563,16 @@ def extract_loop_block(
                     loop["variable"] = match.group(1).strip()
                     loop["collection"] = match.group(2).strip()
                 else:
-                    raise ValueError(f"Invalid for loop syntax: {stripped}")
+                    raise SyntaxError(format_error(
+                        error_type="Syntax Error",
+                        line_num=i + 1,
+                        lines=lines,
+                        message=f"Invalid for loop syntax: {stripped}",
+                        pointer_length=len(stripped),
+                        suggestion="Use: <<for item in collection>> or @for item in collection:",
+                        filename=filename,
+                        line_map=line_map
+                    ))
 
             loop_started = True
             i += 1
@@ -570,7 +622,8 @@ def extract_loop_block(
             if stripped.startswith("<<py") or stripped.startswith("@py"):
                 # Extract Python block and add it to loop content
                 # It will be executed during rendering (for each iteration)
-                code, lines_consumed = extract_python_block(dedented_lines, j)
+                # Note: Pass None for line_map since dedented_lines is a subset
+                code, lines_consumed = extract_python_block(dedented_lines, j, filename, None)
                 loop["content"].append({"type": "python_block", "code": code})
                 j += lines_consumed
                 continue

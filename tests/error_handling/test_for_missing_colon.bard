@@ -1,0 +1,7 @@
+:: Start
+
+@for item in items
+    Item: {item}
+@endfor
+
+Content after loop.
