@@ -172,7 +172,7 @@ def parse(
 
         # Render directive: @render or @render:framework
         if line.strip().startswith("@render"):
-            directive = parse_render_line(line)
+            directive = parse_render_line(line, i + 1, lines, filename, line_map)
             if directive:
                 current_passage["content"].append(directive)
             i += 1
@@ -180,7 +180,7 @@ def parse(
 
         # Input directive: @input
         if line.strip().startswith("@input"):
-            directive = parse_input_line(line)
+            directive = parse_input_line(line, i + 1, lines, filename, line_map)
             if directive:
                 # Store in passage for later access by engine
                 if "input_directives" not in current_passage:
@@ -208,6 +208,25 @@ def parse(
             complete_code, lines_consumed = extract_multiline_expression(
                 lines, i, code
             )
+
+            # Validate Python syntax at compile time
+            import ast
+            try:
+                ast.parse(complete_code)
+            except SyntaxError as e:
+                # Calculate actual line number (accounting for multi-line statements)
+                error_line = i + 1 + (e.lineno - 1 if e.lineno else 0)
+                raise SyntaxError(format_error(
+                    error_type="Invalid Python Syntax",
+                    line_num=error_line,
+                    lines=lines,
+                    message=f"Python syntax error: {e.msg}",
+                    pointer_col=e.offset - 1 if e.offset else 0,
+                    pointer_length=1,
+                    suggestion="Check your Python syntax. Common issues: missing colons, unmatched parentheses, unclosed strings",
+                    filename=filename,
+                    line_map=line_map
+                ))
 
             # Store as Python statement (executed via exec)
             current_passage["execute"].append(

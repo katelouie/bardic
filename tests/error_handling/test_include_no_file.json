@@ -1,0 +1,40 @@
+{
+  "version": "0.1.0",
+  "initial_passage": "Start",
+  "metadata": {},
+  "imports": [],
+  "passages": {
+    "Start": {
+      "id": "Start",
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "@include"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Content after the include directive."
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [],
+      "execute": [],
+      "tags": []
+    }
+  }
+}

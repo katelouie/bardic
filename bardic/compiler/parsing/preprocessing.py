@@ -204,9 +204,39 @@ def resolve_includes(
 
     for line_idx, line in enumerate(lines):
         # Check for @include directive
-        if line.strip().startswith("@include "):
+        if line.strip().startswith("@include"):
             # Extract the include path
-            include_path = line.strip()[9:].strip()  # Remove '@include '
+            # Handle both "@include file.bard" and "@include " and "@include"
+            after_include = line.strip()[8:].strip()  # Remove '@include'
+            include_path = after_include
+
+            # Validate that file path is provided
+            if not include_path:
+                from .errors import format_error
+                raise SyntaxError(format_error(
+                    error_type="Syntax Error",
+                    line_num=line_idx + 1,
+                    lines=lines,
+                    message="@include directive missing file path",
+                    pointer_length=len("@include"),
+                    suggestion="Specify a file to include. Example: @include shared.bard",
+                    filename=base_path,
+                    line_map=None  # No line_map yet at this stage
+                ))
+
+            # Validate no multiple files (space-separated would be ambiguous)
+            if " " in include_path.strip():
+                from .errors import format_error
+                raise SyntaxError(format_error(
+                    error_type="Syntax Error",
+                    line_num=line_idx + 1,
+                    lines=lines,
+                    message="@include can only include one file at a time",
+                    pointer_length=len(line.strip()),
+                    suggestion="Use separate @include directives for each file",
+                    filename=base_path,
+                    line_map=None
+                ))
 
             # Resolve relative to the current file
             base_dir = Path(base_path).parent
