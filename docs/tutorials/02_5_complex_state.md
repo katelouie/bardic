@@ -113,6 +113,7 @@ You have {gold} gold.
     You are carrying:
     @for item in inventory:
         - {item}
+    @endfor
 @else:
     Your pockets are empty.
 @endif
