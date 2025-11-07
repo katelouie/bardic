@@ -12,9 +12,11 @@ import webbrowser
 import shutil
 from bardic.runtime.engine import BardEngine
 
+from bardic import __version__
+
 
 @click.group()
-@click.version_option(version="0.1.0")
+@click.version_option(version=__version__)
 def cli():
     """
     Bardic: Python-first interactive fiction engine
@@ -233,8 +235,19 @@ def play(story_file: str, no_color: bool):
 
 @cli.command()
 @click.argument("project_name")
-@click.option("--template", "-t", default="nicegui", type=click.Choice(['nicegui', 'web', 'reflex']), help="Template to use (default: nicegui)")
-@click.option("--path", "-p", type=click.Path(), help="Parent directory for project (default: current directory)")
+@click.option(
+    "--template",
+    "-t",
+    default="nicegui",
+    type=click.Choice(["nicegui", "web", "reflex"]),
+    help="Template to use (default: nicegui)",
+)
+@click.option(
+    "--path",
+    "-p",
+    type=click.Path(),
+    help="Parent directory for project (default: current directory)",
+)
 def init(project_name: str, template: str, path: str):
     """
     Initialize a new Bardic project from a template.
@@ -257,13 +270,21 @@ def init(project_name: str, template: str, path: str):
     # Determine parent directory
     parent_dir = Path(path) if path else Path.cwd()
     if not parent_dir.exists():
-        click.echo(click.style("✗ Error: ", fg="red", bold=True) + f"Parent directory does not exist: {parent_dir}", err=True)
+        click.echo(
+            click.style("✗ Error: ", fg="red", bold=True)
+            + f"Parent directory does not exist: {parent_dir}",
+            err=True,
+        )
         sys.exit(1)
 
     # Create project directory
     project_dir = parent_dir / project_name
     if project_dir.exists():
-        click.echo(click.style("✗ Error: ", fg="red", bold=True) + f"Directory already exists: {project_dir}", err=True)
+        click.echo(
+            click.style("✗ Error: ", fg="red", bold=True)
+            + f"Directory already exists: {project_dir}",
+            err=True,
+        )
         sys.exit(1)
 
     # Find template directory
@@ -271,32 +292,49 @@ def init(project_name: str, template: str, path: str):
     template_dir = bardic_root / "templates" / template
 
     if not template_dir.exists():
-        click.echo(click.style("✗ Error: ", fg="red", bold=True) + f"Template not found: {template}", err=True)
+        click.echo(
+            click.style("✗ Error: ", fg="red", bold=True)
+            + f"Template not found: {template}",
+            err=True,
+        )
         sys.exit(1)
 
     try:
         # Create project directory
         project_dir.mkdir(parents=True)
-        click.echo(click.style("✓", fg="green", bold=True) + f" Created directory: {project_dir}")
+        click.echo(
+            click.style("✓", fg="green", bold=True)
+            + f" Created directory: {project_dir}"
+        )
 
         # Create compiled_stories directory if not web template (web uses frontend/public/stories/)
-        if template != 'web':
+        if template != "web":
             (project_dir / "compiled_stories").mkdir()
-            click.echo(click.style("✓", fg="green", bold=True) + " Created compiled_stories/")
+            click.echo(
+                click.style("✓", fg="green", bold=True) + " Created compiled_stories/"
+            )
 
         # Copy template files and directories
         for item in template_dir.iterdir():
             dest = project_dir / item.name
             if item.is_file():
                 shutil.copy2(item, dest)
-                click.echo(click.style("✓", fg="green", bold=True) + f" Created {item.name}")
+                click.echo(
+                    click.style("✓", fg="green", bold=True) + f" Created {item.name}"
+                )
             elif item.is_dir():
                 shutil.copytree(item, dest)
-                click.echo(click.style("✓", fg="green", bold=True) + f" Created {item.name}/")
+                click.echo(
+                    click.style("✓", fg="green", bold=True) + f" Created {item.name}/"
+                )
 
         click.echo()
         click.echo("=" * 60)
-        click.echo(click.style(f"✓ Project '{project_name}' initialized!", fg="green", bold=True))
+        click.echo(
+            click.style(
+                f"✓ Project '{project_name}' initialized!", fg="green", bold=True
+            )
+        )
         click.echo("=" * 60)
         click.echo()
         click.echo(click.style("Next steps:", fg="cyan", bold=True))
@@ -306,36 +344,58 @@ def init(project_name: str, template: str, path: str):
         if template == "nicegui":
             click.echo(f"  1. cd {project_name}")
             click.echo("  2. pip install -r requirements.txt")
-            click.echo("  3. bardic compile example.bard -o compiled_stories/example.json")
+            click.echo(
+                "  3. bardic compile example.bard -o compiled_stories/example.json"
+            )
             click.echo("  4. python player.py")
             click.echo()
-            click.echo(click.style("Your game will be running at http://localhost:8080", fg="yellow"))
+            click.echo(
+                click.style(
+                    "Your game will be running at http://localhost:8080", fg="yellow"
+                )
+            )
             click.echo()
-            click.echo(click.style("Tip:", fg="cyan") + " Check out player.py for customization points marked with TODO")
+            click.echo(
+                click.style("Tip:", fg="cyan")
+                + " Check out player.py for customization points marked with TODO"
+            )
 
         elif template == "web":
             click.echo(f"  1. cd {project_name}")
             click.echo("  2. pip install -r requirements.txt  # Backend dependencies")
             click.echo("  3. cd frontend && npm install && cd ..")
-            click.echo("  4. bardic compile example.bard -o frontend/public/stories/example.json")
+            click.echo(
+                "  4. bardic compile example.bard -o frontend/public/stories/example.json"
+            )
             click.echo("  5. cd backend && python main.py  # Terminal 1")
             click.echo("  6. cd frontend && npm run dev     # Terminal 2")
             click.echo()
             click.echo(click.style("Backend: http://127.0.0.1:8000", fg="yellow"))
             click.echo(click.style("Frontend: http://localhost:5173", fg="yellow"))
             click.echo()
-            click.echo(click.style("Tip:", fg="cyan") + " See README.md for @render directives and extensions")
+            click.echo(
+                click.style("Tip:", fg="cyan")
+                + " See README.md for @render directives and extensions"
+            )
 
         elif template == "reflex":
             click.echo(f"  1. cd {project_name}")
             click.echo("  2. pip install -r requirements.txt")
             click.echo("  3. mkdir -p compiled_stories")
-            click.echo("  4. bardic compile example.bard -o compiled_stories/example.json")
+            click.echo(
+                "  4. bardic compile example.bard -o compiled_stories/example.json"
+            )
             click.echo("  5. reflex run")
             click.echo()
-            click.echo(click.style("Your game will be running at http://localhost:3000", fg="yellow"))
+            click.echo(
+                click.style(
+                    "Your game will be running at http://localhost:3000", fg="yellow"
+                )
+            )
             click.echo()
-            click.echo(click.style("Note:", fg="cyan") + " Save/load feature coming soon")
+            click.echo(
+                click.style("Note:", fg="cyan") + " Save/load feature coming soon"
+            )
 
         click.echo()
 
@@ -349,8 +409,19 @@ def init(project_name: str, template: str, path: str):
 
 @cli.command()
 @click.argument("story_file", type=click.Path(exists=True))
-@click.option("--output", "-o", type=click.Path(), help="Output file (without extension, default: story_graph)")
-@click.option("--format", "-f", default="png", type=click.Choice(['png', 'svg', 'pdf']), help="Output format (default: png)")
+@click.option(
+    "--output",
+    "-o",
+    type=click.Path(),
+    help="Output file (without extension, default: story_graph)",
+)
+@click.option(
+    "--format",
+    "-f",
+    default="png",
+    type=click.Choice(["png", "svg", "pdf"]),
+    help="Output format (default: png)",
+)
 @click.option("--no-tags", is_flag=True, help="Hide passage tags in graph")
 def graph(story_file, output, format, no_tags):
     """
@@ -381,7 +452,7 @@ def graph(story_file, output, format, no_tags):
             story_file=Path(story_file),
             output_file=output,
             format=format,
-            show_tags=not no_tags
+            show_tags=not no_tags,
         )
 
     except Exception as e:
