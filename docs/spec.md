@@ -232,6 +232,7 @@ s<>
 ```
 
 **Outputs:**
+
 - If `count = 1`: `You have 1 item.`
 - If `count = 3`: `You have 3 items.`
 
@@ -367,6 +368,7 @@ Shorthand operators for updating variables:
 ```
 
 **Supported Operators:**
+
 - `+=` (addition)
 - `-=` (subtraction)
 - `*=` (multiplication)
@@ -1077,6 +1079,7 @@ Welcome, seeker...
 **Usage in Engine:**
 
 Metadata is available in `story["metadata"]` and used for:
+
 - Save/load file compatibility checking
 - Story listing in web runtime
 - Display in UI
@@ -1148,6 +1151,41 @@ story_id = story_metadata.get("story_id", filename)
 **Status:** ✅ Implemented (Session 12)
 
 ---
+
+### Tags
+
+Attach metadata to passages, choices, and content lines using the `^tag` syntax.
+
+**Syntax:** `^TAG` or `^CATEGORY:VALUE`
+
+```bard
+:: PassageName ^UI:DASHBOARD ^MUSIC:AMBIENT
+Content here ^CALLOUT
+
++ [Choice] -> Target ^STYLE:SPECIAL
+```
+
+**Rules:**
+
+- Tags start with `^` followed by alphanumeric characters
+- Optional colon `:` for parameterized tags
+- Multiple tags allowed (space-separated)
+- Works on:
+  - Passage headers: `:: Name ^tag1 ^tag2`
+  - Content lines: `Text ^tag`
+  - Choices: `+ [Text] -> Target ^tag`
+- Tags are passed to frontend as-is for interpretation
+- Not rendered in output (invisible metadata)
+
+**Use Cases:**
+
+- UI layout hints: `^UI:DASHBOARD`, `^UI:IMMERSIVE`
+- Choice categorization: `^CLIENT:SPECIAL`, `^CLIENT:RETURNING`
+- Styling: `^CALLOUT`, `^EMPHASIS`, `^WHISPER`
+- Game state: `^TUTORIAL:ACTIVE`, `^CUTSCENE`
+- Ambient control: `^MUSIC:THEME`, `^AMBIENT:DARK`
+
+**Status:** ✅ Implemented
 
 ### Passage Parameters
 
@@ -2279,6 +2317,7 @@ Welcome, {player.name}!
 ```
 
 **Flow:**
+
 1. First visit: Conditional evaluates `not _inputs.get("reader_name")` → `True` → shows input form
 2. Player enters name and submits
 3. Frontend calls `engine.submit_inputs({'reader_name': 'Kate'})`
@@ -2395,11 +2434,13 @@ You are {age_str} years old.
 #### Compiled Output
 
 **Story:**
+
 ```bard
 @input name="reader_name" placeholder="Enter your name..." label="Your Name"
 ```
 
 **Compiled JSON:**
+
 ```json
 {
   "type": "input",
@@ -2592,6 +2633,7 @@ async def submit_inputs(
 **Why not use choices for everything?**
 
 Choices are great for predefined options, but sometimes you need open-ended input:
+
 - Player creativity (naming, custom answers)
 - Personalization (real questions, reflections)
 - Replayability (different text = different experience)
@@ -2618,6 +2660,7 @@ wait_for_input()
 ```
 
 Directives are:
+
 - Visible in story text (easy to find)
 - Validated at compile time
 - Frontend-agnostic (works with any UI)
@@ -2640,6 +2683,7 @@ Directives are:
 ##### Input not showing?
 
 **Check:**
+
 1. Is it inside a false conditional branch?
 2. Did you navigate to the passage correctly?
 3. Is frontend checking for `input_directives`?
@@ -2647,6 +2691,7 @@ Directives are:
 ##### Input value not persisting?
 
 **Check:**
+
 1. Is `submit_inputs()` being called correctly?
 2. Is frontend re-navigating after submit? (`engine.goto(current_id)`)
 3. Is the input `name` correct?
@@ -2654,6 +2699,7 @@ Directives are:
 ##### Conditional showing wrong branch?
 
 **Check:**
+
 1. Is frontend re-rendering after submit? (need to call `goto()`, not `current()`)
 2. Is the condition checking the right variable? (`_inputs.get("name")`)
 3. Is the condition logic correct? (`not _inputs.get()` for "show when empty")
@@ -2661,6 +2707,7 @@ Directives are:
 ##### Getting "undefined variable '_inputs'"?
 
 This shouldn't happen - `_inputs` is auto-initialized. But if it does:
+
 1. Check your engine version (should auto-initialize)
 2. Verify no code is deleting `_inputs` from state
 3. Check if using old compiled JSON (recompile your story)
@@ -2716,6 +2763,7 @@ char = Character(
 ```
 
 This example shows:
+
 - Multiple input passages
 - Conditional display (input vs confirmation)
 - Accessing inputs in later passages
