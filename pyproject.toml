@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "bardic"
-dynamic = ["version"]
+dynamic = ["version"] # Use dynamic versioning, see bardic/__init__.py
 authors = [{ name = "Kate Louie", email = "katehlouie@gmail.com" }]
 description = "Python-first interactive fiction engine"
 readme = "README.md"
