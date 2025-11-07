@@ -15,11 +15,9 @@ Usage:
         pass
 """
 
-from dataclasses import dataclass, field
-from typing import Set
+from typing import Optional, Set
 
 
-@dataclass
 class Relationship:
     """Track relationship progression with an NPC.
 
@@ -31,11 +29,22 @@ class Relationship:
         topics_discussed: Set of topic tags discussed
     """
 
-    name: str
-    _trust: int = 50
-    _comfort: int = 50
-    _openness: int = 0
-    topics_discussed: Set[str] = field(default_factory=set)
+    def __init__(
+        self,
+        name: str,
+        trust: int,
+        comfort: int,
+        openness: int,
+        topics_discussed: Optional[Set[str]] = None,
+    ):
+        self.name: str
+        self.topics_discussed = topics_discussed if topics_discussed else set()
+        self._trust = 50
+        self._comfort = 50
+        self._openness = 0
+        self.trust = trust  # Triggers setter
+        self.comfort = comfort  # Triggers setter
+        self.openness = openness  # Triggers setter
 
     # === TRUST (0-100) ===
     @property
@@ -146,8 +155,8 @@ class Relationship:
         """Deserialize from save data."""
         return cls(
             name=data["name"],
-            _trust=data["trust"],
-            _comfort=data["comfort"],
-            _openness=data["openness"],
+            trust=data["trust"],
+            comfort=data["comfort"],
+            openness=data["openness"],
             topics_discussed=set(data["topics_discussed"]),
         )
