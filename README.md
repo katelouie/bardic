@@ -4,6 +4,7 @@
 [![Python Version](https://img.shields.io/pypi/pyversions/bardic.svg)](https://pypi.org/project/bardic/)
 [![VSCode Marketplace](https://img.shields.io/visual-studio-marketplace/v/katelouie.bardic)](https://marketplace.visualstudio.com/items?itemName=katelouie.bardic)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/katelouie/bardic)
 
 **Bardic is a Python-first interactive fiction engine that lets you import your own classes and use real Python in your stories. It's built for modern Python web applications. It's also for people who want to make narrative games without learning web dev.**
 
@@ -178,3 +179,4 @@ code --install-extension katelouie.bardic
 - **Want to see all the syntax?** Check out the [Language Specification](https://github.com/katelouie/bardic/blob/main/docs/spec.md) for the full list of features, from loops to render directives.
 - **Want to build the engine?** See our [`CONTRIBUTING.md`](CONTRIBUTING.md) for details on the architecture and development setup.
 - **Want VS Code integration?** Download the [Bardic VS Code extension](https://github.com/katelouie/bardic-vscode) with full syntax highlighting, snippets and code folding.
+- See the [DeepWiki detailed documentation](https://deepwiki.com/katelouie/bardic) generated from AI code indexing. It includes a *lot* of technical implementation details.
