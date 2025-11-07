@@ -451,11 +451,11 @@ character_stats = {
 
 You've successfully transformed your terminal game into a **beautiful web application**! You learned:
 
-✅ How to use `@input` to collect player data
-✅ How to use `@render` to visualize game state
-✅ How to create a NiceGUI web interface
-✅ How to connect Bardic to a Python web server
-✅ How to handle render directives in your UI code
+- How to use `@input` to collect player data
+- How to use `@render` to visualize game state
+- How to create a NiceGUI web interface
+- How to connect Bardic to a Python web server
+- How to handle render directives in your UI code
 
 Your story is now accessible in a browser with a modern, responsive interface. But there's more to learn about managing larger projects...
 

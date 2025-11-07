@@ -91,6 +91,13 @@ bardic compile my_first_object.bard
 bardic play my_first_object.json
 ```
 
+Or with Pixi:
+
+```bash
+pixi run bardic compile my_first_object.bard
+pixi run bardic play my_first_object.json
+```
+
 **🎉 Congratulations! You just created and used your first custom object!**
 
 ---
@@ -568,6 +575,13 @@ bardic compile shopping_game.bard
 bardic play shopping_game.json
 ```
 
+Or with Pixi:
+
+```bash
+pixi run bardic compile shopping_game.bard
+pixi run bardic play shopping_game.json
+```
+
 ---
 
 ## 🎉 Congratulations
@@ -576,12 +590,12 @@ You've just learned the most powerful feature of Bardic: **creating and using cu
 
 **What you learned:**
 
-✅ Classes are **blueprints** for creating objects
-✅ `__init__` is the **setup method** that runs when creating an object
-✅ Methods like `get_description()` give objects **superpowers**
-✅ You **import** classes into your story like any Python module
-✅ Objects can be stored in **lists and dictionaries**
-✅ You can **loop through** and manipulate custom objects
+- Classes are **blueprints** for creating objects
+- `__init__` is the **setup method** that runs when creating an object
+- Methods like `get_description()` give objects **superpowers**
+- You **import** classes into your story like any Python module
+- Objects can be stored in **lists and dictionaries**
+- You can **loop through** and manipulate custom objects
 
 **This is what makes Bardic different.** Other interactive fiction tools stop at simple variables. Bardic gives you the full power of Python to model your game world exactly how you want.
 

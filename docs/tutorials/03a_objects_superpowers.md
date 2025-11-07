@@ -433,14 +433,16 @@ What if you want:
 That's what we're going to learn next.
 
 You already know:
-âœ… Objects have data (like `hero["health"]`)
-âœ… Objects have methods (like `inventory.append()`)
-âœ… You use **dot notation** to call methods
+
+- Objects have data (like `hero["health"]`)
+- Objects have methods (like `inventory.append()`)
+- You use **dot notation** to call methods
 
 Now we're going to learn:
-âš¡ How to create your OWN objects
-âš¡ How to give them custom methods
-âš¡ How to use them in your stories
+
+- How to create your OWN objects
+- How to give them custom methods
+- How to use them in your stories
 
 + [I'm ready to create my own objects!] -> Ready_For_3B
 + [Let me practice what I learned] -> Practice
@@ -603,6 +605,13 @@ bardic compile exploring_objects.bard
 bardic play exploring_objects.json
 ```
 
+Or if you installed using `pixi` you'd run:
+
+```bash
+pixi run bardic compile exploring_objects.bard
+pixi run bardic play exploring_objects.json
+```
+
 Play through and explore all the object methods! When you're comfortable with the concept of "objects have superpowers," you're ready for Part 3B.
 
 ---
@@ -611,11 +620,11 @@ Play through and explore all the object methods! When you're comfortable with th
 
 You learned that:
 
-✅ **Everything in Python is an object** (lists, strings, dictionaries)
-✅ **Objects bundle data and behavior together**
-✅ **Methods are functions that objects know how to do**
-✅ **Dot notation** (`object.method()`) is how you call methods
-✅ **You can chain methods** (`.strip().lower().title()`)
+- **Everything in Python is an object** (lists, strings, dictionaries)
+- **Objects bundle data and behavior together**
+- **Methods are functions that objects know how to do**
+- **Dot notation** (`object.method()`) is how you call methods
+- **You can chain methods** (`.strip().lower().title()`)
 
 Most importantly: **You've been using objects this whole time!** Now you're just making that knowledge explicit.
 

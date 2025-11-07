@@ -117,6 +117,12 @@ Run this command:
 bardic compile my_story.bard
 ```
 
+Or if you installed with `pixi` you would run:
+
+```bash
+pixi run bardic compile my_story.bard
+```
+
 You should see a success message. If you look in your folder, you'll now see a new file: `my_story.json`. This is your playable game!
 
 ## 7. Play Your Story
@@ -125,6 +131,12 @@ It's time to play. In your terminal, run the `play` command:
 
 ```bash
 bardic play my_story.json
+```
+
+Or if you installed with `pixi` you'd run:
+
+```bash
+pixi run bardic play my_story.json
 ```
 
 Your story will start in the terminal. You'll see your `Start` passage text, followed by your choices with numbers next to them:

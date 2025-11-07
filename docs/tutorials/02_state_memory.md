@@ -211,6 +211,6 @@ You can build surprisingly complex games with just these tools.
 
 But what if you wanted *more than one* key? What if you wanted an inventory, a list of items, or a character with their own stats?
 
-For that, we need to go one step further. It's time to unlock Bardic's most powerful feature.
+For that, we need to go one step further. It's time to unlock Bardic's second-most powerful feature.
 
 **[Continue to Part 2.5: Complex State (Lists and Dictionaries)](02_5_complex_state.md)**

@@ -11,6 +11,25 @@ You need two things:
 
 **The good news?** Pixi will handle Python for you automatically. You don't need to install Python separately or worry about versions.
 
+## Why I Recommend `pixi` for Beginners
+
+1. It handles Python installation automatically
+2. Each project is isolated (can't break your system)
+3. Uninstalling is as simple as deleting a folder
+4. Works identically on Mac, Windows, and Linux
+
+**The trade-off:** You'll type `pixi run bardic` instead of just `bardic`. If that bothers you, Path B (standard Python) works great too!
+
+**Both paths create the exact same stories.** Choose based on what makes you comfortable.
+
+**Pro tip:** If you're using pixi, you can create an alias:
+
+```bash
+alias bardic="pixi run bardic"
+```
+
+Then you can just type `bardic` like everyone else!
+
 ---
 
 ## Step 1: Install Pixi

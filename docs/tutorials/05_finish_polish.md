@@ -671,13 +671,13 @@ Congratulations! You've completed the Bardic Guided Tour!
 
 **You learned how to:**
 
-✅ Create branching narratives with passages and choices
-✅ Manage state with variables and conditionals
-✅ Use Python objects for complex game logic
-✅ Build custom web UIs with NiceGUI
-✅ Organize large projects with `@include` and namespaces
-✅ Debug and visualize your story structure
-✅ Write maintainable, scalable interactive fiction
+- Create branching narratives with passages and choices
+- Manage state with variables and conditionals
+- Use Python objects for complex game logic
+- Build custom web UIs with NiceGUI
+- Organize large projects with `@include` and namespaces
+- Debug and visualize your story structure
+- Write maintainable, scalable interactive fiction
 
 **You're now ready to:**
 
@@ -691,18 +691,11 @@ Congratulations! You've completed the Bardic Guided Tour!
 
 ## Next Steps
 
-**Community & Resources:**
-
-- [Bardic Documentation](https://bardic.dev/docs)
-- [Example Games](https://github.com/bardic-lang/examples)
-- [Discord Community](https://discord.gg/bardic)
-
 **Advanced Topics:**
 
 - State management patterns
 - Complex branching narratives
 - Integration with databases
-- Multiplayer story experiences
 - Procedural content generation
 
 **Build Something Amazing:**
