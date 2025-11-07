@@ -1,0 +1,116 @@
+from bardic.stdlib.relationship import Relationship
+
+@metadata
+  title: The Coffee Shop Encounter
+  author: Bardic Examples
+  version: 1.0.0
+  story_id: coffee_shop
+  description: A simple romance story teaching relationship tracking
+
+:: Start
+~ alex = Relationship(name="Alex", trust=50, comfort=45)
+
+You're wiping down the counter when Alex, your most reliable regular, actually sits down instead of taking their coffee to go.
+
+"Hey," they say, fidgeting with their cup. "Got a minute?"
+
++ [Sit down with them] -> FirstTalk
++ [Keep working, but chat] -> KeepWorking
+
+:: FirstTalk
+~ alex.add_comfort(5)
+~ alex.add_trust(5)
+
+You slide into the seat across from them. Alex relaxes slightly.
+
+"I just... needed to talk to someone," they admit.
+
+@if alex.comfort >= 50:
+    Their shoulders drop. They're starting to feel safe here.
+@else:
+    They still seem tense, hands wrapped tight around their cup.
+@endif
+
++ [Ask what's wrong] -> AskWrong
++ [Just listen] -> Listen
+
+:: KeepWorking
+~ alex.add_comfort(-5)
+
+You keep wiping tables, but hover nearby. Alex looks disappointed.
+
+"Yeah, no worries. You're busy." They stand up to leave.
+
++ [Stop them] -> StopThem
++ [Let them go] -> BadEnding
+
+:: AskWrong
+~ alex.discuss_topic("work_stress")
+~ alex.add_openness(2)
+
+"It's work," they sigh. "My boss is... god, I sound like I'm complaining."
+
++ ["You're not complaining"] -> Reassure
++ ["Want advice or just venting?"] -> CheckIntent
+
+:: Listen
+~ alex.add_comfort(10)
+~ alex.add_openness(3)
+
+You just wait. After a moment, Alex starts talking.
+
+"I've been coming here for months," they say quietly. "And I realized... this is the only place I feel okay anymore."
+
+{alex.is_vulnerable ? Their eyes are shining. They're really opening up. | They're holding back, but trying.}
+
++ [Reach across the table] -> Touch
++ [Say something comforting] -> Comfort
+
+:: Touch
+~ alex.add_trust(15)
+~ alex.add_openness(5)
+
+You reach across and squeeze their hand. Alex freezes for a second, then squeezes back.
+
+"Thank you," they whisper.
+
+@if alex.is_ready_for_deep_work:
+-> DeepConnection
+@else:
+-> SlowBuild
+@endif
+
+:: DeepConnection
+~ alex.discuss_topic("feelings_revealed")
+
+"I think I've been coming here because of you," Alex says, not letting go of your hand.
+
+The coffee shop fades away. It's just the two of you.
+
++ [Kiss them] -> Kiss
++ [Say you feel the same] -> Confess
+
+:: Kiss
+~ alex.add_trust(20)
+
+You lean in. They meet you halfway.
+
+**ENDING: First Kiss**
+Trust: {alex.trust}/100
+Topics discussed: {len(alex.topics_discussed)}
+
+:: Confess
+~ alex.add_trust(15)
+~ alex.discuss_topic("mutual_feelings")
+
+"I feel the same," you say. Alex's face lights up.
+
+"Can I take you to dinner? Like, not here?" They laugh.
+
+**ENDING: New Beginning**
+Trust: {alex.trust}/100
+
+:: BadEnding
+Alex leaves. You never see them again.
+
+**ENDING: Missed Connection**
