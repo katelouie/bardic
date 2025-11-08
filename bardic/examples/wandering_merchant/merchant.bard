@@ -9,7 +9,9 @@ from bardic.modules.dice import roll
   story_id: wandering_merchant
   version: 1.0.0
 
+
 :: Start
+
 @py:
 # Initialize player
 player_inventory = Inventory(max_weight=50)
@@ -39,7 +41,9 @@ Choose your trades wisely!
 
 + [Begin your journey] -> Encounter1
 
+
 :: Encounter1
+
 **Encounter 1: The Farmer**
 
 You come across a weathered farmer sitting by his roadside stall.
@@ -54,3 +58,499 @@ farmer_shop = Shop([
     {'name': 'Iron Hoe', 'weight': 3, 'value': 35, 'category': 'tool'},
 ])
 @endpy
+
+**Your Status:**
+- Gold: {player_wallet.gold}g
+- Weight: {player_inventory.current_weight:.1f}/{player_inventory.max_weight}
+- Items: {len(player_inventory.items)}
+
++ [Buy from farmer] -> Encounter1Buy
++ [Sell to farmer] -> Encounter1Sell
++ [Move on] -> Encounter2
+
+
+:: Encounter1Buy
+
+**Buy from the Farmer**
+
+"I've got quality goods here!"
+
+@for item in farmer_shop.items:
+    ~ price = farmer_shop.get_buy_price(item['name'])
+    ~ can_buy = player_wallet.can_afford(price) and not player_inventory.is_full
+    + {can_buy} [{item['name']} - {price}g (weight: {item['weight']})] -> BuyFarmerItem(item=item)
+@endfor
+
++ [Never mind] -> Encounter1
+
+
+:: BuyFarmerItem(item)
+
+~ success = farmer_shop.buy(item["name"], player_wallet, player_inventory)
+
+@if success:
+    You buy the {item["name"]} for {farmer_shop.get_buy_price(item["name"])}g
+@else:
+    {player_inventory.is_full ? **Your pack is too full!** | **You can't afford that.**}
+@endif
+
+Gold: {player_wallet.gold}
+
++ [Continue shopping] -> Encounter1Buy
++ [Done] -> Encounter1
+
+
+:: Encounter1Sell
+
+**Sell to the Farmer**
+
+"I'll buy things off you, but I don't pay much."
+
+(The farmer pays 50% of item value)
+
+@if player_inventory.is_empty:
+    You don't have anything to sell.
+
+    + [Back] -> Encounter1
+@else:
+    @for item in player_inventory.items:
+        ~ sell_price = farmer_shop.get_sell_price(item['value'])
+        + [Sell {item["name"]} for {sell_price}g] -> SellFarmerItem(item=item)
+    @endfor
+    + [Never mind] -> Encounter1
+@endif
+
+
+:: SellFarmerItem(item)
+
+@py:
+item = player_inventory.get(item["name"])
+sell_price = farmer_shop.get_sell_price(item["value"])
+success = farmer_shop.sell(item["name"], player_wallet, player_inventory)
+@endpy
+
+@if success:
+    You sell your **{item["name"]}** for {sell_price}g.
+
+    @if item["name"] == 'Travel Rations':
+        "Not worth much, but thanks," the farmer says.
+    @endif
+@endif
+
+Gold: {player_wallet.gold}g
+
++ [Continue] -> Encounter1Sell
+
+
+:: Encounter2
+
+A rough-looking woman steps out from the trees, hand on her sword.
+
+"Your coin or your life, merchant."
+
+@py:
+    # Intimidation check (1d20 + gold/10)
+    intimidation_roll = roll('1d20') + int(player_wallet.gold / 10)
+    intimidation_dc = 15
+@endpy
+
++ {intimidation_roll >= intimidation_dc} [Intimidate her (DC 15)] -> BanditIntimidate
++ [Pay her off (20g)] -> BanditPay
++ [Fight!] -> BanditFight
+
+
+:: BanditIntimidate
+
+You rattle your coin purse and puff out your chest.
+
+"I've got friends in the capital. You don't want this trouble."
+
+She eyes you, then steps aside. "Smart. Move along."
+
+**You avoided the toll!**
+
++ [Continue] -> Encounter3
+
+
+:: BanditPay
+
+@py:
+if player_wallet.spend(20):
+    paid = True
+else:
+    paid = False
+@endpy
+
+@if paid:
+    You toss her 20 gold. She catches it and grins.
+
+    "Pleasure doing business. Safe travels."
+
+    Gold: {player_wallet.gold}g
+@else:
+    You don't have 20 gold! She laughs and robs you blind anyway.
+
+    # Lose half your gold
+    ~ player_wallet.gold = int(player_wallet.gold / 2)
+
+
+    "Shoulda just paid," she says, pocketing your coin.
+
+    Gold: {player_wallet.gold}g
+@endif
+
++ [Continue] -> Encounter3
+
+
+:: BanditFight
+
+~ combat_roll = roll('1d20')
+
+You draw your weapon!
+
+Roll: {combat_roll}
+
+@if combat_roll >= 15:
+    **Critical hit!** You drive her off!
+
+    As she flees, she drops a pouch of coins!
+
+    ~ player_wallet.earn(30)
+
+    Gold: {player_wallet.gold}g (+30g!)
+@elif combat_roll >= 10:
+    You fight her to a standstill. She retreats empty-handed.
+
+    "Another time, merchant."
+@else:
+    She disarms you easily and takes half your gold.
+
+    ~ player_wallet.gold = int(player_wallet.gold / 2)
+
+    "Better luck next time!"
+
+    Gold: {player_wallet.gold}g
+@endif
+
++ [Continue] -> Encounter3
+
+
+:: Encounter3
+
+**Encounter 3: The Wizard**
+
+An old wizard sits beneath a tree, surrounded by glowing bottles.
+
+"Potions and curiosities, traveler. Rare goods."
+
+@py:
+wizard_shop = Shop([
+    {'name': 'Healing Potion', 'weight': 0.5, 'value': 60, 'category': 'potion'},
+    {'name': 'Mana Crystal', 'weight': 0.2, 'value': 80, 'category': 'magic'},
+    {'name': 'Enchanted Compass', 'weight': 0.3, 'value': 100, 'category': 'magic'},
+], sell_back_rate=0.7)  # Wizard pays 70% back (better than farmer!)
+@endpy
+
+**Your Status:**
+- Gold: {player_wallet.gold}g
+- Weight: {player_inventory.current_weight:.1f}/{player_inventory.max_weight}
+
++ [Buy from wizard] -> Encounter3Buy
++ [Sell to wizard] -> Encounter3Sell
++ [Move on] -> Encounter4
+
+
+:: Encounter3Buy
+
+**Buy from the Wizard**
+
+"Powerful items, but not cheap."
+
+@for item in wizard_shop.items:
+  ~ price = wizard_shop.get_buy_price(item['name'])
+  ~ can_buy = player_wallet.can_afford(price) and not player_inventory.is_full
+
+  + {can_buy} [{item['name']} - {price}g] -> BuyWizardItem(item=item)
+@endfor
+
++ [Never mind] -> Encounter3
+
+
+:: BuyWizardItem(item)
+
+~ success = wizard_shop.buy(item["name"], player_wallet, player_inventory)
+
+@if success:
+    You buy the *{item['name']}** for {wizard_shop.get_buy_price(item['name'])}g.
+
+    @if item['name'] == 'Healing Potion':
+        "Use it wisely," the wizard intones.
+    @elif item['name'] == 'Mana Crystal':
+        It pulses with arcane energy.
+    @elif item['name'] == 'Enchanted Compass':
+        "It always points toward profit," the wizard says with a wink.
+    @endif
+@else:
+    {player_inventory.is_full ? **Your pack is too full!** | **You can't afford that.**}
+@endif
+
+Gold: {player_wallet.gold}g
+
++ [Continue] -> Encounter3Buy
+
+
+:: Encounter3Sell
+
+**Sell to the Wizard**
+
+"I pay better than most. I recognize quality."
+
+(The wizard pays 70% of item value)
+
+@if player_inventory.is_empty:
+    You don't have anything to sell.
+
+    + [Back] -> Encounter3
+@else:
+    @for item in player_inventory.items:
+        ~ sell_price = wizard_shop.get_sell_price(item['value'])
+
+        + [Sell {item['name']} for {sell_price}g] -> SellWizardItem(item=item)
+    @endfor
+    + [Never mind] -> Encounter3
+@endif
+
+
+:: SellWizardItem(item)
+
+@py:
+item = player_inventory.get(item['name'])
+sell_price = wizard_shop.get_sell_price(item['value'])
+success = wizard_shop.sell(item['name'], player_wallet, player_inventory)
+@endpy
+
+@if success:
+    Sold **{item['name']}** for {sell_price}g.
+@endif
+
+Gold: {player_wallet.gold}g
+
++ [Continue] -> Encounter3Sell
+
+
+:: Encounter4
+
+**Encounter 4: The Noble**
+
+A well-dressed noble in a fine carriage stops beside you.
+
+"You there! Merchant! I need gifts for a party tonight."
+
+@py:
+noble_shop = Shop([
+    {'name': 'Silk Scarf', 'weight': 0.1, 'value': 120, 'category': 'luxury'},
+    {'name': 'Fine Wine', 'weight': 2, 'value': 90, 'category': 'luxury'},
+], discount=1.2)  # Noble charges 20% MORE (greedy!)
+@endpy
+
+**Your Status:**
+- Gold: {player_wallet.gold}g
+- Weight: {player_inventory.current_weight:.1f}/{player_inventory.max_weight}
+
++ [Buy from noble] -> Encounter4Buy
++ [Sell to noble] -> Encounter4Sell
++ [Move on] -> Encounter5
+
+:: Encounter4Buy
+
+**Buy from the Noble**
+
+"These are PREMIUM goods. Priced accordingly."
+
+(20% markup!)
+
+@for item in noble_shop.items:
+    ~ price = noble_shop.get_buy_price(item['name'])
+    ~ can_buy = player_wallet.can_afford(price) and not player_inventory.is_full
+
+    + {can_buy} [{item['name']} - {price}g] -> BuyNobleItem(item=item)
+@endfor
+
++ [Never mind] -> Encounter4
+
+
+:: BuyNobleItem(item)
+
+~ success = noble_shop.buy(item["name"], player_wallet, player_inventory)
+
+@if success:
+    You buy the *{item['name']}** for {noble_shop.get_buy_price(item['name'])}g.
+@else:
+    {player_inventory.is_full ? **Your pack is too full!** | **You can't afford that.**}
+@endif
+
+Gold: {player_wallet.gold}g
+
++ [Continue] -> Encounter4Buy
+
+
+:: Encounter4Sell
+
+**Sell to the Noble**
+
+"I suppose I could buy something, if it's impressive."
+
+(The noble pays 60% of item value - better than farmer!)
+
+@if player_inventory.is_empty:
+    You don't have anything to sell.
+
+    + [Back] -> Encounter4
+@else:
+    @for item in player_inventory.items:
+        ~ sell_price = noble_shop.get_sell_price(item['value'])
+
+        + [Sell {item['name']} for {sell_price}g] -> SellNobleItem(item=item)
+    @endfor
+    + [Never mind] -> Encounter4
+@endif
+
+
+:: SellNobleItem(item=item)
+
+@py:
+item = player_inventory.get(item['name'])
+sell_price = noble_shop.get_sell_price(item['value'])
+success = noble_shop.sell(item['name'], player_wallet, player_inventory)
+@endpy
+
+@if success:
+    Sold **{item['name']}** for {sell_price}g.
+@endif
+
+Gold: {player_wallet.gold}g
+
++ [Continue] -> Encounter4Sell
+
+
+:: Encounter5
+
+**Encounter 5: The Tavern**
+
+You reach a roadside tavern just before nightfall.
+
+"Room's 10 gold, or you can sleep in the stable for free," the innkeeper says.
+
+**Your Status:**
+- Gold: {player_wallet.gold}g
+- Weight: {player_inventory.current_weight:.1f}/{player_inventory.max_weight}
+
++ {player_wallet.can_afford(10)} [Pay for a room (10g)] -> TavernRoom
++ [Sleep in stable (free)] -> TavernStable
+
+
+:: TavernRoom
+
+@py:
+player_wallet.spend(10)
+# Bonus: Well-rested gives you a trade bonus at capital
+well_rested = True
+@endpy
+
+You sleep soundly in a warm bed.
+
+**Next morning, you feel refreshed!**
+
+(You'll get better prices at the capital)
+
+Gold: {player_wallet.gold}g
+
++ [Continue to capital] -> Capital
+
+
+:: TavernStable
+
+@py:
+well_rested = False
+@endpy
+
+You sleep on hay. It's... fine. You've had worse.
+
++ [Continue to capital] -> Capital
+
+
+:: Capital
+
+**THE CAPITAL**
+
+You arrive at the grand market of the capital city!
+
+@py:
+# Final shop - BEST prices for selling
+capital_sell_back_rate = 0.9 if well_rested else 0.8
+capital_shop = Shop([], sell_back_rate=capital_sell_back_rate)
+
+# Calculate final tallies
+final_inventory_value = player_inventory.total_value
+final_gold = player_wallet.gold
+final_total = final_gold + final_inventory_value
+
+# Calculate profit
+starting_value = 115  # 100g + 10g rations + 5g waterskin
+profit = final_total - starting_value
+@endpy
+
+*FINAL TALLY:**
+
+**Current Gold:** {final_gold}g
+**Inventory Value:** {final_inventory_value}g
+**Total Worth:** {final_total}g
+
+**Profit:** {profit}g ({profit > 0 ? "SUCCESS!" | "LOSS"})
+
+---
+
+@if profit >= 200:
+    **MASTER MERCHANT!**
+
+    You've made a fortune! The guild takes notice.
+    Word spreads of your trading prowess.
+@elif profit >= 100:
+    **SUCCESSFUL TRADER!**
+
+    A solid profit! You've got a good eye for deals.
+@elif profit >= 50:
+    **MODEST GAINS**
+
+    You made some gold. Not bad for a first run.
+@elif profit >= 0:
+    **BREAK EVEN**
+
+    You didn't lose money, at least. Try again?
+@else:
+    **BANKRUPT**
+
+    You lost money on this trip. Better luck next time!
+@endif
+
+---
+
+**Items in your pack:**
+@if player_inventory.is_empty:
+    (Empty)
+@else:
+    @for item in player_inventory.items:
+        - {item['name']} ({item['value']}g value)
+    @endfor
+@endif
+
+---
+
+Thanks for playing **The Wandering Merchant!**
+
+Try different strategies:
+
+- Buy cheap from farmers, sell high to nobles
+- Avoid the bandit toll to keep more gold
+- Sleep at the tavern for better capital prices
+- Manage your weight limit carefully
