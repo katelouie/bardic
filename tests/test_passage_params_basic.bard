@@ -1,0 +1,10 @@
+:: Start
+~ health = 100
+
++ [Show health] -> ShowHealth(health)
++ [Lose health] -> ShowHealth(health - 20)
+
+:: ShowHealth(hp)
+Your health: {hp}
+
++ [Back] -> Start

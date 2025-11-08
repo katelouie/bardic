@@ -6,12 +6,13 @@ from typing import Dict, Any, Optional, List
 from .errors import format_error, SourceLocation
 from .preprocessing import extract_imports, extract_metadata, strip_inline_comment
 from .blocks import extract_python_block, extract_conditional_block, extract_loop_block
-from .content import parse_content_line, parse_choice_line, parse_tags
+from .content import parse_content_line, parse_choice_line, parse_tags, extract_passage_params, parse_passage_params, extract_target_and_args
 from .directives import parse_render_line, parse_input_line, extract_multiline_expression
 from .validation import (
     BlockStack,
     validate_passage_name,
     validate_choice_syntax,
+    validate_passage_arguments,
     _cleanup_whitespace,
     _trim_trailing_newlines,
     _determine_initial_passage,
@@ -114,11 +115,21 @@ def parse(
             passage_header = line[3:].strip()
             # Strip inline comment first
             passage_header, _ = strip_inline_comment(passage_header)
-            # Extract tags from passage header
-            passage_name, passage_tags = parse_tags(passage_header)
+
+            # Extract parameters from passage name (before parsing tags)
+            # Format: PassageName(param1, param2=default) ^tag1 ^tag2
+            passage_name_with_params, params_str = extract_passage_params(passage_header)
+
+            # Extract tags from passage name (tags can appear after params)
+            passage_name, passage_tags = parse_tags(passage_name_with_params)
 
             # Validate passage name (strict rules for navigation targets)
             validate_passage_name(passage_name, i, lines, filename, line_map)
+
+            # Parse parameters if present
+            params = []
+            if params_str:
+                params = parse_passage_params(params_str, i, lines, filename, line_map)
 
             # Track passage location for duplicate detection
             if passage_name not in passage_locations:
@@ -130,6 +141,7 @@ def parse(
 
             current_passage = {
                 "id": passage_name,
+                "params": params,  # NEW: store parameter definitions
                 "content": [],
                 "choices": [],
                 "execute": [],
@@ -191,10 +203,15 @@ def parse(
 
         # Immediate jump to target
         if line.strip().startswith("->"):
-            match = re.match(r"->\s*([\w.]+)", line.strip())
+            match = re.match(r"->\s*(.+)", line.strip())
             if match:
-                target = match.group(1)
-                current_passage["content"].append({"type": "jump", "target": target})
+                target_with_args = match.group(1).strip()
+                target, args = extract_target_and_args(target_with_args)
+                current_passage["content"].append({
+                    "type": "jump",
+                    "target": target,
+                    "args": args  # NEW: store argument expressions
+                })
             i += 1
             continue
 
@@ -309,6 +326,9 @@ def parse(
 
     # Detect duplicate passages (errors if any found)
     check_duplicate_passages(passage_locations, lines, filename, line_map)
+
+    # Validate passage arguments (after all passages collected)
+    validate_passage_arguments(passages, filename, line_map)
 
     # Determine initial passage (priority order)
     initial_passage = _determine_initial_passage(passages, explicit_start)

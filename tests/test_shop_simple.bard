@@ -1,0 +1,21 @@
+:: Start
+~ gold = 500
+~ sword_price = 100
+~ shield_price = 80
+
++ [Go to shop] -> Shop
+
+:: Shop
+You have {gold} gold.
+
++ [Buy Sword for {sword_price} gold] -> BuyItem("Sword", sword_price)
++ [Buy Shield for {shield_price} gold] -> BuyItem("Shield", shield_price)
++ [Leave] -> Start
+
+:: BuyItem(item_name, price)
+~ gold = gold - price
+
+You bought {item_name} for {price} gold!
+You now have {gold} gold left.
+
++ [Back to shop] -> Shop

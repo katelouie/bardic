@@ -1365,28 +1365,81 @@ Content here ^CALLOUT
 
 ### Passage Parameters
 
-Pass data between passages like function arguments.
+**Status:** ✅ Implemented (v0.3.0)
 
+Pass data between passages like function arguments. Enables dynamic content patterns like shops, NPC conversations, and combat encounters.
+
+#### Syntax
+
+**Declaration:**
 ```bard
-:: DrawCards(count=3, spread_type='three_card') <<py cards = deck.draw(count) layout = SPREADS[spread_type]
-
-Drawing {count} cards...
-
-- [Continue] -> Interpret(cards=cards, style='traditional')
-
-:: Interpret(cards=None, style='traditional') <<if cards is None>> Error: No cards provided! -> Start <<endif>>
-
-Interpreting with {style} approach...
+:: PassageName(param1, param2=default_value)
 ```
 
-**Rules:**
+**Navigation:**
+```bard
+-> PassageName(value1, value2)              # Positional
+-> PassageName(param2=value2, param1=value1) # Keyword
++ [Choice] -> PassageName(expression)       # In choices
+```
 
-- Parameters defined in passage header
-- Can have default values
-- Passed when navigating: `-> Target(param=value)`
-- Temporary scope (don't persist unless assigned to global state)
+#### Examples
 
-**Status:** 📅 Week 4
+**Basic parameters:**
+```bard
+:: Start
+~ health = 100
++ [Show health] -> Display(health)
++ [Take damage] -> Display(health - 20)
+
+:: Display(hp)
+Your health: {hp}
++ [Back] -> Start
+```
+
+**Default values:**
+```bard
+:: Greet(name="World", greeting="Hi")
+{greeting}, {name}!
+
+:: Start
++ [Default greeting] -> Greet()
++ [Custom greeting] -> Greet("Alice", "Hello")
+```
+
+**Shop system (the killer use case!):**
+```bard
+:: Shop
+~ gold = 500
+
+@for item in shop_inventory:
+    + [Buy {item.name} for {item.price} gold] -> BuyItem(item)
+@endfor
+
+:: BuyItem(item)
+~ gold = gold - item.price
+~ player_inventory.append(item)
+
+You bought {item.name}!
++ [Continue] -> Shop
+```
+
+#### Rules
+
+- **Declaration:** Parameters defined in passage header with optional defaults
+- **Scope:** Parameters are LOCAL variables (don't persist to global state)
+- **Arguments:** Support both positional and keyword arguments
+- **Validation:** Compile-time checking ensures required params are provided
+- **Defaults:** Can reference earlier parameters: `:: Calc(x, y=x*2)`
+- **Expressions:** Arguments can be any valid Python expression
+- **Persistence:** To save a param value, explicitly assign it: `~ saved_item = item`
+
+#### Implementation Details
+
+- Parameters create a local scope stack in the runtime engine
+- Local scope shadows global variables (local takes precedence)
+- Scope is automatically cleaned up when leaving the passage
+- Compile-time validator checks all passage calls for correct arguments
 
 ---
 

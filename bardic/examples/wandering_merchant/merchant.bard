@@ -1,0 +1,56 @@
+from bardic.modules.inventory import Inventory
+from bardic.modules.economy import Wallet, Shop
+from bardic.modules.dice import roll
+
+@metadata
+  title: The Wandering Merchant
+  author: Bardic Examples
+  description: A simple trading game teaching inventory and economy systems
+  story_id: wandering_merchant
+  version: 1.0.0
+
+:: Start
+@py:
+# Initialize player
+player_inventory = Inventory(max_weight=50)
+player_wallet = Wallet(gold=100)
+
+# Add starting items
+player_inventory.add({'name': 'Travel Rations', 'weight': 2, 'value': 10, 'category': 'food'})
+player_inventory.add({'name': 'Waterskin', 'weight': 1, 'value': 5, 'category': 'gear'})
+@endpy
+
+**THE WANDERING MERCHANT**
+
+You're a traveling merchant on the road to the capital.
+
+Your goal: Buy low, sell high, arrive rich.
+
+---
+
+**Your Starting Inventory:**
+- Gold: **{player_wallet.gold}g**
+- Items: **{len(player_inventory.items)}** ({player_inventory.current_weight:.1f}/{player_inventory.max_weight} weight)
+- Total value: **{player_inventory.total_value}g**
+
+The road ahead has five encounters before you reach the capital.
+
+Choose your trades wisely!
+
++ [Begin your journey] -> Encounter1
+
+:: Encounter1
+**Encounter 1: The Farmer**
+
+You come across a weathered farmer sitting by his roadside stall.
+
+"Ho there, traveler! Got seeds and tools for sale, if you're interested."
+
+@py:
+# Create farmer's shop
+farmer_shop = Shop([
+    {'name': 'Wheat Seeds', 'weight': 0.5, 'value': 15, 'category': 'seed'},
+    {'name': 'Carrot Seeds', 'weight': 0.3, 'value': 12, 'category': 'seed'},
+    {'name': 'Iron Hoe', 'weight': 3, 'value': 35, 'category': 'tool'},
+])
+@endpy

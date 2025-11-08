@@ -45,6 +45,238 @@ def parse_tags(line: str) -> tuple[str, list[str]]:
     return line_without_tags, clean_tags
 
 
+def extract_passage_params(passage_header: str) -> tuple[str, str]:
+    """
+    Extract parameter list from passage header.
+
+    Examples:
+        "PassageName(x, y)" -> ("PassageName", "x, y")
+        "PassageName(x, y=5) ^tag" -> ("PassageName ^tag", "x, y=5")
+        "PassageName" -> ("PassageName", "")
+        "PassageName()" -> ("PassageName", "")
+
+    Args:
+        passage_header: The passage header after "::" and inline comment removal
+
+    Returns:
+        Tuple of (passage_name_with_tags, params_str)
+    """
+    # Find opening paren if present
+    if '(' not in passage_header:
+        return passage_header, ""
+
+    paren_start = passage_header.index('(')
+    before_paren = passage_header[:paren_start]
+
+    # Find matching closing paren using depth tracking
+    depth = 0
+    paren_end = -1
+    for i in range(paren_start, len(passage_header)):
+        if passage_header[i] == '(':
+            depth += 1
+        elif passage_header[i] == ')':
+            depth -= 1
+            if depth == 0:
+                paren_end = i
+                break
+
+    if paren_end == -1:
+        # Unclosed paren - will be caught as syntax error later
+        return passage_header, ""
+
+    params_str = passage_header[paren_start + 1:paren_end]
+    after_paren = passage_header[paren_end + 1:]
+
+    # Reconstruct name without params but with tags (if any)
+    passage_name_with_tags = before_paren + after_paren
+
+    return passage_name_with_tags.strip(), params_str.strip()
+
+
+def parse_passage_params(params_str: str, line_num: int, lines: list,
+                         filename: Optional[str], line_map: Optional[list]) -> list[dict]:
+    """
+    Parse passage parameter declarations.
+
+    Examples:
+        "x, y" -> [{"name": "x", "default": None}, {"name": "y", "default": None}]
+        "x, y=5" -> [{"name": "x", "default": None}, {"name": "y", "default": "5"}]
+        "item, count=1" -> [{"name": "item", "default": None}, {"name": "count", "default": "1"}]
+
+    Args:
+        params_str: The parameters string (contents of parentheses)
+        line_num: Current line number for error reporting (0-indexed)
+        lines: All lines in file for error context
+        filename: Optional filename for error messages
+        line_map: Optional source mapping for @include files
+
+    Returns:
+        List of {"name": str, "default": str|None} dicts
+
+    Raises:
+        SyntaxError: If parameter syntax is invalid
+    """
+    from .errors import format_error
+
+    if not params_str:
+        return []
+
+    params = []
+    seen_optional = False
+    param_names = set()
+
+    # Split on commas, respecting nested parens/brackets/braces
+    param_parts = _split_on_commas(params_str)
+
+    for part in param_parts:
+        part = part.strip()
+        if not part:
+            continue
+
+        # Check if has default value (contains =)
+        if '=' in part:
+            # Split on first = only
+            equals_pos = part.index('=')
+            param_name = part[:equals_pos].strip()
+            default_value = part[equals_pos + 1:].strip()
+            seen_optional = True
+        else:
+            param_name = part
+            default_value = None
+
+            # Check: required param can't come after optional
+            if seen_optional:
+                raise SyntaxError(format_error(
+                    error_type="Invalid Parameter Order",
+                    line_num=line_num + 1,
+                    lines=lines,
+                    message=f"Required parameter '{param_name}' cannot follow optional parameter",
+                    pointer_length=len(params_str),
+                    suggestion="Put all required parameters before optional ones",
+                    filename=filename,
+                    line_map=line_map
+                ))
+
+        # Validate parameter name
+        if not param_name.isidentifier():
+            raise SyntaxError(format_error(
+                error_type="Invalid Parameter Name",
+                line_num=line_num + 1,
+                lines=lines,
+                message=f"'{param_name}' is not a valid parameter name",
+                pointer_length=len(params_str),
+                suggestion="Parameter names must be valid Python identifiers (letters, numbers, underscore)",
+                filename=filename,
+                line_map=line_map
+            ))
+
+        # Check for Python keywords
+        import keyword
+        if keyword.iskeyword(param_name):
+            raise SyntaxError(format_error(
+                error_type="Invalid Parameter Name",
+                line_num=line_num + 1,
+                lines=lines,
+                message=f"'{param_name}' is a Python keyword and cannot be used as a parameter name",
+                pointer_length=len(params_str),
+                suggestion="Choose a different parameter name",
+                filename=filename,
+                line_map=line_map
+            ))
+
+        # Check for duplicates
+        if param_name in param_names:
+            raise SyntaxError(format_error(
+                error_type="Duplicate Parameter",
+                line_num=line_num + 1,
+                lines=lines,
+                message=f"Parameter '{param_name}' is defined multiple times",
+                pointer_length=len(params_str),
+                suggestion="Each parameter must have a unique name",
+                filename=filename,
+                line_map=line_map
+            ))
+
+        param_names.add(param_name)
+        params.append({"name": param_name, "default": default_value})
+
+    return params
+
+
+def _split_on_commas(text: str) -> list[str]:
+    """
+    Split text on commas, respecting nested parentheses, brackets, and braces.
+
+    Example:
+        "x, func(a, b), z" -> ["x", "func(a, b)", "z"]
+    """
+    parts = []
+    current = []
+    depth = 0
+
+    for char in text:
+        if char in '([{':
+            depth += 1
+            current.append(char)
+        elif char in ')]}':
+            depth -= 1
+            current.append(char)
+        elif char == ',' and depth == 0:
+            # Top-level comma - split here
+            parts.append(''.join(current))
+            current = []
+        else:
+            current.append(char)
+
+    # Don't forget the last part
+    if current:
+        parts.append(''.join(current))
+
+    return parts
+
+
+def extract_target_and_args(target_with_args: str) -> tuple[str, str]:
+    """
+    Extract passage name and arguments from a target specification.
+
+    Examples:
+        "PassageName" -> ("PassageName", "")
+        "PassageName(x, y)" -> ("PassageName", "x, y")
+        "PassageName(func(a, b), z)" -> ("PassageName", "func(a, b), z")
+
+    Args:
+        target_with_args: The target specification (may include arguments)
+
+    Returns:
+        Tuple of (passage_name, args_str)
+    """
+    if '(' not in target_with_args:
+        return target_with_args, ""
+
+    paren_start = target_with_args.index('(')
+    passage_name = target_with_args[:paren_start]
+
+    # Find matching closing paren using depth tracking
+    depth = 0
+    paren_end = -1
+    for i in range(paren_start, len(target_with_args)):
+        if target_with_args[i] == '(':
+            depth += 1
+        elif target_with_args[i] == ')':
+            depth -= 1
+            if depth == 0:
+                paren_end = i
+                break
+
+    if paren_end == -1:
+        # Unclosed paren - return as-is, will error later
+        return target_with_args, ""
+
+    args_str = target_with_args[paren_start + 1:paren_end]
+
+    return passage_name, args_str
+
+
 def parse_choice_line(line: str, passage: dict) -> Optional[dict]:
     """Parse a choice line and return choice dict or None.
 
@@ -77,21 +309,25 @@ def parse_choice_line(line: str, passage: dict) -> Optional[dict]:
 
     # Check for condition
     if choice_line.startswith("{"):
-        match = re.match(r"\{([^}]+)\}\s*\[(.*?)\]\s*->\s*([\w.]+)", choice_line)
+        match = re.match(r"\{([^}]+)\}\s*\[(.*?)\]\s*->\s*(.+)", choice_line)
         if match:
-            condition, choice_text, target = match.groups()
+            condition, choice_text, target_with_args = match.groups()
         else:
             return None
     else:
-        match = re.match(r"\[(.*?)\]\s*->\s*([\w.]+)", choice_line)
+        match = re.match(r"\[(.*?)\]\s*->\s*(.+)", choice_line)
         if match:
-            choice_text, target = match.groups()
+            choice_text, target_with_args = match.groups()
         else:
             return None
+
+    # Extract passage name and arguments from target
+    target, args = extract_target_and_args(target_with_args.strip())
 
     return {
         "text": parse_content_line(choice_text),  # Tokenize for interpolation
         "target": target,
+        "args": args,  # NEW: store argument expressions
         "condition": condition,
         "sticky": sticky,
         "tags": tags,

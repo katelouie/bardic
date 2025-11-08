@@ -1,0 +1,43 @@
+:: Start
+~ gold = 500
+
+@py:
+    class Item:
+        def __init__(self, name, price):
+            self.name = name
+            self.price = price
+
+    shop_inventory = [
+        Item("Sword", 100),
+        Item("Shield", 80),
+        Item("Potion", 20)
+    ]
+
+    player_inventory = []
+@endpy
+
++ [Go to shop] -> Shop
+
+:: Shop
+You have {gold} gold.
+
+@for item in shop_inventory:
+    + [Buy {item.name} for {item.price} gold] -> BuyItem(item)
+@endfor
+
++ [Leave] -> Start
+
+:: BuyItem(item)
+@if gold >= item.price:
+    ~ gold = gold - item.price
+    ~ player_inventory.append(item)
+    ~ shop_inventory.remove(item)
+
+    You bought {item.name} for {item.price} gold!
+    You have {gold} gold left.
+
+    + [Continue shopping] -> Shop
+@else:
+    You don't have enough gold for {item.name}!
+    + [Back] -> Shop
+@endif

@@ -601,3 +601,215 @@ def check_duplicate_passages(
     error_parts.append("        Consider renaming duplicates or removing redundant definitions.\n")
 
     raise ValueError("".join(error_parts))
+
+
+def validate_passage_arguments(
+    passages: Dict[str, Any],
+    filename: Optional[str] = None,
+    line_map: Optional[List] = None
+) -> None:
+    """
+    Validate that all passage calls provide required arguments.
+
+    Checks:
+    1. Target passage exists
+    2. Required params are provided (params without defaults)
+    3. No extra arguments beyond what passage accepts
+
+    Note: We can't validate argument TYPES or VALUES at compile time since
+    args are expressions that depend on runtime state. We only validate STRUCTURE.
+
+    Args:
+        passages: Dict of all passages in the story
+        filename: Optional filename for error context
+        line_map: Optional source mapping for @include files
+
+    Raises:
+        SyntaxError: If any passage call is invalid
+    """
+    import ast
+
+    for passage_id, passage in passages.items():
+        # Check all choices
+        for choice_idx, choice in enumerate(passage.get("choices", [])):
+            _validate_single_call(
+                target=choice["target"],
+                args_str=choice.get("args", ""),
+                passages=passages,
+                caller_passage=passage_id,
+                call_context=f"choice {choice_idx + 1}",
+                filename=filename,
+                line_map=line_map
+            )
+
+        # Check all jumps
+        for content_item in passage.get("content", []):
+            if content_item.get("type") == "jump":
+                _validate_single_call(
+                    target=content_item["target"],
+                    args_str=content_item.get("args", ""),
+                    passages=passages,
+                    caller_passage=passage_id,
+                    call_context="immediate jump",
+                    filename=filename,
+                    line_map=line_map
+                )
+
+
+def _validate_single_call(
+    target: str,
+    args_str: str,
+    passages: Dict[str, Any],
+    caller_passage: str,
+    call_context: str,
+    filename: Optional[str],
+    line_map: Optional[List]
+) -> None:
+    """
+    Validate a single passage call.
+
+    Args:
+        target: Target passage name
+        args_str: Argument string (e.g., "x, y=5")
+        passages: Dict of all passages
+        caller_passage: Name of passage making the call
+        call_context: Description of where call happens ("choice 1", "immediate jump")
+        filename: Optional filename for errors
+        line_map: Optional source mapping
+
+    Raises:
+        SyntaxError: If call is invalid
+    """
+    import ast
+
+    # 1. Check target passage exists
+    if target not in passages:
+        # Find similar passage names for helpful suggestion
+        similar = _find_similar_passages(target, passages)
+        suggestion = f"Did you mean: {', '.join(similar)}?" if similar else "Check passage name spelling"
+
+        raise SyntaxError(
+            f"In passage '{caller_passage}' ({call_context}): "
+            f"Target passage '{target}' does not exist. {suggestion}"
+        )
+
+    target_passage = passages[target]
+    params = target_passage.get("params", [])
+
+    # If no params defined, args must be empty
+    if not params and args_str:
+        raise SyntaxError(
+            f"In passage '{caller_passage}' ({call_context}): "
+            f"Passage '{target}' takes no parameters, but arguments were provided: ({args_str})"
+        )
+
+    # If no params and no args, we're done
+    if not params:
+        return
+
+    # 2. Parse the argument structure using AST
+    try:
+        # Parse as function call to analyze structure
+        call_str = f"_temp_({args_str})" if args_str else "_temp_()"
+        tree = ast.parse(call_str, mode='eval')
+        call_node = tree.body
+
+        positional_count = len(call_node.args)
+        keyword_args = {kw.arg: True for kw in call_node.keywords}
+
+    except SyntaxError as e:
+        raise SyntaxError(
+            f"In passage '{caller_passage}' ({call_context}): "
+            f"Malformed arguments in call to '{target}': {args_str}\n"
+            f"Syntax error: {e}"
+        )
+
+    # 3. Build param info for validation
+    required_params = [p for p in params if p["default"] is None]
+    param_names = [p["name"] for p in params]
+
+    # 4. Check for too many positional arguments
+    if positional_count > len(params):
+        raise SyntaxError(
+            f"In passage '{caller_passage}' ({call_context}): "
+            f"Passage '{target}' takes at most {len(params)} parameter(s), "
+            f"but {positional_count} positional argument(s) were provided"
+        )
+
+    # 5. Check for unknown keyword arguments
+    for kw_name in keyword_args.keys():
+        if kw_name not in param_names:
+            raise SyntaxError(
+                f"In passage '{caller_passage}' ({call_context}): "
+                f"Passage '{target}' has no parameter named '{kw_name}'. "
+                f"Valid parameters: {', '.join(param_names)}"
+            )
+
+    # 6. Check that all required params are satisfied
+    # Build a set of which params are provided
+    provided_params = set()
+
+    # Positional args satisfy params in order
+    for i in range(positional_count):
+        provided_params.add(param_names[i])
+
+    # Keyword args
+    provided_params.update(keyword_args.keys())
+
+    # Check if any required params are missing
+    missing_required = []
+    for param in required_params:
+        if param["name"] not in provided_params:
+            missing_required.append(param["name"])
+
+    if missing_required:
+        raise SyntaxError(
+            f"In passage '{caller_passage}' ({call_context}): "
+            f"Missing required parameter(s) for '{target}': {', '.join(missing_required)}"
+        )
+
+    # 7. Check for duplicate arguments (positional + keyword for same param)
+    for i in range(positional_count):
+        param_name = param_names[i]
+        if param_name in keyword_args:
+            raise SyntaxError(
+                f"In passage '{caller_passage}' ({call_context}): "
+                f"Parameter '{param_name}' provided both as positional and keyword argument"
+            )
+
+
+def _find_similar_passages(target: str, passages: Dict[str, Any], max_results: int = 3) -> List[str]:
+    """
+    Find passage names similar to target using basic string similarity.
+
+    Args:
+        target: The passage name that wasn't found
+        passages: Dict of all passages
+        max_results: Maximum number of suggestions to return
+
+    Returns:
+        List of similar passage names
+    """
+    # Simple similarity: check for substring matches and case-insensitive matches
+    similar = []
+
+    target_lower = target.lower()
+
+    for passage_name in passages.keys():
+        passage_lower = passage_name.lower()
+
+        # Exact match (case-insensitive)
+        if passage_lower == target_lower:
+            similar.append(passage_name)
+            continue
+
+        # Substring match
+        if target_lower in passage_lower or passage_lower in target_lower:
+            similar.append(passage_name)
+            continue
+
+        # Starts with same prefix
+        if len(target) >= 3 and passage_lower.startswith(target_lower[:3]):
+            similar.append(passage_name)
+
+    return similar[:max_results]

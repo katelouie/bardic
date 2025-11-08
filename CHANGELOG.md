@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Passage Parameters (MAJOR):**
+  - Passages can now accept parameters like functions: `:: PassageName(param1, param2=default)`
+  - Navigate with arguments: `-> PassageName(value)` or `+ [Choice] -> PassageName(arg1, arg2)`
+  - Support for positional and keyword arguments: `-> Target(100)` or `-> Target(hp=100)`
+  - Default parameter values: `:: Greet(name="World", greeting="Hi")`
+  - Parameters are local variables (don't persist to global state)
+  - Compile-time validation ensures required params are provided
+  - **Unlocks dynamic content patterns:** shops, NPC conversations, combat encounters, any template passage!
+  - Example: `@for item in inventory: + [Buy {item.name}] -> BuyItem(item) @endfor`
+
+- Inventory and Economy modules to `stdlib`
+- Wandering Merchant story to `examples`
+
 ### Changed
 
 ### Fixed

@@ -64,6 +64,7 @@ class BardEngine:
         self.current_passage_id = None  # Will be set by goto()
         self.state = {}  # Game state (variables)
         self.state['_inputs'] = {}  # Initialize empty inputs dict (always available)
+        self._local_scope_stack = []  # Stack of local parameter scopes (NEW for passage params)
         self.used_choices = set()  # Track which one-time choices have been used
         self.context = context or {}
         self.evaluate_directives = evaluate_directives
@@ -223,6 +224,63 @@ class BardEngine:
         except Exception as e:
             raise ValueError(f"Could not parse directive arguments: {args_str}") from e
 
+    def _bind_arguments(self, params: list[dict], arg_dict: dict) -> dict:
+        """
+        Bind provided arguments to parameter names.
+
+        Args:
+            params: List of {"name": str, "default": str|None} from passage definition
+            arg_dict: Parsed arguments from _parse_directive_args()
+                      Format: {"arg_0": val, "arg_1": val, "keyword": val, ...}
+
+        Returns:
+            Dict of parameter name → evaluated value
+
+        Raises:
+            ValueError: If required param missing, or argument provided twice
+        """
+        result = {}
+
+        # Process positional arguments
+        positional_index = 0
+        for i, param in enumerate(params):
+            arg_key = f"arg_{positional_index}"
+
+            if arg_key in arg_dict:
+                # Positional arg provided
+                result[param["name"]] = arg_dict[arg_key]
+                positional_index += 1
+            elif param["name"] in arg_dict:
+                # Keyword arg provided
+                if param["name"] in result:
+                    raise ValueError(
+                        f"Parameter '{param['name']}' provided multiple times "
+                        f"(both positional and keyword)"
+                    )
+                result[param["name"]] = arg_dict[param["name"]]
+            elif param["default"] is not None:
+                # Use default value (evaluate it)
+                eval_context = {**self.context, **self.state}
+                if self._local_scope_stack:
+                    eval_context.update(self._local_scope_stack[-1])
+                # IMPORTANT: Include already-bound params in eval context
+                # This allows defaults like (x, y=x*2)
+                eval_context.update(result)
+
+                safe_builtins = self._get_safe_builtins()
+                result[param["name"]] = eval(
+                    param["default"],
+                    {"__builtins__": safe_builtins},
+                    eval_context
+                )
+            else:
+                # Required param not provided
+                raise ValueError(
+                    f"Required parameter '{param['name']}' not provided"
+                )
+
+        return result
+
     def _process_render_directive(self, directive: dict[str, Any]) -> dict[str, Any]:
         """
         Process a render directive based on configuration.
@@ -247,6 +305,8 @@ class BardEngine:
             # Evaluated mode: Execute python expressions, return data
             try:
                 eval_context = {**self.context, **self.state}
+                if self._local_scope_stack:
+                    eval_context.update(self._local_scope_stack[-1])
                 safe_builtins = self._get_safe_builtins()
 
                 # Parse and evaluate arguments
@@ -298,7 +358,7 @@ class BardEngine:
 
             return result
 
-    def _execute_passage(self, passage_id: str) -> None:
+    def _execute_passage(self, passage_id: str) -> Optional[str]:
         """
         Execute a passage's commands (side effects only).
 
@@ -307,6 +367,9 @@ class BardEngine:
 
         Args:
             passage_id: ID of the passage to execute
+
+        Returns:
+            Jump spec if immediate jump found, None otherwise
 
         Raises:
             ValueError: If passage_id doesn't exist
@@ -319,6 +382,22 @@ class BardEngine:
         # Execute commands (variable assignments, etc.)
         if "execute" in passage:
             self._execute_commands(passage["execute"])
+
+        # Check for immediate jumps in content
+        for item in passage.get("content", []):
+            if isinstance(item, dict) and item.get("type") == "jump":
+                target = item["target"]
+                args_str = item.get("args", "")
+
+                # Build passage spec
+                if args_str:
+                    jump_spec = f"{target}({args_str})"
+                else:
+                    jump_spec = target
+
+                return jump_spec
+
+        return None
 
     def _render_passage(self, passage_id: str) -> PassageOutput:
         """
@@ -444,6 +523,8 @@ class BardEngine:
         # Else, evaluate the condition
         try:
             eval_context = {**self.context, **self.state}
+            if self._local_scope_stack:
+                eval_context.update(self._local_scope_stack[-1])
             safe_builtins = self._get_safe_builtins()
             result = eval(condition, {"__builtins__": safe_builtins}, eval_context)
             return bool(result)
@@ -452,7 +533,7 @@ class BardEngine:
             print(f"Warning: Choice condition failed: {condition} - {e}")
             return False
 
-    def goto(self, passage_id: str) -> PassageOutput:
+    def goto(self, passage_spec: str) -> PassageOutput:
         """
         Navigate to a passage, execute its commands, and cache the output.
 
@@ -471,76 +552,153 @@ class BardEngine:
         Use this for: Story navigation, jumping between passages
 
         Args:
-            passage_id: ID of the passage to navigate to
+            passage_spec: Passage specification - either "PassageName" or "PassageName(args)"
 
         Returns:
             PassageOutput for the final passage (after following any jumps)
 
         Raises:
-            ValueError: If passage_id doesn't exist
+            ValueError: If passage doesn't exist or arguments are invalid
             RuntimeError: If a jump loop is detected
         """
+        # Parse passage_spec to extract passage_id and args
+        if '(' in passage_spec:
+            paren_start = passage_spec.index('(')
+            passage_id = passage_spec[:paren_start]
+
+            # Find matching closing paren
+            depth = 0
+            paren_end = -1
+            for i in range(paren_start, len(passage_spec)):
+                if passage_spec[i] == '(':
+                    depth += 1
+                elif passage_spec[i] == ')':
+                    depth -= 1
+                    if depth == 0:
+                        paren_end = i
+                        break
+
+            if paren_end == -1:
+                raise ValueError(f"Unclosed parenthesis in passage spec: {passage_spec}")
+
+            args_str = passage_spec[paren_start + 1:paren_end]
+        else:
+            passage_id = passage_spec
+            args_str = ""
+
         if passage_id not in self.passages:
             raise ValueError(f"Cannot navigate to unknown passage: '{passage_id}'")
 
-        accumulated_content = []
-        accumulated_directives = []
-        visited = set()
+        # Get passage and check for parameters
+        passage = self.passages[passage_id]
+        params = passage.get("params", [])
 
-        # Start with the requested passage
-        current_id = passage_id
+        # Handle parameters if present
+        if params or args_str:
+            # Parse arguments
+            eval_context = {**self.context, **self.state}
+            if self._local_scope_stack:
+                eval_context.update(self._local_scope_stack[-1])
 
-        # Follow jump chain
-        while True:
-            # Check for jump loops
-            if current_id in visited:
-                jump_chain = " -> ".join(visited) + f" -> {current_id}"
-                raise RuntimeError(f"Jump loop detected: {jump_chain}")
+            safe_builtins = self._get_safe_builtins()
 
-            visited.add(current_id)
-
-            # Update current passage
-            self.current_passage_id = current_id
-
-            # Execute commands (side effects happen here, once per passage)
-            self._execute_passage(current_id)
-
-            # Render the passage
-            output = self._render_passage(current_id)
-
-            # Accumulate content
-            if output.content:
-                accumulated_content.append(output.content)
-
-            # Accumulatve directives
-            if output.render_directives:
-                accumulated_directives.extend(output.render_directives)
-
-            # Check for jump
-            if output.jump_target:
-                # There's a jump - follow it
-                current_id = output.jump_target
+            if args_str:
+                arg_dict = self._parse_directive_args(args_str, eval_context, safe_builtins)
             else:
-                # No jump - we're done
-                break
+                arg_dict = {}
 
-        # Combine all content from jump chain
-        combined_content = "\n\n".join(accumulated_content)
+            # Bind arguments to parameters
+            try:
+                param_values = self._bind_arguments(params, arg_dict)
+            except ValueError as e:
+                raise ValueError(f"Error calling passage '{passage_id}': {e}")
 
-        # Create final output with combined content
-        final_output = PassageOutput(
-            content=combined_content,
-            choices=output.choices,  # Choices from final passage
-            passage_id=output.passage_id,  # Final passage ID
-            jump_target=None,  # No more jumps
-            render_directives=accumulated_directives,
-            input_directives=output.input_directives,  # Input directives from final passage
-        )
+            # Push local scope
+            self._local_scope_stack.append(param_values)
 
-        # Cache the final output
-        self._current_output = final_output
+        try:
+            accumulated_content = []
+            accumulated_directives = []
+            visited = set()
 
-        return self._current_output
+            # Start with the requested passage
+            current_id = passage_id
+
+            # Follow jump chain
+            while True:
+                # Check for jump loops
+                if current_id in visited:
+                    jump_chain = " -> ".join(visited) + f" -> {current_id}"
+                    raise RuntimeError(f"Jump loop detected: {jump_chain}")
+
+                visited.add(current_id)
+
+                # Update current passage
+                self.current_passage_id = current_id
+
+                # Execute commands (side effects happen here, once per passage)
+                jump_spec = self._execute_passage(current_id)
+
+                # If there's an immediate jump, handle it (may have args)
+                if jump_spec:
+                    # Immediate jump found - recursively goto (which may push new scope)
+                    jump_output = self.goto(jump_spec)
+
+                    # Combine accumulated content with jump result
+                    if accumulated_content:
+                        combined = "\n\n".join(accumulated_content + [jump_output.content])
+                        jump_output = PassageOutput(
+                            content=combined,
+                            choices=jump_output.choices,
+                            passage_id=jump_output.passage_id,
+                            jump_target=None,
+                            render_directives=accumulated_directives + jump_output.render_directives,
+                            input_directives=jump_output.input_directives,
+                        )
+
+                    return jump_output
+
+                # Render the passage
+                output = self._render_passage(current_id)
+
+                # Accumulate content
+                if output.content:
+                    accumulated_content.append(output.content)
+
+                # Accumulate directives
+                if output.render_directives:
+                    accumulated_directives.extend(output.render_directives)
+
+                # Check for jump (from rendered content, not immediate)
+                if output.jump_target:
+                    # There's a jump - follow it
+                    current_id = output.jump_target
+                else:
+                    # No jump - we're done
+                    break
+
+            # Combine all content from jump chain
+            combined_content = "\n\n".join(accumulated_content)
+
+            # Create final output with combined content
+            final_output = PassageOutput(
+                content=combined_content,
+                choices=output.choices,  # Choices from final passage
+                passage_id=output.passage_id,  # Final passage ID
+                jump_target=None,  # No more jumps
+                render_directives=accumulated_directives,
+                input_directives=output.input_directives,  # Input directives from final passage
+            )
+
+            # Cache the final output
+            self._current_output = final_output
+
+            return self._current_output
+
+        finally:
+            # Pop local scope if we pushed one
+            if params or args_str:
+                self._local_scope_stack.pop()
 
     def current(self) -> PassageOutput:
         """
@@ -588,6 +746,13 @@ class BardEngine:
 
         chosen_choice = filtered_choices[choice_index]
         target = chosen_choice["target"]
+        args_str = chosen_choice.get("args", "")
+
+        # Build passage spec with arguments
+        if args_str:
+            passage_spec = f"{target}({args_str})"
+        else:
+            passage_spec = target
 
         # Track this choice if it's one-time (not sticky)
         if not chosen_choice.get(
@@ -598,7 +763,7 @@ class BardEngine:
             self.used_choices.add(choice_id)
 
         # Navigate to target (executes and caches)
-        return self.goto(target)
+        return self.goto(passage_spec)
 
     def submit_inputs(self, input_data: dict) -> None:
         """
@@ -642,17 +807,20 @@ class BardEngine:
         code = cmd["code"]
 
         try:
-            # Create evaluation context with context and state
+            # Create evaluation context with context, state, and local scope
             eval_context = {**self.context, **self.state}
+            if self._local_scope_stack:
+                eval_context.update(self._local_scope_stack[-1])
             safe_builtins = self._get_safe_builtins()
 
             # Execute the statement
             exec(code, {"__builtins__": safe_builtins}, eval_context)
 
             # Sync any new/modified variables back to state
-            # Skip private vars (starting with _) and context vars (read-only)
+            # Skip private vars (starting with _), context vars (read-only), and local params
+            local_param_names = set(self._local_scope_stack[-1].keys()) if self._local_scope_stack else set()
             for key, value in eval_context.items():
-                if not key.startswith("_") and key not in self.context:
+                if not key.startswith("_") and key not in self.context and key not in local_param_names:
                     self.state[key] = value
 
         except Exception as e:
@@ -669,8 +837,10 @@ class BardEngine:
 
         # Try to evaluate the expression
         try:
-            # Create evaluation context with context and state
+            # Create evaluation context with context, state, and local scope
             eval_context = {**self.context, **self.state}
+            if self._local_scope_stack:
+                eval_context.update(self._local_scope_stack[-1])
             safe_builtins = self._get_safe_builtins()
 
             # Evaluate the expression
@@ -727,6 +897,8 @@ class BardEngine:
         try:
             # Create evaluation context with context and state
             eval_context = {**self.context, **self.state}
+            if self._local_scope_stack:
+                eval_context.update(self._local_scope_stack[-1])
             safe_builtins = self._get_safe_builtins()
 
             # Evaluate the expression (result is discarded, we only care about side effects)
@@ -876,8 +1048,10 @@ class BardEngine:
             elif token["type"] == "expression":
                 # Evaluate the expression (with optional format spec)
                 try:
-                    # Merge context and state for evaluation
+                    # Merge context, state, and local scope for evaluation
                     eval_context = {**self.context, **self.state}
+                    if self._local_scope_stack:
+                        eval_context.update(self._local_scope_stack[-1])
                     code = token["code"]
 
                     # Check for format specifier (e.g., "average:.1f")
@@ -1037,6 +1211,8 @@ class BardEngine:
         try:
             # Evaluate the collection expression
             eval_context = {**self.context, **self.state}
+            if self._local_scope_stack:
+                eval_context.update(self._local_scope_stack[-1])
             safe_builtins = self._get_safe_builtins()
             collection = eval(
                 collection_expr, {"__builtins__": safe_builtins}, eval_context
@@ -1126,6 +1302,8 @@ class BardEngine:
             Rendered content from the first true branch
         """
         eval_context = {**self.context, **self.state}
+        if self._local_scope_stack:
+            eval_context.update(self._local_scope_stack[-1])
         safe_builtins = self._get_safe_builtins()
 
         # Evaluate each branch until we find a true condition

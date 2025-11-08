@@ -72,6 +72,7 @@ You feel a bit tired.
 
 - **Write Python, Natively:** Use `~` for simple variable assignments or drop into full `@py:` blocks for complex logic.
 - **Use Your Own Objects:** `import` your custom Python classes (like `Player`, `Card`, or `Client`) and use them directly in your story.
+- **Passage Parameters:** Pass data between passages like function arguments: `:: Shop(item) -> BuyItem(item)`. Perfect for shops, NPC conversations, and dynamic content!
 - **Complex State, Solved:** Bardic's engine can save and load your *entire game state*, including all your custom Python objects, right out of the box.
 - **You Write the Story, Not the UI:** Bardic doesn't care if you use React, NiceGUI, or a terminal. It produces structured data for any UI.
   - Use the **NiceGUI** template for a pure-Python, single-file game.
