@@ -85,36 +85,46 @@ def validate_choice_syntax(
         )
 
     # Check 4: Check for conditionals FIRST (to handle nested brackets like {cards[0]})
+    # A conditional is { } that appears BEFORE the [ bracket
     # If conditional present, find its boundaries first
     cond_start = -1
     cond_end = -1
 
-    if "{" in choice_part:
-        if "}" not in choice_part:
-            raise SyntaxError(
-                format_error(
-                    error_type="Malformed Choice",
-                    line_num=line_num,
-                    lines=lines,
-                    message="Unclosed conditional - missing '}'",
-                    pointer_length=len(line.strip()),
-                    suggestion="Expected format: + {condition} [Choice text] -> Target\nConditional choices must have matching { and } before the bracket",
-                    filename=filename,
-                    line_map=line_map,
-                )
-            )
+    # Find position of [ bracket first
+    bracket_pos = choice_part.find("[")
 
-        # Find matching braces (handle nesting)
-        cond_start = choice_part.index("{")
-        depth = 0
-        for i in range(cond_start, len(choice_part)):
-            if choice_part[i] == "{":
-                depth += 1
-            elif choice_part[i] == "}":
-                depth -= 1
-                if depth == 0:
-                    cond_end = i
-                    break
+    # Only look for conditional { } BEFORE the [ bracket
+    if "{" in choice_part and bracket_pos >= 0:
+        first_brace = choice_part.index("{")
+
+        # Check if { appears before [
+        if first_brace < bracket_pos:
+            # This might be a conditional - find matching }
+            if "}" not in choice_part[:bracket_pos]:
+                raise SyntaxError(
+                    format_error(
+                        error_type="Malformed Choice",
+                        line_num=line_num,
+                        lines=lines,
+                        message="Unclosed conditional - missing '}'",
+                        pointer_length=len(line.strip()),
+                        suggestion="Expected format: + {condition} [Choice text] -> Target\nConditional choices must have matching { and } before the bracket",
+                        filename=filename,
+                        line_map=line_map,
+                    )
+                )
+
+            # Find matching braces (handle nesting) before the bracket
+            cond_start = first_brace
+            depth = 0
+            for i in range(cond_start, bracket_pos):
+                if choice_part[i] == "{":
+                    depth += 1
+                elif choice_part[i] == "}":
+                    depth -= 1
+                    if depth == 0:
+                        cond_end = i
+                        break
 
     # Check 5: If } present without {, error
     if "}" in choice_part and "{" not in choice_part:

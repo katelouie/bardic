@@ -931,38 +931,42 @@ class BardEngine:
                     )
 
                     # Choose branch based on condition (truthy or falsy)
-                    branch_text = token["truthy"] if condition_result else token["falsy"]
+                    # Branches are now token lists (new format) or strings (backward compatibility)
+                    branch = token["truthy"] if condition_result else token["falsy"]
 
-                    # The branch might be:
-                    # 1. Plain text: "Healthy"
-                    # 2. An expression: "{func()}"
-                    # 3. Empty: ""
+                    # Handle both new format (token list) and old format (string)
+                    if isinstance(branch, list):
+                        # New format: token list like [{"type": "text", "value": "HP: "}, {"type": "expression", "code": "health"}]
+                        # Recursively render the tokens
+                        branch_content, _, _ = self._render_content(branch)
+                        result.append(branch_content)
+                    elif isinstance(branch, str):
+                        # Old format (backward compatibility): plain string or single expression
+                        if not branch:
+                            # Empty branch - add nothing
+                            pass
+                        elif branch.startswith("{") and branch.endswith("}"):
+                            # Branch contains an expression - evaluate it
+                            branch_expr = branch[1:-1]  # Remove { }
 
-                    if not branch_text:
-                        # Empty branch - add nothing
-                        pass
-                    elif branch_text.startswith("{") and branch_text.endswith("}"):
-                        # Branch contains an expression - evaluate it
-                        branch_expr = branch_text[1:-1]  # Remove { }
+                            # Check for format spec in the branch expression
+                            if ":" in branch_expr and not any(
+                                op in branch_expr for op in ["==", "!=", "<=", ">=", "::"]
+                            ):
+                                # Has format spec
+                                colon_idx = branch_expr.find(":")
+                                expr = branch_expr[:colon_idx].strip()
+                                format_spec = branch_expr[colon_idx + 1:].strip()
 
-                        # Check for format spec in the branch expression
-                        if ":" in branch_expr and not any(
-                            op in branch_expr for op in ["==", "!=", "<=", ">=", "::"]
-                        ):
-                            # Has format spec
-                            colon_idx = branch_expr.find(":")
-                            expr = branch_expr[:colon_idx].strip()
-                            format_spec = branch_expr[colon_idx + 1:].strip()
-
-                            value = eval(expr, {"__builtins__": safe_builtins}, eval_context)
-                            result.append(format(value, format_spec))
+                                value = eval(expr, {"__builtins__": safe_builtins}, eval_context)
+                                result.append(format(value, format_spec))
+                            else:
+                                # No format spec
+                                value = eval(branch_expr, {"__builtins__": safe_builtins}, eval_context)
+                                result.append(str(value))
                         else:
-                            # No format spec
-                            value = eval(branch_expr, {"__builtins__": safe_builtins}, eval_context)
-                            result.append(str(value))
-                    else:
-                        # Plain text - add as-is
-                        result.append(branch_text)
+                            # Plain text - add as-is
+                            result.append(branch)
 
                 except Exception as e:
                     # Error evaluating inline conditional

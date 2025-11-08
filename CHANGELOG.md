@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Better error messages with source file and line tracking
 - `stdlib/`: Reusable Python modules for common game logic
 - `examples/`: Small example Bardic games demonstrating core features
+- Allow expressions nested inside inline conditionals
+- Allow inline conditionals inside choice text (with nested expressions)
 
 ### Changed
 

@@ -1,0 +1,17 @@
+:: Start
+
+~ time = "night"
+~ health = 75
+
+You stand at the forest edge.
+
++ [Go to {time == "night" ? the dark forest | the sunny glade}] -> Forest
++ [{health > 50 ? Fight (HP: {health}) | Too weak to fight}] -> Battle
+
+:: Forest
+
+You enter the forest.
+
+:: Battle
+
+You prepare for battle.

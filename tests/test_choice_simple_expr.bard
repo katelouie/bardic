@@ -1,0 +1,11 @@
+:: Start
+
+~ gold = 100
+
+You have some gold.
+
++ [You have {gold} coins] -> Shop
+
+:: Shop
+
+You enter the shop.

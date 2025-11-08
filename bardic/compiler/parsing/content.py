@@ -231,14 +231,19 @@ def parse_inline_conditional(expr: str) -> Optional[dict]:
         return None  # No | found, not an inline conditional
 
     # Split at the |
-    truthy = rest[:pipe_idx].strip()
-    falsy = rest[pipe_idx + 1:].strip()
+    truthy_text = rest[:pipe_idx].strip()
+    falsy_text = rest[pipe_idx + 1:].strip()
+
+    # Tokenize the truthy and falsy branches to support mixed text + expressions
+    # e.g., "HP: {health}" should become [{"type": "text", "value": "HP: "}, {"type": "expression", "code": "health"}]
+    truthy_tokens = parse_content_line(truthy_text) if truthy_text else []
+    falsy_tokens = parse_content_line(falsy_text) if falsy_text else []
 
     return {
         "type": "inline_conditional",
         "condition": condition,
-        "truthy": truthy,
-        "falsy": falsy
+        "truthy": truthy_tokens,
+        "falsy": falsy_tokens
     }
 
 

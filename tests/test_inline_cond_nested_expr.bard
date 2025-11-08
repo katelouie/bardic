@@ -1,0 +1,16 @@
+:: Start
+
+~ health = 75
+~ gold = 100
+
+You check your status.
+
+{health > 50 ? HP: {health} | You're weak}
+
+You have {gold} coins.
+
++ [Continue] -> End
+
+:: End
+
+The end.
