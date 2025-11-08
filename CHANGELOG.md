@@ -9,18 +9,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Better error messages with source file and line tracking
-- `stdlib/`: Reusable Python modules for common game logic
-- `examples/`: Small example Bardic games demonstrating core features
-- Allow expressions nested inside inline conditionals
-- Allow inline conditionals inside choice text (with nested expressions)
-- Implement expression validation error messages with source line tracking
-
 ### Changed
 
 ### Fixed
 
 ### Removed
+
+## [0.2.0] - 2025-11-07
+
+### Added
+
+- **Inline Conditional Enhancements:**
+  - Mixed text + expressions in conditional branches: `{health > 50 ? HP: {health} | You're weak}`
+  - Inline conditionals in choice text: `+ [{health > 0 ? Fight (HP: {health}) | Too weak}] -> Battle`
+  - Nested expressions inside conditionals: fully recursive rendering
+  - Choice text supports pure expressions: `+ [You have {gold} coins] -> Shop`
+
+- **Comprehensive Error Validation (100% coverage!):**
+  - Expression validation: detects unclosed braces, extra closing braces, mismatched nesting
+  - Python syntax validation: AST parsing catches all syntax errors at compile time
+  - @py block validation: missing colons, unclosed blocks
+  - Control flow validation: @if/@elif/@else/@endif/@for/@endfor syntax
+  - Directive validation: @render and @input parameter checking
+  - @include edge cases: missing file path, multiple files
+  - All errors use beautiful `format_error()` with visual context
+  - Source line mapping for @include scenarios (shows correct file/line)
+  - 35+ test files covering all error scenarios
+
+### Changed
+
+- Updated `parse_content_line()` to accept line_num, lines, filename, line_map for better error reporting
+- Updated `split_expressions_with_depth()` to validate brace matching
+- Choice validation now distinguishes between conditionals (before `[`) and expressions (inside `[...]`)
+- All parse_content_line() call sites updated across core.py and blocks.py
+
+### Fixed
+
+- Apostrophes in inline conditional text no longer break syntax (VSCode extension)
+- Choice text validation no longer treats expressions as conditionals
+- Expression validation catches all brace mismatches with helpful error messages
 
 ## [0.1.0] - 2025-11-03
 
