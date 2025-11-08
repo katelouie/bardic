@@ -267,11 +267,11 @@ def parse(
             if line.rstrip().endswith("<>"):
                 # Remove <> and parse (glue: no newline after)
                 content_line = line.rstrip()[:-2]
-                content_tokens = parse_content_line(content_line)
+                content_tokens = parse_content_line(content_line, i + 1, lines, filename, line_map)
                 current_passage["content"].extend(content_tokens)
             else:
                 # Normal: add newline after content
-                content_tokens = parse_content_line(line)
+                content_tokens = parse_content_line(line, i + 1, lines, filename, line_map)
                 current_passage["content"].extend(content_tokens)
                 current_passage["content"].append({"type": "text", "value": "\n"})
             i += 1

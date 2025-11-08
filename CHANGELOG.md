@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `examples/`: Small example Bardic games demonstrating core features
 - Allow expressions nested inside inline conditionals
 - Allow inline conditionals inside choice text (with nested expressions)
+- Implement expression validation error messages with source line tracking
 
 ### Changed
 

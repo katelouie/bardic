@@ -1,0 +1,5 @@
+:: Start
+
+This has mismatched braces: {outer {inner} still missing close
+
+Content after the error.

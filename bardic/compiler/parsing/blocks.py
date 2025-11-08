@@ -173,16 +173,18 @@ def extract_conditional_block(
             if current_branch_lines:
                 dedented = detect_and_strip_indentation(current_branch_lines)
                 # Parse dedented content
+                # Note: dedented lines don't have accurate line numbers,
+                # so we pass minimal context for error reporting
                 for line in dedented:
                     # Check for glue operator <>
                     if line.rstrip().endswith("<>"):
                         # Remove <> and parse (glue: no newline after)
                         content_line = line.rstrip()[:-2]
-                        content_tokens = parse_content_line(content_line)
+                        content_tokens = parse_content_line(content_line, 0, None, filename, None)
                         current_branch["content"].extend(content_tokens)
                     else:
                         # Normal: add newline after content
-                        content_tokens = parse_content_line(line)
+                        content_tokens = parse_content_line(line, 0, None, filename, None)
                         current_branch["content"].extend(content_tokens)
                         current_branch["content"].append({"type": "text", "value": "\n"})
             # Always append branch (even if it only has directives, no text)
@@ -207,7 +209,7 @@ def extract_conditional_block(
             if current_branch_lines:
                 dedented = detect_and_strip_indentation(current_branch_lines)
                 for dedented_line in dedented:
-                    content_tokens = parse_content_line(dedented_line)
+                    content_tokens = parse_content_line(dedented_line, 0, None, filename, None)
                     current_branch["content"].extend(content_tokens)
                     current_branch["content"].append({"type": "text", "value": "\n"})
                 current_branch_lines = []  # Reset
@@ -225,7 +227,7 @@ def extract_conditional_block(
             if current_branch_lines:
                 dedented = detect_and_strip_indentation(current_branch_lines)
                 for dedented_line in dedented:
-                    content_tokens = parse_content_line(dedented_line)
+                    content_tokens = parse_content_line(dedented_line, 0, None, filename, None)
                     current_branch["content"].extend(content_tokens)
                     current_branch["content"].append({"type": "text", "value": "\n"})
                 current_branch_lines = []  # Reset
@@ -243,7 +245,7 @@ def extract_conditional_block(
             if current_branch_lines:
                 dedented = detect_and_strip_indentation(current_branch_lines)
                 for dedented_line in dedented:
-                    content_tokens = parse_content_line(dedented_line)
+                    content_tokens = parse_content_line(dedented_line, 0, None, filename, None)
                     current_branch["content"].extend(content_tokens)
                     current_branch["content"].append({"type": "text", "value": "\n"})
                 current_branch_lines = []  # Reset
@@ -261,7 +263,7 @@ def extract_conditional_block(
             if current_branch_lines:
                 dedented = detect_and_strip_indentation(current_branch_lines)
                 for dedented_line in dedented:
-                    content_tokens = parse_content_line(dedented_line)
+                    content_tokens = parse_content_line(dedented_line, 0, None, filename, None)
                     current_branch["content"].extend(content_tokens)
                     current_branch["content"].append({"type": "text", "value": "\n"})
                 current_branch_lines = []  # Reset
@@ -293,7 +295,7 @@ def extract_conditional_block(
                 if current_branch_lines:
                     dedented = detect_and_strip_indentation(current_branch_lines)
                     for dedented_line in dedented:
-                        content_tokens = parse_content_line(dedented_line)
+                        content_tokens = parse_content_line(dedented_line, 0, None, filename, None)
                         current_branch["content"].extend(content_tokens)
                         current_branch["content"].append({"type": "text", "value": "\n"})
                     current_branch_lines = []  # Reset
@@ -310,7 +312,7 @@ def extract_conditional_block(
             if current_branch_lines:
                 dedented = detect_and_strip_indentation(current_branch_lines)
                 for dedented_line in dedented:
-                    content_tokens = parse_content_line(dedented_line)
+                    content_tokens = parse_content_line(dedented_line, 0, None, filename, None)
                     current_branch["content"].extend(content_tokens)
                     current_branch["content"].append({"type": "text", "value": "\n"})
                 current_branch_lines = []  # Reset
@@ -387,11 +389,11 @@ def extract_conditional_block(
                             if dedented_line.rstrip().endswith("<>"):
                                 # Remove <> and parse (glue: no newline after)
                                 content_line = dedented_line.rstrip()[:-2]
-                                content_tokens = parse_content_line(content_line)
+                                content_tokens = parse_content_line(content_line, 0, None, filename, None)
                                 current_branch["content"].extend(content_tokens)
                             else:
                                 # Normal: add newline after content
-                                content_tokens = parse_content_line(dedented_line)
+                                content_tokens = parse_content_line(dedented_line, 0, None, filename, None)
                                 current_branch["content"].extend(content_tokens)
                                 current_branch["content"].append({"type": "text", "value": "\n"})
                     # Always append branch (even if it only has directives, no text)
@@ -466,7 +468,7 @@ def extract_conditional_block(
             if current_branch_lines:
                 dedented = detect_and_strip_indentation(current_branch_lines)
                 for dedented_line in dedented:
-                    content_tokens = parse_content_line(dedented_line)
+                    content_tokens = parse_content_line(dedented_line, 0, None, filename, None)
                     current_branch["content"].extend(content_tokens)
                     current_branch["content"].append({"type": "text", "value": "\n"})
                 current_branch_lines = []  # Reset
@@ -705,14 +707,15 @@ def extract_loop_block(
 
             # Regular content line
             # Check for glue operator <>
+            # Note: These are dedented lines, so we pass minimal context
             if line.rstrip().endswith("<>"):
                 # Remove <> and parse (glue: no newline after)
                 content_line = line.rstrip()[:-2]
-                content_tokens = parse_content_line(content_line)
+                content_tokens = parse_content_line(content_line, 0, None, filename, None)
                 loop["content"].extend(content_tokens)
             else:
                 # Normal: add newline after content
-                content_tokens = parse_content_line(line)
+                content_tokens = parse_content_line(line, 0, None, filename, None)
                 loop["content"].extend(content_tokens)
                 loop["content"].append({"type": "text", "value": "\n"})
             j += 1

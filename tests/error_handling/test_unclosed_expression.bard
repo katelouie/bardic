@@ -1,0 +1,5 @@
+:: Start
+
+This is some text with an unclosed expression: {variable
+
+Content after the error.

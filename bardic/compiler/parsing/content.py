@@ -136,10 +136,15 @@ def split_expressions_with_depth(text: str) -> list[str]:
     Returns alternating list of [text, {expr}, text, {expr}, ...]
     Preserves empty strings where appropriate.
 
+    Validates that all braces are properly matched.
+
     Examples:
         "Hello {name}" -> ["Hello ", "{name}", ""]
         "{a ? {b} | c}" -> ["", "{a ? {b} | c}", ""]
         "text {x} more {y} end" -> ["text ", "{x}", " more ", "{y}", " end"]
+
+    Raises:
+        ValueError: If braces are mismatched or unclosed
     """
     result = []
     current = []
@@ -156,6 +161,9 @@ def split_expressions_with_depth(text: str) -> list[str]:
             depth += 1
         elif char == '}':
             depth -= 1
+            if depth < 0:
+                # Found } without matching {
+                raise ValueError(f"Found '}}' without matching '{{' in: {text}")
             current.append(char)
             if depth == 0:
                 # Complete expression
@@ -163,6 +171,10 @@ def split_expressions_with_depth(text: str) -> list[str]:
                 current = []
         else:
             current.append(char)
+
+    # Check if we ended with unclosed braces
+    if depth > 0:
+        raise ValueError(f"Unclosed expression in: {text}")
 
     # Add remaining text (even if empty)
     if current or (result and not text.endswith('}')):
@@ -247,14 +259,32 @@ def parse_inline_conditional(expr: str) -> Optional[dict]:
     }
 
 
-def parse_content_line(line: str) -> list[dict]:
+def parse_content_line(
+    line: str,
+    line_num: int = 0,
+    lines: Optional[list[str]] = None,
+    filename: Optional[str] = None,
+    line_map: Optional[list] = None
+) -> list[dict]:
     """
     Parse a content line with {variable} interpolation and optional tags.
 
     Returns list of content tokens (text and expressions).
     Tags are attached to the last token in the line.
     Supports inline comments: text // comment
+
+    Args:
+        line: The line to parse
+        line_num: Line number (1-indexed) for error reporting
+        lines: All source lines for error context
+        filename: Optional filename for error context
+        line_map: Optional source location map for @include resolution
+
+    Raises:
+        SyntaxError: If braces are mismatched or unclosed
     """
+    from .errors import format_error
+
     # Strip inline comment first (before any parsing!)
     line, _ = strip_inline_comment(line)
 
@@ -264,7 +294,25 @@ def parse_content_line(line: str) -> list[dict]:
     tokens = []
 
     # Split on {expressions} with depth-tracking for nested braces
-    parts = split_expressions_with_depth(line_without_tags)
+    # This now validates brace matching
+    try:
+        parts = split_expressions_with_depth(line_without_tags)
+    except ValueError as e:
+        # Convert to SyntaxError with proper formatting
+        if lines is not None and line_num > 0:
+            raise SyntaxError(format_error(
+                error_type="Expression Error",
+                line_num=line_num,
+                lines=lines,
+                message=str(e),
+                pointer_length=len(line.strip()),
+                suggestion="Check that all { have matching } braces",
+                filename=filename,
+                line_map=line_map
+            ))
+        else:
+            # Fallback if context not available
+            raise SyntaxError(str(e))
 
     for part in parts:
         if part.startswith("{") and part.endswith("}"):

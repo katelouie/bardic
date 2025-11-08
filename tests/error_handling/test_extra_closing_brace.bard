@@ -1,0 +1,5 @@
+:: Start
+
+This has an extra closing brace: }variable
+
+Content after the error.
