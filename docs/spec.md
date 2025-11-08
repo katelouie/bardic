@@ -303,31 +303,185 @@ Allow player navigation between passages.
 
 ---
 
-### Variables
+### Inline Python Statements (`~`)
 
-Store and manipulate state.
+Execute single-line Python statements directly in your story content.
+
+**Syntax:** `~ <any valid Python statement>`
 
 ```bard
-~ variable_name = value
+~ health = 100
+~ client.add_trust(15)
+~ inventory.append("key")
 ```
 
-**Supported Types:**
+**Rules:**
 
-- Numbers: `~ health = 100`
-- Strings: `~ name = "Hero"`
-- Booleans: `~ has_key = True`
-- Lists: `~ inventory = []`
-- Objects: `~ card = Card()`
+- Must be a single logical line (though can span physical lines for lists/dicts/parenthesized expressions)
+- Has access to all variables in `state` and functions in `context`
+- Modifies state directly and immediately
+- Executes in order with other passage content
+- Gets compiled to `execute` commands that run before rendering
 
-**Display Variables:**
+---
+
+#### What You Can Do
+
+**Variable Assignment:**
+
+```bard
+~ health = 100
+~ name = "Hero"
+~ has_key = True
+~ inventory = []
+~ card = Card()
+```
+
+**Augmented Assignment:**
+
+Shorthand operators for updating variables:
+
+```bard
+~ count += 1              # Same as: count = count + 1
+~ health -= 10            # Same as: health = health - 10
+~ total *= 2              # Same as: total = total * 2
+~ price /= 1.5            # Same as: price = price / 1.5
+~ items //= 2             # Same as: items = items // 2 (floor division)
+~ remainder %= 10         # Same as: remainder = remainder % 10
+~ area **= 2              # Same as: area = area ** 2 (exponentiation)
+```
+
+**Supported operators:** `+=`, `-=`, `*=`, `/=`, `//=`, `%=`, `**=`
+
+**Works with complex expressions:**
+
+```bard
+~ total += (base * multiplier) + bonus
+~ score -= penalty_amount * difficulty
+```
+
+**Method Calls:**
+
+```bard
+~ client.add_trust(15)
+~ client.discuss_topic("grief")
+~ deck.shuffle()
+~ reader.add_experience(50)
+```
+
+**List/Dict Operations:**
+
+```bard
+~ inventory.append("key")
+~ cards_seen.extend([card.name for card in drawn_cards])
+~ stats["strength"] += 5
+~ del inventory[0]
+```
+
+**Complex Expressions:**
+
+```bard
+~ filtered_cards = [c for c in deck.cards if c.is_major()]
+~ total_value = sum(item.value for item in inventory)
+~ average = total / len(items) if items else 0
+```
+
+**Multiline Expressions:**
+
+The `~` operator supports multiline for lists, dicts, and parenthesized expressions:
+
+```bard
+~ total += (
+    base_value +
+    bonus_multiplier +
+    situational_modifier
+)
+
+~ my_list = [
+    first_item,
+    second_item,
+    third_item
+]
+
+~ client_data = {
+    "name": client.name,
+    "trust": client.trust,
+    "sessions": client.sessions_completed
+}
+```
+
+**Debug Output:**
+
+```bard
+~ print(f"[DEBUG] Trust: {client.trust}, Session: {session_num}")
+~ print(f"Cards drawn: {[c.name for c in cards]}")
+```
+
+---
+
+#### What You Can't Do
+
+```bard
+# ❌ Multiple statements (no semicolons - use separate ~ lines)
+~ trust = 50; comfort = 50
+
+# ❌ Control flow structures
+~ if health < 50:
+    health = 50  # Use @py: blocks for this
+
+# ❌ Loops
+~ for item in inventory:
+    process(item)  # Use @py: blocks for this
+
+# ❌ Function definitions
+~ def my_func():
+    return 42  # Use @py: blocks for this
+
+# ❌ Import statements
+~ import random  # Use file-level imports instead
+```
+
+---
+
+#### `~` vs `@py:` Blocks
+
+> [!TIP]
+> 💡 **When to use which:**
+>
+> **Use `~` for quick one-liners:**
+>
+> - Variable assignments: `~ gold = 100`
+> - Method calls: `~ client.add_trust(10)`
+> - Simple operations: `~ inventory.append("key")`
+> - Debug output: `~ print(f"Trust: {trust}")`
+>
+> **Use `@py:` blocks for complex logic:**
+>
+> - Loops: `for card in cards: ...`
+> - Conditionals: `if health < 50: ...`
+> - Multi-statement sequences
+> - Function definitions
+> - Complex algorithms
+>
+> **Think of `~` as "inline Python" and `@py:` as "Python block".**
+>
+> ⚠️ **Side effects happen immediately:** When you write `~ client.add_trust(10)`, that trust is added right now, during passage execution. The change persists across passages. If you're modifying objects or collections, remember that `~` statements run in the order they appear.
+
+---
+
+#### Display Variables
+
+Access variables in story text using `{expression}` syntax:
 
 ```bard
 You have {health} health. Your name is {name}.
+The client's trust is {client.trust}.
+You've completed {reader.sessions_completed} sessions.
 ```
 
 **Format Specifiers:**
 
-Use Python's format specification mini-language to control how values are displayed:
+Use Python's format specification mini-language to control display:
 
 ```bard
 Average: {average:.1f}        # Float with 1 decimal place
@@ -346,53 +500,75 @@ Percent: {ratio:.1%}          # Percentage (0.753 → 75.3%)
 - `^N` - Center in N spaces (`^10`)
 - `.N%` - Percentage with N decimals (`.1%` → `75.3%`)
 
-**Expressions:**
+---
+
+#### Common Patterns
+
+**Update character stats:**
 
 ```bard
-~ health = health - 10
-~ total = (gold * 2) + bonus
+~ reader.add_experience(50)
+~ reader.add_money(25)
+~ reader.add_competence(1)
 ```
 
-**Augmented Assignment:**
-
-Shorthand operators for updating variables:
+**Track story progress:**
 
 ```bard
-~ count += 1              # Same as: count = count + 1
-~ health -= 10            # Same as: health = health - 10
-~ total *= 2              # Same as: total = total * 2
-~ price /= 1.5            # Same as: price = price / 1.5
-~ items //= 2             # Same as: items = items // 2 (floor division)
-~ remainder %= 10         # Same as: remainder = remainder % 10
-~ area **= 2              # Same as: area = area ** 2 (exponentiation)
+~ cards_seen.append(card.name)
+~ topics_discussed.add("grief")
+~ client.sessions_completed += 1
 ```
 
-**Supported Operators:**
-
-- `+=` (addition)
-- `-=` (subtraction)
-- `*=` (multiplication)
-- `/=` (division)
-- `//=` (floor division)
-- `%=` (modulo)
-- `**=` (exponentiation)
-
-**Works with complex expressions:**
+**Conditional side effects:**
 
 ```bard
-~ total += (base * multiplier) + bonus
-~ score -= penalty_amount * difficulty
+~ client.unlock_memory("childhood") if client.trust >= 80 else None
+~ bonus_gold = 50 if reader.reputation >= 5 else 0
 ```
 
-**Works with multiline expressions:**
+**Batch updates (use multiple lines):**
 
 ```bard
-~ total += (
-    item1 +
-    item2 +
-    item3
-)
+~ client.add_trust(10)
+~ client.add_comfort(5)
+~ client.discuss_topic("fear")
 ```
+
+**Calculate before displaying:**
+
+```bard
+~ total_value = sum(item.price for item in inventory)
+~ average_trust = sum(c.trust for c in clients) / len(clients)
+
+Your inventory is worth {total_value} gold.
+Average client trust: {average_trust:.1f}
+```
+
+---
+
+#### Error Handling
+
+When a `~` statement fails, Bardic provides detailed error messages with source file and line number:
+
+```bard
+~ undefined_function()
+```
+
+**Error output:**
+
+```sh
+RuntimeError: Error executing statement in passage 'MyPassage'
+  File: story.bard, Line: 42
+  Statement: undefined_function()
+
+  NameError: name 'undefined_function' is not defined
+
+  Available variables: ['client', 'reader', 'health', 'cards']
+  Available functions: ['draw_cards', 'roll_dice']
+```
+
+---
 
 **Status:** ✅ Implemented (Week 2, Session 6)
 
