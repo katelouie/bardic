@@ -44,6 +44,10 @@ No matter your skill level, start at Part 1. Each lesson builds on the last.
   - Now create your OWN objects! Learn to write a simple `Item` class, import it into your story, and give objects custom superpowers.
   - **You'll create:** A custom Item class and shopping system
 
+- **[Part 3C: Reusable Passages & The Standard Library](03_5_reusable_passages_stdlib.md)**
+  - Stop copy-pasting! Learn to write reusable passages with parameters, and explore Bardic's built-in modules for inventory, economy, and dice rolling.
+  - **You'll create:** A complete merchant trading game with shops, currency, and random events
+
 ### Phase 4: The Game Developer
 
 - **[Part 4: Building a "Game" with a Custom UI](04_custom_ui.md)**
@@ -65,6 +69,7 @@ No matter your skill level, start at Part 1. Each lesson builds on the last.
 | 2.5 | Games with inventories and stats |
 | 3A | Stories using built-in object methods |
 | 3B | Games with custom Python objects |
+| 3C | Merchant games, shops, and reusable game systems |
 | 4 | Web-based games with custom UIs |
 | 5 | Large-scale, organized projects |
 
@@ -87,11 +92,11 @@ If you want to make interactive fiction without diving too deep into programming
 If you want to leverage Python's full capabilities:
 
 1. **Complete:** All parts in order
-2. **Focus on:** Part 3B (this is the game-changer)
+2. **Focus on:** Parts 3B & 3C (these are the game-changers)
 3. **Definitely do:** Part 4 (custom UIs are powerful)
 4. **Master:** Part 5 (for building large projects)
 
-**Result:** You can build complex narrative systems with custom objects, external APIs, databases, and professional UIs.
+**Result:** You can build complex narrative systems with custom objects, reusable passages, external APIs, databases, and professional UIs.
 
 ---
 
@@ -148,10 +153,11 @@ If you want to leverage Python's full capabilities:
 1. [Your First Branching Story](01_first_story.md)
 2. [Adding State & Memory](02_state_memory.md)
 3. [Complex State (Lists & Dictionaries)](02_5_complex_state.md)
-4. [Objects Have Superpowers](03A_objects_have_superpowers.md)
-5. [Creating Your Own Objects](03B_creating_objects.md)
-6. [Building a Custom UI](04_custom_ui.md)
-7. [Finishing & Polishing Your Story](05_finish_polish.md)
+4. [Objects Have Superpowers](03a_objects_superpowers.md)
+5. [Creating Your Own Objects](03b_creating_objects.md)
+6. [Reusable Passages & The Standard Library](03_5_reusable_passages_stdlib.md)
+7. [Building a Custom UI](04_custom_ui.md)
+8. [Finishing & Polishing Your Story](05_finish_polish.md)
 
 ---
 

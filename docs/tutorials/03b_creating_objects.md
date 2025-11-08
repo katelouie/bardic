@@ -626,4 +626,4 @@ Now that you understand custom objects, you can:
 
 You've gone from complete beginner to someone who can write object-oriented Python for game logic. That's incredible!
 
-[← Back to Part 3A](03a_objects_superpowers.md) | [Continue to Part 4 →](04_custom_ui.md)
+[← Back to Part 3A](03a_objects_superpowers.md) | [Continue to Part 3C →](03_5_reusable_passages_stdlib.md)

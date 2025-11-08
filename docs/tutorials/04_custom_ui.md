@@ -461,4 +461,4 @@ Your story is now accessible in a browser with a modern, responsive interface. B
 
 **Next up:** In Part 5, we'll cover the tools you need to manage a real project: splitting files with `@include`, debugging with visualization tools, and organizing your story as it grows.
 
-[← Back to Part 3](03_python_first.md) | [Continue to Part 5 →](05_finish_polish.md)
+[← Back to Part 3C](03_5_reusable_passages_stdlib.md) | [Continue to Part 5 →](05_finish_polish.md)
