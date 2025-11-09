@@ -55,7 +55,15 @@ def compile(input_file, output):
         output_path = compiler.compile_file(input_file, output)
 
         # Show success message
-        input_size = Path(input_file).stat().st_size
+        # Calculate total input size (including all @include files)
+        with open(input_file, 'r', encoding='utf-8') as f:
+            source = f.read()
+
+        # Resolve includes to get the ACTUAL total source size
+        from bardic.compiler.parsing.preprocessing import resolve_includes
+        resolved_source, _ = resolve_includes(source, str(Path(input_file).resolve()))
+        input_size = len(resolved_source.encode('utf-8'))
+
         output_size = Path(output_path).stat().st_size
 
         click.echo(click.style("✓", fg="green", bold=True) + f" Compiled {input_file}")

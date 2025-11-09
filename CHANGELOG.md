@@ -15,6 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Bug preventing compiling on inline conditionals in choice text
+- `bardic compile` success message was displaying only base `.bard` file size, not with all `@include`-d files' content.
+
 ### Removed
 
 ## [0.3.0] - 2025-11-08
