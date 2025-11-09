@@ -4,13 +4,12 @@
 
 Deck preview:
 
-<<for suit in suits>>
-=== {suit.upper()} ===
-<<for rank in ranks>>
-{rank} of {suit}
-<<endfor>>
-
-<<endfor>>
+@for suit in suits:
+    === {suit.upper()} ===
+    @for rank in ranks:
+        {rank} of {suit}
+    @endfor
+@endfor
 
 + [Done] -> End
 

@@ -1,92 +1,89 @@
-"""Manual test of the runtime engine."""
+"""Test the Bardic runtime engine."""
 
-import json
+import pytest
 from bardic.runtime.engine import BardEngine
 
-def test_basic_navigation():
-    """Test basic story navigation"""
 
-    # Load the compiled story
-    with open('test_story.json') as f:
-        story = json.load(f)
+class TestBasicNavigation:
+    """Test basic story navigation features."""
 
-    # Create engine
-    engine = BardEngine(story)
+    def test_engine_initializes_at_start(self, simple_story):
+        """Engine should initialize at the initial_passage."""
+        # When: We create an engine
+        engine = BardEngine(simple_story)
 
-    # Show story info
-    info = engine.get_story_info()
-    print("Story Info:")
-    print(f"  Version: {info['version']}")
-    print(f"  Passages: {info['passage_count']}")
-    print(f"  Starting at: {info['initial_passage']}")
-    print()
+        # Then: It should be at the Start passage
+        output = engine.current()
+        assert output.passage_id == "Start"
+        assert "You are at the start" in output.content
 
-    # Get first passage
-    output = engine.current()
-    print(f"=== {output.passage_id} ===")
-    print(output.content)
-    print()
-    print("Choices:")
-    for i, choice in enumerate(output.choices):
-        print(f"  {i}: {choice['text']} -> {choice['target']}")
-    print()
+    def test_navigate_with_choose(self, simple_story):
+        """Choosing a choice should navigate to the target passage."""
+        # Given: An engine at Start
+        engine = BardEngine(simple_story)
 
-    # Make a choice
-    print("Choosing option 0...")
-    output = engine.choose(0)
-    print()
+        # When: We choose the first choice
+        output = engine.choose(0)
 
-    print(f"=== {output.passage_id} ===")
-    print(output.content)
-    print()
-    print("Choices:")
-    for i, choice in enumerate(output.choices):
-        print(f"  {i}: {choice['text']} -> {choice['target']}")
-    print()
+        # Then: We should be at Second passage
+        assert output.passage_id == "Second"
+        assert "second passage" in output.content
 
-    # Navigate manually
-    print("Navigating to ExamineScratches...")
-    engine.goto('ExamineScratches')
-    output = engine.current()
-    print()
+    def test_navigate_with_goto(self, simple_story):
+        """goto() should jump directly to a passage."""
+        # Given: An engine at Start
+        engine = BardEngine(simple_story)
 
-    print(f"=== {output.passage_id} ===")
-    print(output.content)
-    print()
+        # When: We goto Second
+        output = engine.goto("Second")
+
+        # Then: We should be at Second
+        assert output.passage_id == "Second"
+        assert "second passage" in output.content
 
 
-def test_error_handling():
-    """Test error handling"""
+class TestErrorHandling:
+    """Test that the engine handles errors correctly."""
 
-    with open('test_story.json') as f:
-        story = json.load(f)
+    def test_goto_nonexistent_passage_raises_error(self, simple_story):
+        """goto() should raise ValueError for non-existent passages."""
+        # Given: An engine
+        engine = BardEngine(simple_story)
 
-    engine = BardEngine(story)
+        # When/Then: Trying to goto a non-existent passage should raise
+        with pytest.raises(ValueError, match="unknown passage"):
+            engine.goto("NonExistentPassage")
 
-    # Test invalid passage
-    try:
-        engine.goto('NonExistentPassage')
-        print("ERROR: Should have raised ValueError")
-    except ValueError as e:
-        print(f"✓ Caught expected error: {e}")
+    def test_choose_invalid_index_raises_error(self, simple_story):
+        """choose() should raise IndexError for invalid choice indices."""
+        # Given: An engine at Start (which has 1 choice)
+        engine = BardEngine(simple_story)
 
-    # Test invalid choice
-    try:
-        engine.choose(999)
-        print("ERROR: Should have raised IndexError")
-    except IndexError as e:
-        print(f"✓ Caught expected error: {e}")
+        # When/Then: Choosing index 999 should raise IndexError
+        with pytest.raises(IndexError, match="out of range"):
+            engine.choose(999)
+
+    def test_choose_negative_index_raises_error(self, simple_story):
+        """choose() should raise IndexError for negative indices."""
+        engine = BardEngine(simple_story)
+
+        with pytest.raises(IndexError):
+            engine.choose(-1)
 
 
-if __name__ == '__main__':
-    print("=" * 60)
-    print("Testing Basic Navigation")
-    print("=" * 60)
-    test_basic_navigation()
+class TestStoryInfo:
+    """Test the get_story_info() method."""
 
-    print("\n" + "=" * 60)
-    print("Testing Error Handling")
-    print("=" * 60)
-    test_error_handling()
+    def test_get_story_info_returns_metadata(self, simple_story):
+        """get_story_info() should return story metadata."""
+        # Given: An engine
+        engine = BardEngine(simple_story)
 
-    print("\n✅ All tests passed!")
+        # When: We get story info
+        info = engine.get_story_info()
+
+        # Then: It should contain expected fields
+        assert info["version"] == "0.1.0"
+        assert info["passage_count"] == 2
+        assert info["initial_passage"] == "Start"
+        assert info["current_passage"] == "Start"
