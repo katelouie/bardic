@@ -531,6 +531,7 @@ def extract_loop_block(
     i = start_index
     loop_started = False
     found_closer = False  # Track whether we found @endfor
+    depth = 0  # Track nesting depth for nested loops
 
     while i < len(lines):
         line = lines[i]
@@ -577,6 +578,7 @@ def extract_loop_block(
                     ))
 
             loop_started = True
+            depth = 1  # We're now inside one loop
             i += 1
             continue
 
@@ -593,11 +595,26 @@ def extract_loop_block(
                 line_map=line_map,
             ))
 
+        # Track nested loops: increment depth when we see another @for/@for
+        if loop_started and (stripped.startswith("<<for ") or stripped.startswith("@for ")):
+            depth += 1
+            loop_raw_lines.append(line)
+            i += 1
+            continue
+
         # Check for <<endfor>> or @endfor
         if stripped.startswith("<<endfor>>") or stripped == "@endfor":
-            found_closer = True
-            i += 1
-            break
+            depth -= 1
+            if depth == 0:
+                # This closes OUR loop
+                found_closer = True
+                i += 1
+                break
+            else:
+                # This closes a nested loop - include it in our content
+                loop_raw_lines.append(line)
+                i += 1
+                continue
 
         # Regular content line - collect for later dedenting
         if loop_started:

@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Added Tutorial Step 3.5: Reusable Passages & The Standard Library
+- Began to convert tests to `pytest` suite
 
 ### Changed
 
@@ -17,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Bug preventing compiling on inline conditionals in choice text
 - `bardic compile` success message was displaying only base `.bard` file size, not with all `@include`-d files' content.
+- Fix bug on for-loop `@endfor` depth tracking causing nested loops to error on compile.
 
 ### Removed
 
