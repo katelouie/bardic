@@ -90,17 +90,32 @@ def validate_choice_syntax(
     cond_start = -1
     cond_end = -1
 
-    # Find position of [ bracket first
-    bracket_pos = choice_part.find("[")
-
-    # Only look for conditional { } BEFORE the [ bracket
-    if "{" in choice_part and bracket_pos >= 0:
+    # Look for conditional { } by doing proper brace matching FIRST
+    # BUT: Only if the { appears BEFORE the [
+    # If { is inside [Choice text], it's an inline conditional, not a choice conditional
+    if "{" in choice_part and "[" in choice_part:
         first_brace = choice_part.index("{")
+        first_bracket = choice_part.index("[")
 
-        # Check if { appears before [
-        if first_brace < bracket_pos:
-            # This might be a conditional - find matching }
-            if "}" not in choice_part[:bracket_pos]:
+        # Only treat {..} as conditional if it comes BEFORE [
+        if first_brace < first_bracket:
+            # Find matching closing brace using depth tracking
+            # This handles square brackets INSIDE the conditional like {cards[0].name}
+            depth = 0
+            found_closing = False
+            for i in range(first_brace, len(choice_part)):
+                if choice_part[i] == "{":
+                    depth += 1
+                elif choice_part[i] == "}":
+                    depth -= 1
+                    if depth == 0:
+                        cond_start = first_brace
+                        cond_end = i
+                        found_closing = True
+                        break
+
+            # If we found opening { but no matching }, error
+            if not found_closing:
                 raise SyntaxError(
                     format_error(
                         error_type="Malformed Choice",
@@ -113,18 +128,6 @@ def validate_choice_syntax(
                         line_map=line_map,
                     )
                 )
-
-            # Find matching braces (handle nesting) before the bracket
-            cond_start = first_brace
-            depth = 0
-            for i in range(cond_start, bracket_pos):
-                if choice_part[i] == "{":
-                    depth += 1
-                elif choice_part[i] == "}":
-                    depth -= 1
-                    if depth == 0:
-                        cond_end = i
-                        break
 
     # Check 5: If } present without {, error
     if "}" in choice_part and "{" not in choice_part:

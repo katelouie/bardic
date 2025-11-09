@@ -1,0 +1,16 @@
+@start Test
+
+:: Test
+~ shamanic_awakening = 5
+
+# Test 1: Inline conditional inside choice text (no choice conditional)
++ [You have {shamanic_awakening >= 4 ? strong | weak} power] -> Pass
+
+# Test 2: Both choice conditional AND inline conditional
++ {shamanic_awakening >= 3} [You have {shamanic_awakening >= 4 ? strong | weak} power] -> Pass
+
+# Test 3: Regular choice
++ [No conditionals here] -> Pass
+
+:: Pass
+Success!

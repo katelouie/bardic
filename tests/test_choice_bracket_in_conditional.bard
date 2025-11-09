@@ -1,0 +1,11 @@
+@start Test
+
+:: Test
+~ cards = [{"name": "The Fool", "reversed": False}, {"name": "The Devil", "reversed": True}]
+
++ {cards[0].reversed} [This should work] -> Pass
++ {cards[1].reversed} [This should also work] -> Pass
++ [No conditional] -> Pass
+
+:: Pass
+Success!
