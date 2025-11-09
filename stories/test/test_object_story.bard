@@ -3,8 +3,8 @@
 # import test classes
 import sys
 sys.path.insert(0, '.')
-from test_objects import Card, Player
-
+from game_logic.test_tarot_objects import Card
+from game_logic.test_objects import Player
 # Create objects
 card = Card("The Fool", "major")
 player = Player("Hero")

@@ -1,7 +1,9 @@
+import random
+
 :: Start
 ~ count = 0
 
-<<py
+@py:
 # Multi-line python
 import random
 
@@ -20,7 +22,13 @@ elif total > 15:
     outcome = "good"
 else:
     outcome = "poor"
->>
+
+def greet(name):
+    return f"Hi there {name}"
+
+def roll_dice(int):
+    return random.randint(1, int)
+@endpy
 
 You rolled {count} dice: {rolls}
 
@@ -30,11 +38,10 @@ Outcome: {outcome}
 
 ---
 
-<<py
+@py:
 name = "Hero"
 greeting = greet(name)
-dice_roll = roll_dice(20)
->>
+@endpy
 
 {greeting}
 You rolled: {dice_roll}
@@ -43,12 +50,12 @@ You rolled: {dice_roll}
 + [Done] -> End
 
 :: RollAgain
-<<py
+@py:
 import random
 new_roll = random.randint(1, 6)
 total = total + new_roll
 count = count + 1
->>
+@endpy
 
 You rolled another die: {new_roll}
 New total: {total} (from {count} dice)

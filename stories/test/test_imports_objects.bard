@@ -1,4 +1,4 @@
-from test_tarot_objects import Card, Client, Reader, draw_cards
+from game_logic.test_tarot_objects import Card, Client, Reader, draw_cards
 
 :: Start
 Testing imports with custom objects...

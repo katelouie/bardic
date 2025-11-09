@@ -2,7 +2,7 @@
 <<py
 import sys
 sys.path.insert(0, '.')
-from test_tarot_objects import draw_cards
+from game_logic.test_tarot_objects import draw_cards
 
 cards = draw_cards(5)
 >>

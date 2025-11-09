@@ -2,7 +2,7 @@
 <<py
 import sys
 sys.path.insert(0, '.')
-from test_tarot_objects import Client
+from game_logic.test_tarot_objects import Client
 
 clients = {
     "aria": Client("Aria", 28),

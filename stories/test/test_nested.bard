@@ -2,7 +2,7 @@
 <<py
 import sys
 sys.path.insert(0, '.')
-from test_objects import Character
+from game_logic.test_objects import Character
 
 hero = Character("Aldric")
 hero.stats.health = 85

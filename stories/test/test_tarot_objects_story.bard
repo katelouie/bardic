@@ -3,7 +3,7 @@
 import sys
 sys.path.insert(0, '.')
 
-from test_tarot_objects import Card, Client, Reader, draw_cards
+from game_logic.test_tarot_objects import Card, Client, Reader, draw_cards
 
 # Initialize
 reader = Reader("You")

@@ -2,7 +2,7 @@
 <<py
 import sys
 sys.path.insert(0, '.')
-from test_tarot_objects import Card
+from game_logic.test_tarot_objects import Card
 
 card = Card("The Fool", "major", 0)
 >>

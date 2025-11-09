@@ -2,10 +2,17 @@
 
 import pytest
 import json
+import sys
 from pathlib import Path
 from bardic.compiler.compiler import BardCompiler
 from bardic.compiler.parser import parse
 from bardic.runtime.engine import BardEngine
+
+# Add fixtures directory to Python path
+# This allows test .bard files to do: from game_logic.test_tarot_objects import Card
+fixtures_dir = Path(__file__).parent / "fixtures"
+if str(fixtures_dir) not in sys.path:
+    sys.path.insert(0, str(fixtures_dir))
 
 
 @pytest.fixture
