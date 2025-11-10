@@ -808,6 +808,89 @@ Best: {max(clients.values(), key=lambda c: c.trust).name}
 
 ---
 
+### Special Variables
+
+Bardic provides special built-in variables for safe state inspection and debugging.
+
+#### `_state` - Global State Dictionary
+
+Direct reference to the engine's global state dictionary. Useful for defensive coding and existence checks.
+
+```bard
+:: Start
+~ hp = 100
+~ gold = 500
+
+# Safe access with defaults
+HP: {_state.get('hp', 0)}
+Mana: {_state.get('mana', 100)}  # Uses default if missing
+
+# Existence checks
+@if 'inventory' in _state:
+    You have an inventory.
+@else:
+    No inventory found.
+@endif
+
+# Inspect available variables
+Available vars: {list(_state.keys())}
+Total vars: {len(_state)}
+```
+
+**Common use cases:**
+- Safe variable access: `{_state.get('optional_var', 'default')}`
+- Existence checking: `{'var_name' in _state}`
+- Debugging: `{sorted(_state.keys())}`
+- Conditional rendering: `@if _state.get('has_sword'): ...`
+
+#### `_local` - Local Scope Dictionary
+
+Direct reference to current local scope (passage parameters). Always available, empty dict if no parameters.
+
+```bard
+:: ShowItem(item=None)
+
+# Check if parameter was provided
+@if _local.get('item'):
+    You examine the {item}.
+@else:
+    You have nothing to examine.
+@endif
+
+# Inspect parameters
+Params: {list(_local.keys())}
+```
+
+**Common use cases:**
+- Optional parameters: `{_local.get('param', 'default')}`
+- Parameter existence: `{'param' in _local}`
+- Reusable passages that work with/without params
+- Debugging: `{sorted(_local.keys())}`
+
+#### Scope Isolation
+
+Parameters are local-only and don't leak into global state:
+
+```bard
+:: Start
+~ hp = 100
+
++ [Attack] -> Combat(25)
+
+:: Combat(damage)
+
+Global HP: {_state.get('hp')}        # 100
+Local damage: {_local.get('damage')}  # 25
+
+# 'damage' is NOT in global state
+In global: {'damage' in _state}       # False
+In local: {'damage' in _local}        # True
+```
+
+**Status:** ✅ Implemented (Nov 2025)
+
+---
+
 ### Conditionals
 
 Branch content based on conditions.

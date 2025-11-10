@@ -260,9 +260,7 @@ class BardEngine:
                 result[param["name"]] = arg_dict[param["name"]]
             elif param["default"] is not None:
                 # Use default value (evaluate it)
-                eval_context = {**self.context, **self.state}
-                if self._local_scope_stack:
-                    eval_context.update(self._local_scope_stack[-1])
+                eval_context = self._get_eval_context()
                 # IMPORTANT: Include already-bound params in eval context
                 # This allows defaults like (x, y=x*2)
                 eval_context.update(result)
@@ -304,9 +302,7 @@ class BardEngine:
         if self.evaluate_directives:
             # Evaluated mode: Execute python expressions, return data
             try:
-                eval_context = {**self.context, **self.state}
-                if self._local_scope_stack:
-                    eval_context.update(self._local_scope_stack[-1])
+                eval_context = self._get_eval_context()
                 safe_builtins = self._get_safe_builtins()
 
                 # Parse and evaluate arguments
@@ -522,7 +518,7 @@ class BardEngine:
 
         # Else, evaluate the condition
         try:
-            eval_context = {**self.context, **self.state}
+            eval_context = self._get_eval_context()
             if self._local_scope_stack:
                 eval_context.update(self._local_scope_stack[-1])
             safe_builtins = self._get_safe_builtins()
@@ -596,7 +592,7 @@ class BardEngine:
         # Handle parameters if present
         if params or args_str:
             # Parse arguments
-            eval_context = {**self.context, **self.state}
+            eval_context = self._get_eval_context()
             if self._local_scope_stack:
                 eval_context.update(self._local_scope_stack[-1])
 
@@ -808,7 +804,7 @@ class BardEngine:
 
         try:
             # Create evaluation context with context, state, and local scope
-            eval_context = {**self.context, **self.state}
+            eval_context = self._get_eval_context()
             if self._local_scope_stack:
                 eval_context.update(self._local_scope_stack[-1])
             safe_builtins = self._get_safe_builtins()
@@ -838,7 +834,7 @@ class BardEngine:
         # Try to evaluate the expression
         try:
             # Create evaluation context with context, state, and local scope
-            eval_context = {**self.context, **self.state}
+            eval_context = self._get_eval_context()
             if self._local_scope_stack:
                 eval_context.update(self._local_scope_stack[-1])
             safe_builtins = self._get_safe_builtins()
@@ -874,7 +870,7 @@ class BardEngine:
                 # Check if var_name contains a dot (attribute assignment)
                 if "." in var_name:
                     # Use exec for attribute assignments
-                    eval_context = {**self.context, **self.state}
+                    eval_context = self._get_eval_context()
                     safe_builtins = self._get_safe_builtins()
                     assignment_code = f"{var_name} = __value__"
                     eval_context["__value__"] = value
@@ -896,7 +892,7 @@ class BardEngine:
         # Try to evaluate the expression for its side effects
         try:
             # Create evaluation context with context and state
-            eval_context = {**self.context, **self.state}
+            eval_context = self._get_eval_context()
             if self._local_scope_stack:
                 eval_context.update(self._local_scope_stack[-1])
             safe_builtins = self._get_safe_builtins()
@@ -945,11 +941,45 @@ class BardEngine:
             # Logic
             "any": any,
             "all": all,
+            # Type inspection (safe, read-only)
+            "type": type,
+            "isinstance": isinstance,
             # Debugging
             "print": print,
             # Allow imports
             "__import__": __import__,
         }
+
+    def _get_eval_context(self) -> dict[str, Any]:
+        """
+        Build evaluation context with state, local scope, and special variables.
+
+        Returns a dictionary containing:
+        - All global state variables
+        - All context variables (from engine initialization)
+        - Local scope variables (passage parameters) if in local scope
+        - _state: Direct reference to global state dict
+        - _local: Direct reference to current local scope (or empty dict)
+
+        Returns:
+            Dictionary to use as eval() context
+        """
+        # Start with context and state
+        eval_context = {**self.context, **self.state}
+
+        # Add special _state variable
+        eval_context["_state"] = self.state
+
+        # Add local scope if present
+        if self._local_scope_stack:
+            local_scope = self._local_scope_stack[-1]
+            eval_context.update(local_scope)
+            eval_context["_local"] = local_scope
+        else:
+            # _local is always present (empty dict if no params)
+            eval_context["_local"] = {}
+
+        return eval_context
 
     def _execute_python_block(self, cmd: dict) -> None:
         """
@@ -1049,7 +1079,7 @@ class BardEngine:
                 # Evaluate the expression (with optional format spec)
                 try:
                     # Merge context, state, and local scope for evaluation
-                    eval_context = {**self.context, **self.state}
+                    eval_context = self._get_eval_context()
                     if self._local_scope_stack:
                         eval_context.update(self._local_scope_stack[-1])
                     code = token["code"]
@@ -1094,7 +1124,7 @@ class BardEngine:
             elif token["type"] == "inline_conditional":
                 # Evaluate inline conditional: {condition ? truthy | falsy}
                 try:
-                    eval_context = {**self.context, **self.state}
+                    eval_context = self._get_eval_context()
                     safe_builtins = self._get_safe_builtins()
 
                     # Evaluate the condition
@@ -1210,7 +1240,7 @@ class BardEngine:
 
         try:
             # Evaluate the collection expression
-            eval_context = {**self.context, **self.state}
+            eval_context = self._get_eval_context()
             if self._local_scope_stack:
                 eval_context.update(self._local_scope_stack[-1])
             safe_builtins = self._get_safe_builtins()
@@ -1301,7 +1331,7 @@ class BardEngine:
         Returns:
             Rendered content from the first true branch
         """
-        eval_context = {**self.context, **self.state}
+        eval_context = self._get_eval_context()
         if self._local_scope_stack:
             eval_context.update(self._local_scope_stack[-1])
         safe_builtins = self._get_safe_builtins()

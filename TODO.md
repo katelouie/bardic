@@ -28,9 +28,12 @@ High priority fixes discovered through comprehensive test suite:
 
 ### Medium-term (0.5.0)
 
-- [ ] **`_state` special variable** - For checking if variables exist and providing defaults
-  - Allows: `{_state.get('hp', 100)}` or `{_state.has('inventory')}`
+- [x] **`_state` special variable** - ✅ COMPLETED (Nov 2025)
+  - Allows: `{_state.get('hp', 100)}` or `{'inventory' in _state}`
   - Useful for optional variables and safe access patterns
+- [x] **`_local` special variable** - ✅ COMPLETED (Nov 2025)
+  - Allows: `{_local.get('param', 'default')}`
+  - Perfect for reusable passages with optional parameters
 
 - [ ] **VSCode Extension: Passage parameter syntax highlighting**
   - Currently params are highlighted as regular text

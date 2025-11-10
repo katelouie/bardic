@@ -1,0 +1,39 @@
+@start Test
+
+:: Test
+~ hp = 100
+~ name = "Hero"
+
+**Testing _state variable:**
+
+HP exists: {'hp' in _state}
+Name exists: {'name' in _state}
+Nonexistent: {'foo' in _state}
+
+HP value: {_state.get('hp')}
+With default: {_state.get('missing', 'DEFAULT')}
+
+All keys: {sorted(_state.keys())}
+
+**Testing _local variable (no params):**
+
+Local is empty: {len(_local) == 0}
+Local keys: {list(_local.keys())}
+
++ [Test with params] -> TestParams(42)
+
+:: TestParams(value, optional="default")
+
+**Testing _local with params:**
+
+Value param: {_local.get('value')}
+Optional param: {_local.get('optional')}
+All local keys: {sorted(_local.keys())}
+
+Value in local: {'value' in _local}
+Value NOT in state: {'value' not in _state}
+
++ [Done] -> End
+
+:: End
+All tests complete!

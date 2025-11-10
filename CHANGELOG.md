@@ -9,21 +9,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`_state` special variable** - Direct access to global state dictionary for safe variable inspection
+  - Use `_state.get('var', default)` for safe access with defaults
+  - Check existence with `'var' in _state`
+  - Inspect available variables with `_state.keys()`
+- **`_local` special variable** - Direct access to local scope (passage parameters)
+  - Always available (empty dict if no parameters)
+  - Use `_local.get('param', default)` for optional parameters
+  - Perfect for reusable passages with conditional logic
+- Added `type()` and `isinstance()` to safe builtins for type inspection
 - Added Tutorial Step 3.5: Reusable Passages & The Standard Library
-- Began to convert tests to `pytest` suite
-- Test suite with 100+ tests
-- CI/CD on GitHub Actions (Python 3.10+)
-- Test fixtures for custom objects
-- 32 error handling tests
-- 9 object-based story tests
+- Comprehensive test suite with 100+ tests
+  - 18 tests for `_state` and `_local` special variables
+  - 32 error handling tests
+  - 9 object-based story tests
+  - Test fixtures for custom objects
+- CI/CD on GitHub Actions (Python 3.10, 3.11, 3.12)
 
 ### Changed
 
 ### Fixed
 
 - Bug preventing compiling on inline conditionals in choice text
-- `bardic compile` success message was displaying only base `.bard` file size, not with all `@include`-d files' content.
-- Fix bug on for-loop `@endfor` depth tracking causing nested loops to error on compile.
+- `bardic compile` success message now shows total size including all `@include`-d files
+- Fix bug on for-loop `@endfor` depth tracking causing nested loops to error on compile
+- Parser now properly handles square brackets inside choice conditionals (e.g., `{cards[1].reversed}`)
 
 ### Removed
 
