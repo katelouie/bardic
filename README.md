@@ -29,6 +29,10 @@ Have you ever been writing and thought, "I wish I could just `import` my custom 
 
 It bridges the gap between simple, text-based branching logic and the full power of a programming language, letting you use both in the same file.
 
+## Bardic in Action (with VSCode Extension)
+
+![Split View Screenshot](images/split_graph_view.png)
+
 ## A Quick Example
 
 Bardic syntax is designed to be simple and stay out of your way. Here's a small story that shows off the core features:
@@ -57,12 +61,12 @@ You feel a bit tired.
 :: Inventory
 # Use Python blocks for complex logic
 @py:
-  if not hero.inventory:
-    bag_contents = "Your bag is empty."
-  else:
-    # Use list comprehensions, f-strings...
-    item_names = [item.name for item in hero.inventory]
-    bag_contents = f"You have: {', '.join(item_names)}"
+if not hero.inventory:
+  bag_contents = "Your bag is empty."
+else:
+  # Use list comprehensions, f-strings...
+  item_names = [item.name for item in hero.inventory]
+  bag_contents = f"You have: {', '.join(item_names)}"
 @endpy
 
 {bag_contents}
