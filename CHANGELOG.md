@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added Tutorial Step 3.5: Reusable Passages & The Standard Library
 - Began to convert tests to `pytest` suite
+- Test suite with 100+ tests
+- CI/CD on GitHub Actions (Python 3.10+)
+- Test fixtures for custom objects
+- 32 error handling tests
+- 9 object-based story tests
 
 ### Changed
 
