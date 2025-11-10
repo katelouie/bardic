@@ -479,6 +479,3 @@ saves/
 
 # Compiled story outputs (generated)
 compiled_stories/
-
-# Local test files
-test_*.py
