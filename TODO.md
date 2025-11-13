@@ -24,7 +24,7 @@ High priority fixes discovered through comprehensive test suite:
 
 ### Short-term (0.4.0)
 
-- [ ] **Version bump to 0.3.1** - Include nested loops fix + full test suite
+- [x] **Version bump to 0.3.1** - Include nested loops fix + full test suite
 
 ### Medium-term (0.5.0)
 
@@ -40,12 +40,12 @@ High priority fixes discovered through comprehensive test suite:
   - Should recognize `:: PassageName(param1, param2=default)` syntax
   - Update grammar in `bardic-vscode`
 
-- [ ] **Graph visualization enhancements**
+- [x] **Graph visualization enhancements**
   - Show passage parameter signatures in nodes
   - Differentiate between passages with/without params
   - Maybe: Show argument values on edges when known
 
-- [ ] **Live preview feature** (VSCode extension)
+- [x] **Live preview feature** (VSCode extension)
   - Auto-compile on save
   - Show rendered passage in side panel
   - Allow navigation through story in preview

@@ -8,7 +8,7 @@ from bardic.stdlib.relationship import Relationship
   description: A simple romance story teaching relationship tracking
 
 :: Start
-~ alex = Relationship(name="Alex", trust=50, comfort=45)
+~ alex = Relationship(name="Alex", trust=50, comfort=45, openness=50)
 
 You're wiping down the counter when Alex, your most reliable regular, actually sits down instead of taking their coffee to go.
 
@@ -44,6 +44,20 @@ You keep wiping tables, but hover nearby. Alex looks disappointed.
 + [Stop them] -> StopThem
 + [Let them go] -> BadEnding
 
+:: StopThem
+~ alex.add_comfort(10) // Reverses the -5 and adds a +5 bonus
+~ alex.add_trust(5)
+
+"Wait," you say, dropping the cleaning rag on the counter. "I'm sorry, I'm not busy. Not for this. Please, sit down."
+
+Alex hesitates, looking at the door, then at you. They slowly return to the seat, a flicker of relief in their eyes.
+
+"I just... needed to talk to someone," they repeat, quieter this time.
+
+# This path now merges back into the main conversation
++ [Ask what's wrong] -> AskWrong
++ [Just listen] -> Listen
+
 :: AskWrong
 ~ alex.discuss_topic("work_stress")
 ~ alex.add_openness(2)
@@ -52,6 +66,76 @@ You keep wiping tables, but hover nearby. Alex looks disappointed.
 
 + ["You're not complaining"] -> Reassure
 + ["Want advice or just venting?"] -> CheckIntent
+
+:: CheckIntent
+~ alex.add_trust(15) // This is a very respectful and high-trust question
+~ alex.add_comfort(5)
+
+Alex looks surprised, then genuinely appreciative. "Wow. Uh... mostly just venting, I think."
+
+They laugh, a little self-consciously. "I don't think there's any advice that could fix this, short of 'quit your job,' and I can't do that."
+
++ ["Then vent away. I am all ears."] -> VentingSession
++ ["(Offer advice anyway) You should report them to HR."] -> BadAdvice
+
+:: VentingSession
+~ alex.discuss_topic("work_stress")
+~ alex.add_comfort(15)
+~ alex.add_openness(5)
+
+And they do. For ten minutes, you just nod and make sympathetic noises as they get it all out.
+
+"Okay," they say finally, slumping back in their seat. "Okay. I feel... 100 pounds lighter. You're a lifesaver."
+
+**ENDING: The Confidante**
+Trust: {alex.trust}/100
+Comfort: {alex.comfort}/100
+
+:: BadAdvice
+~ alex.add_trust(-10)
+~ alex.add_comfort(-10)
+
+You jump in. "You should definitely just report them to HR. That's what they're for."
+
+Alex's face shutters. "Yeah. Right. It's... not that simple." They stand up, gathering their things. "I should go. Thanks for the coffee."
+
+They leave before you can say anything else.
+
+-> BadEnding
+
+:: Reassure
+~ alex.add_comfort(10)
+~ alex.add_trust(5)
+
+"You're not complaining," you say softly. "You're venting. It's different, and you're allowed to."
+
+Alex lets out a breath they seemed to be holding. "Thanks. It's just... it feels like I'm stuck in a loop there."
+
++ ["Tell me more about it."] -> DeeperWorkTalk
++ ["That sounds really tough. I'm sorry."] -> SimpleSupport
+
+:: DeeperWorkTalk
+~ alex.discuss_topic("boss_problems")
+~ alex.add_openness(5)
+
+Alex leans in and tells you about a project they've been working on, and how their boss is taking all the credit. You listen, nodding and asking questions.
+
+"...and I know it's just a job, but it sucks," they finish, looking much lighter. "Wow. Thanks for listening."
+
+**ENDING: A Friendly Ear**
+Trust: {alex.trust}/100
+Comfort: {alex.comfort}/100
+
+:: SimpleSupport
+~ alex.add_comfort(15)
+
+"It is tough," Alex agrees, but they give you a small, real smile. "Just saying it out loud to someone who *gets* it helps, though. Thank you."
+
+They finish their coffee, seeming much more at peace than when they sat down.
+
+**ENDING: A Moment of Peace**
+Trust: {alex.trust}/100
+Comfort: {alex.comfort}/100
 
 :: Listen
 ~ alex.add_comfort(10)
@@ -65,6 +149,41 @@ You just wait. After a moment, Alex starts talking.
 
 + [Reach across the table] -> Touch
 + [Say something comforting] -> Comfort
+
+:: Comfort
+~ alex.add_comfort(10)
+~ alex.add_trust(10)
+
+"I'm really glad you feel safe here, Alex," you say, your voice gentle. "That means a lot to me."
+
+Alex's eyes soften, and they meet your gaze. "It means a lot to me, too. More than you know."
+
+The air is thick with unsaid things.
+
++ {alex.is_ready_for_deep_conversation} [They're ready for a deep conversation] -> DeepConnection
++ {not alex.is_ready_for_deep_conversation} [Take things slow] -> SlowBuild
+
+:: SlowBuild
+~ alex.add_comfort(5)
+
+Alex holds your gaze for a long moment, a small, warm smile playing on their lips. They seem to want to say more, but instead, they just sigh and look down at their cup.
+
+"I... I should probably get going," they say, though they don't seem to want to. "But... thank you. Seriously. This helped a lot."
+
+They stand up, looking more relaxed than you've ever seen them.
+
+"I'll see you tomorrow?" they ask.
+
++ ["Definitely."] -> SeeYouTomorrow
+
+:: SeeYouTomorrow
+You smile back. "Definitely."
+
+As they head for the door, you can't help but feel that something has changed. For the better.
+
+**ENDING: A New Understanding**
+Trust: {alex.trust}/100
+Comfort: {alex.comfort}/100
 
 :: Touch
 ~ alex.add_trust(15)

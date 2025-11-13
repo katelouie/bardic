@@ -34,6 +34,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `bardic compile` success message now shows total size including all `@include`-d files
 - Fix bug on for-loop `@endfor` depth tracking causing nested loops to error on compile
 - Parser now properly handles square brackets inside choice conditionals (e.g., `{cards[1].reversed}`)
+- Setter bug in relationships.py
+- Missing passages in Coffee Shop example story.
 
 ### Removed
 

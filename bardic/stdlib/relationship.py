@@ -53,7 +53,7 @@ class Relationship:
 
     @trust.setter
     def trust(self, value: int):
-        self.trust = max(0, min(100, value))
+        self._trust = max(0, min(100, value))
 
     def add_trust(self, amount: int):
         """Add trust with automatic threshold checks."""
