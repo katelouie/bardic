@@ -33,6 +33,8 @@ It bridges the gap between simple, text-based branching logic and the full power
 
 ![Split View Screenshot](images/split_graph_view.png)
 
+![Live Preview Screenshot](images/livepreview.png)
+
 ## A Quick Example
 
 Bardic syntax is designed to be simple and stay out of your way. Here's a small story that shows off the core features:
