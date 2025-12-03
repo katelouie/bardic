@@ -35,7 +35,7 @@ High priority fixes discovered through comprehensive test suite:
   - Allows: `{_local.get('param', 'default')}`
   - Perfect for reusable passages with optional parameters
 
-- [ ] **VSCode Extension: Passage parameter syntax highlighting**
+- [x] **VSCode Extension: Passage parameter syntax highlighting**
   - Currently params are highlighted as regular text
   - Should recognize `:: PassageName(param1, param2=default)` syntax
   - Update grammar in `bardic-vscode`
@@ -68,6 +68,9 @@ High priority fixes discovered through comprehensive test suite:
   - Profile runtime rendering for bottlenecks
 
 ## 📚 Documentation
+
+- [ ] **Tutorial Part 3C"" - Needs updating
+  - Update final story and intermediate code examples to use for-loop generation of choices (iterating over the list of items) with `{cond}` pre-conditionals
 
 - [ ] **Tutorial Part 5: Finishing & Polishing** - Needs expansion
   - Project organization best practices
