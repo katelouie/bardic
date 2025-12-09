@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+### Changed
+
+### Fixed
+
+## [0.4.0] - 2025-12-09
+
+### Added
+
 - **`_state` special variable** - Direct access to global state dictionary for safe variable inspection
   - Use `_state.get('var', default)` for safe access with defaults
   - Check existence with `'var' in _state`
@@ -36,6 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Parser now properly handles square brackets inside choice conditionals (e.g., `{cards[1].reversed}`)
 - Setter bug in relationships.py
 - Missing passages in Coffee Shop example story.
+- Bug in template bardic files using old syntax that caused them to not run properly.
 
 ### Removed
 
