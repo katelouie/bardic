@@ -22,7 +22,7 @@ What will you do?
 :: TryDoor
 You grasp the cold metal handle and pull.
 
-<<if has_key>>
+@if has_key:
   The key from the hallway fits perfectly! The door swings open with a satisfying *click*.
 
   Beyond the threshold, you see a room filled with golden light...
@@ -30,19 +30,19 @@ You grasp the cold metal handle and pull.
   **You found the treasure!**
 
   *Courage: {courage}*
-<<else>>
+@else:
   The door is locked tight. You need to find a key.
 
   + [Examine the symbols] -> ExamineSymbols
   + [Search the hallway] -> SearchHallway
-<<endif>>
+@endif
 
 :: ExamineSymbols
 You lean closer to study the mysterious symbols carved into the wood.
 
-<<python>>
+@py:
 courage = courage + 10
-<<endpython>>
+@endpy
 
 The symbols form a pattern - they seem to be instructions:
 
@@ -56,9 +56,9 @@ Your **courage** increases to **{courage}** as you understand the meaning.
 :: SearchHallway
 You carefully examine the hallway, running your hands along the stone walls.
 
-<<python>>
+@py:
 courage = courage + 5
-<<endpython>>
+@endpy
 
 Behind a loose stone, you find something small and metallic...
 
