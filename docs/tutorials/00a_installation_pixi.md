@@ -140,7 +140,8 @@ Time to see it in action!
 ### In Terminal or PowerShell (make sure you're still in the `my-first-story` folder)
 
 ```bash
-pixi run bardic play hello.bard
+pixi run bardic compile hello.bard -o hello.json
+pixi run bardic play hello.json
 ```
 
 **What you should see:**
