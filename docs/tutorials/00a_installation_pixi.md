@@ -87,8 +87,14 @@ pixi init my-first-story
 # Go into that folder
 cd my-first-story
 
-# Add Bardic and Python to the project
-pixi add bardic python
+# Install python (this may take a few minutes)
+pixi add python
+
+# If you want to skip that step for future projects, instead you can run
+# pixi global install python
+
+# Install bardic via pypi (pixi assumes everything is in conda)
+pixi add --pypi bardic
 ```
 
 **What just happened?**
