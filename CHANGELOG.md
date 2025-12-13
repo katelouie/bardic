@@ -13,6 +13,60 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+## [0.5.0] - 2025-12-12
+
+### Added
+
+- **Browser Distribution (`bardic bundle`)** - Package games for itch.io and web deployment
+  - New `bardic bundle` CLI command creates self-contained browser packages
+  - `--zip` / `-z` flag creates ready-to-upload ZIP files
+  - `--theme` option with three built-in themes: `dark`, `light`, `retro`
+  - `--name` option to customize game title
+  - `--output` / `-o` to specify output directory
+
+- **Local Pyodide Runtime** - No CDN dependency, faster loading
+  - Bundles Pyodide 0.29.0 core (~12 MB) for offline Python execution
+  - Pre-installed packages for interactive fiction authors:
+    - `numpy` - Math, random distributions, procedural generation
+    - `pillow` - Image processing
+    - `networkx` - Graph-based world maps, relationship webs
+    - `pyyaml` - YAML data files
+    - `regex` - Advanced pattern matching
+    - `jinja2` - Text templating
+    - `nltk` - Natural language processing
+    - `sympy` - Symbolic math
+    - `pygments` - Syntax highlighting
+    - `rich` - Rich text formatting
+    - `micropip` - Install additional pure-Python packages at runtime
+    - `python_dateutil`, `attrs`, `more_itertools`, `sortedcontainers`
+  - Total bundle size: ~17 MB (compressed ZIP)
+
+- **Browser Engine (`engine_browser.py`)** - Pyodide-compatible runtime
+  - localStorage-based save/load system
+  - `save_to_browser(slot_name)` - Save game state
+  - `load_from_browser(slot_name)` - Load saved game
+  - `list_browser_saves()` - List available save slots
+  - `delete_browser_save(slot_name)` - Delete a save
+  - Works with both direct Pyodide and PyScript
+
+- **Browser Player UI**
+  - Progress bar during Pyodide initialization
+  - Save/Load/Restart buttons
+  - Simple markdown rendering (bold, italic, paragraphs)
+  - CSS custom properties for easy theming
+  - Mobile-responsive layout
+  - Notification system for user feedback
+
+- **Sample Game: "The Midnight Cafe"**
+  - Atmospheric interactive fiction demo
+  - Demonstrates Relationship system from stdlib
+  - Multiple endings based on relationship stats
+  - Located at `stories/samples/midnight_cafe.bard`
+
+### Changed
+
+### Fixed
+
 ## [0.4.0] - 2025-12-09
 
 ### Added

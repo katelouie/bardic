@@ -605,5 +605,87 @@ def serve(port, frontend_port, no_browser):
         click.echo()
 
 
+@cli.command()
+@click.argument("story_file", type=click.Path(exists=True))
+@click.option("--output", "-o", default="./dist", help="Output directory for the bundle")
+@click.option("--name", "-n", help="Game name (uses metadata title if not specified)")
+@click.option(
+    "--theme", "-t",
+    default="dark",
+    type=click.Choice(["dark", "light", "retro"]),
+    help="Visual theme for the game"
+)
+@click.option(
+    "--zip", "-z",
+    is_flag=True,
+    help="Create a ZIP file ready for upload to itch.io"
+)
+def bundle(story_file: str, output: str, name: str, theme: str, zip: bool):
+    """
+    Bundle a Bardic game for browser distribution.
+
+    Creates a directory containing all files needed to run the game
+    in a web browser. The bundle can be uploaded to itch.io or any
+    static hosting platform.
+
+    Uses PyScript/Pyodide to run Python in the browser, so your game
+    code (including custom Python modules) works without a server.
+
+    \b
+    Example:
+        bardic bundle story.bard
+        bardic bundle story.bard -o ./release -n "My Epic Adventure"
+        bardic bundle story.bard --theme retro
+        bardic bundle story.bard --zip
+
+    \b
+    After bundling:
+        1. Test locally: cd dist && python -m http.server 8000
+        2. For itch.io: Use --zip flag, then upload the ZIP file
+
+    \b
+    Note: First load takes 10-15 seconds (Pyodide download).
+    Subsequent loads are fast (cached by browser).
+    """
+    from bardic.cli.bundler import create_browser_bundle
+
+    try:
+        output_path = create_browser_bundle(
+            story_file=Path(story_file),
+            output_dir=Path(output),
+            game_name=name,
+            theme=theme,
+        )
+
+        click.echo(click.style("✓", fg="green", bold=True) + " Bundle created!")
+        click.echo(f"  → {output_path}")
+
+        # Create ZIP if requested
+        if zip:
+            zip_path = shutil.make_archive(
+                str(output_path),  # Base name (without .zip)
+                'zip',             # Format
+                output_path.parent,  # Root directory
+                output_path.name     # Base directory to zip
+            )
+            click.echo()
+            click.echo(click.style("✓", fg="green", bold=True) + " ZIP created!")
+            click.echo(f"  → {zip_path}")
+            click.echo()
+            click.echo("To upload to itch.io:")
+            click.echo(click.style(f"  Upload {zip_path} and mark as 'playable in browser'", fg="cyan"))
+        else:
+            click.echo()
+            click.echo("To test locally:")
+            click.echo(click.style(f"  cd {output_path} && python -m http.server 8000", fg="cyan"))
+            click.echo()
+            click.echo("To create a ZIP for itch.io:")
+            click.echo(click.style("  Re-run with --zip flag, or manually zip the folder", fg="cyan"))
+
+    except Exception as e:
+        click.echo(click.style("✗ Error: ", fg="red", bold=True) + str(e), err=True)
+        sys.exit(1)
+
+
 if __name__ == "__main__":
     cli()

@@ -1,0 +1,56 @@
+/*
+ * Retro Theme - Classic terminal aesthetic
+ * Green-on-black CRT monitor vibes
+ */
+
+:root {
+    --bg-color: #0a0a0a;
+    --bg-secondary: #1a1a1a;
+    --text-color: #00ff00;
+    --text-muted: #00aa00;
+    --accent-color: #00ffff;
+    --accent-hover: #66ffff;
+    --link-color: #ffff00;
+
+    /* Monospace font for retro feel */
+    --font-main: 'Courier New', 'Lucida Console', monospace;
+    --font-ui: 'Courier New', 'Lucida Console', monospace;
+
+    /* Sharper corners */
+    --border-radius: 2px;
+
+    /* CRT-style effects */
+    --shadow: 0 0 10px rgba(0, 255, 0, 0.3);
+}
+
+/* Add scanline effect */
+body::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: repeating-linear-gradient(
+        0deg,
+        rgba(0, 0, 0, 0.15),
+        rgba(0, 0, 0, 0.15) 1px,
+        transparent 1px,
+        transparent 2px
+    );
+    pointer-events: none;
+    z-index: 9999;
+}
+
+/* Glowing text effect */
+#story-content {
+    text-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
+}
+
+.choice-btn {
+    border: 1px solid var(--text-muted);
+}
+
+.choice-btn:hover {
+    box-shadow: 0 0 10px var(--accent-color);
+}

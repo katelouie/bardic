@@ -159,6 +159,53 @@ Bardic comes with a command-line interface to help you build your game.
 - `bardic compile story.bard`: Compiles your `.bard` file into a `.json` file that the engine can read.
 - `bardic play story.json`: Plays your game directly in your terminal.
 - `bardic graph story.json`: Generates a visual flowchart of your story (as a `.png` or `.svg`).
+- `bardic bundle story.bard`: Packages your game for browser distribution (itch.io, static hosting).
+
+## Browser Distribution (itch.io)
+
+Want to share your game on itch.io or any web hosting? Bardic can bundle your entire game into a self-contained package that runs in the browser:
+
+```bash
+# Create a browser-ready bundle
+bardic bundle my-story.bard --zip
+
+# With options
+bardic bundle my-story.bard -o ./release -n "My Epic Adventure" --theme dark --zip
+```
+
+This creates a ~17 MB ZIP file containing:
+- Your compiled story
+- The Bardic engine (browser version)
+- A complete Python runtime (Pyodide)
+- Pre-installed packages: numpy, pillow, networkx, pyyaml, regex, jinja2, nltk, and more
+
+**No server required** - everything runs in the browser via WebAssembly.
+
+### Options
+
+| Option | Description |
+|--------|-------------|
+| `-o, --output` | Output directory (default: `./dist`) |
+| `-n, --name` | Game title (uses story metadata if not specified) |
+| `-t, --theme` | Visual theme: `dark`, `light`, or `retro` |
+| `-z, --zip` | Create a ZIP file ready for upload |
+
+### Uploading to itch.io
+
+1. Run `bardic bundle my-story.bard --zip`
+2. Go to [itch.io](https://itch.io) and create a new project
+3. Upload the generated ZIP file
+4. Check "This file will be played in the browser"
+5. Publish!
+
+### Testing Locally
+
+```bash
+bardic bundle my-story.bard -o ./dist
+cd dist
+python -m http.server 8000
+# Open http://localhost:8000 in your browser
+```
 
 ## Example Game: *Arcanum*
 

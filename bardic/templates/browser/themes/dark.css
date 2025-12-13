@@ -1,0 +1,14 @@
+/*
+ * Dark Theme - Default Bardic theme
+ * A moody, atmospheric dark theme with red accents
+ */
+
+:root {
+    --bg-color: #1a1a2e;
+    --bg-secondary: #16213e;
+    --text-color: #eaeaea;
+    --text-muted: #a0a0a0;
+    --accent-color: #e94560;
+    --accent-hover: #ff6b6b;
+    --link-color: #4ecdc4;
+}

@@ -69,6 +69,8 @@ High priority fixes discovered through comprehensive test suite:
 
 ## 📚 Documentation
 
+- [ ] Tutorial on new distribution method (HTML)
+
 - [ ] **Tutorial Part 3C"" - Needs updating
   - Update final story and intermediate code examples to use for-loop generation of choices (iterating over the list of items) with `{cond}` pre-conditionals
 

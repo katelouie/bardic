@@ -1,0 +1,392 @@
+/*
+ * Bardic Browser Player - Default Styles
+ *
+ * This file uses CSS custom properties (variables) for easy theming.
+ * Override these variables to customize the look of your game.
+ *
+ * To use a different theme, replace the :root variables or
+ * link to a theme file from the themes/ directory.
+ */
+
+/* =========================================================================
+   CSS Variables - Customize these for your game
+   ========================================================================= */
+
+:root {
+    /* Colors */
+    --bg-color: #1a1a2e;
+    --bg-secondary: #16213e;
+    --text-color: #eaeaea;
+    --text-muted: #a0a0a0;
+    --accent-color: #e94560;
+    --accent-hover: #ff6b6b;
+    --link-color: #4ecdc4;
+
+    /* Typography */
+    --font-main: 'Georgia', 'Times New Roman', serif;
+    --font-ui: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-size-base: 18px;
+    --font-size-large: 1.5rem;
+    --line-height: 1.7;
+
+    /* Spacing */
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 2rem;
+    --spacing-xl: 3rem;
+
+    /* Layout */
+    --max-width: 720px;
+    --border-radius: 8px;
+
+    /* Effects */
+    --shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    --transition: 0.2s ease;
+}
+
+
+/* =========================================================================
+   Reset & Base
+   ========================================================================= */
+
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+html {
+    font-size: var(--font-size-base);
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: var(--font-main);
+    font-size: 1rem;
+    line-height: var(--line-height);
+    color: var(--text-color);
+    background-color: var(--bg-color);
+    min-height: 100vh;
+}
+
+
+/* =========================================================================
+   Loading Screen
+   ========================================================================= */
+
+#loading {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-color);
+    z-index: 1000;
+}
+
+.loading-content {
+    text-align: center;
+    padding: var(--spacing-lg);
+}
+
+.loading-content h1 {
+    font-size: 2rem;
+    margin-bottom: var(--spacing-md);
+    color: var(--accent-color);
+}
+
+.loading-content p {
+    color: var(--text-muted);
+    margin: var(--spacing-sm) 0;
+}
+
+.loading-hint {
+    font-size: 0.85rem;
+    opacity: 0.7;
+}
+
+.progress-container {
+    width: 200px;
+    height: 4px;
+    background: var(--bg-secondary);
+    border-radius: 2px;
+    margin: var(--spacing-md) auto;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    background: var(--accent-color);
+    width: 0%;
+    transition: width 0.3s ease;
+}
+
+/* Spinner animation */
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid var(--bg-secondary);
+    border-top-color: var(--accent-color);
+    border-radius: 50%;
+    margin: var(--spacing-lg) auto;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+
+/* =========================================================================
+   Game Container
+   ========================================================================= */
+
+#game {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+
+/* =========================================================================
+   Header
+   ========================================================================= */
+
+header {
+    background: var(--bg-secondary);
+    padding: var(--spacing-md) var(--spacing-lg);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
+    box-shadow: var(--shadow);
+}
+
+header h1 {
+    font-family: var(--font-ui);
+    font-size: var(--font-size-large);
+    margin: 0;
+    color: var(--accent-color);
+}
+
+.game-controls {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+.game-controls button {
+    font-family: var(--font-ui);
+    font-size: 0.9rem;
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--text-muted);
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: all var(--transition);
+}
+
+.game-controls button:hover {
+    color: var(--accent-color);
+    border-color: var(--accent-color);
+}
+
+
+/* =========================================================================
+   Main Content
+   ========================================================================= */
+
+main {
+    flex: 1;
+    max-width: var(--max-width);
+    margin: 0 auto;
+    padding: var(--spacing-xl) var(--spacing-lg);
+    width: 100%;
+}
+
+#story-content {
+    margin-bottom: var(--spacing-xl);
+}
+
+#story-content p {
+    margin: 0 0 var(--spacing-md) 0;
+}
+
+#story-content p:last-child {
+    margin-bottom: 0;
+}
+
+#story-content strong {
+    color: var(--accent-color);
+}
+
+#story-content em {
+    font-style: italic;
+    color: var(--text-muted);
+}
+
+
+/* =========================================================================
+   Choices
+   ========================================================================= */
+
+#choices {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.choice-btn {
+    font-family: var(--font-main);
+    font-size: 1rem;
+    padding: var(--spacing-md) var(--spacing-lg);
+    background: var(--bg-secondary);
+    color: var(--text-color);
+    border: 2px solid transparent;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    text-align: left;
+    transition: all var(--transition);
+}
+
+.choice-btn:hover {
+    border-color: var(--accent-color);
+    transform: translateX(5px);
+}
+
+.choice-btn:active {
+    transform: translateX(5px) scale(0.98);
+}
+
+
+/* =========================================================================
+   End Screen
+   ========================================================================= */
+
+.end-screen {
+    text-align: center;
+    padding: var(--spacing-xl);
+}
+
+.end-screen h2 {
+    font-size: 2rem;
+    color: var(--accent-color);
+    margin-bottom: var(--spacing-md);
+}
+
+.end-screen p {
+    color: var(--text-muted);
+    margin-bottom: var(--spacing-lg);
+}
+
+.restart-btn {
+    font-family: var(--font-ui);
+    font-size: 1rem;
+    padding: var(--spacing-md) var(--spacing-xl);
+    background: var(--accent-color);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: all var(--transition);
+}
+
+.restart-btn:hover {
+    background: var(--accent-hover);
+    transform: scale(1.05);
+}
+
+
+/* =========================================================================
+   Footer
+   ========================================================================= */
+
+footer {
+    text-align: center;
+    padding: var(--spacing-md);
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+footer a {
+    color: var(--link-color);
+    text-decoration: none;
+}
+
+footer a:hover {
+    text-decoration: underline;
+}
+
+
+/* =========================================================================
+   Notifications
+   ========================================================================= */
+
+.notification {
+    position: fixed;
+    bottom: var(--spacing-lg);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--bg-secondary);
+    color: var(--text-color);
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    z-index: 1000;
+    animation: slideUp 0.3s ease;
+}
+
+.notification.error {
+    background: #8b0000;
+    border: 1px solid var(--accent-color);
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+
+/* =========================================================================
+   Responsive Design
+   ========================================================================= */
+
+@media (max-width: 600px) {
+    html {
+        font-size: 16px;
+    }
+
+    header {
+        padding: var(--spacing-md);
+        flex-direction: column;
+        text-align: center;
+    }
+
+    main {
+        padding: var(--spacing-lg) var(--spacing-md);
+    }
+
+    .game-controls button {
+        padding: var(--spacing-sm);
+        font-size: 0.85rem;
+    }
+}
+
+
+/* =========================================================================
+   PyScript Styles (hide default elements)
+   ========================================================================= */
+
+/* Hide PyScript loading elements */
+py-script, py-config {
+    display: none;
+}

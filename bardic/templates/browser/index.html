@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{GAME_NAME}}</title>
+
+    <!-- Game styles -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Loading screen (shown while Pyodide loads) -->
+    <div id="loading">
+        <div class="loading-content">
+            <h1>{{GAME_NAME}}</h1>
+            <p id="loading-status">Initializing...</p>
+            <div class="spinner"></div>
+            <div class="progress-container">
+                <div class="progress-bar" id="progress-bar"></div>
+            </div>
+            <p class="loading-hint" id="loading-hint"></p>
+        </div>
+    </div>
+
+    <!-- Game container (hidden until loaded) -->
+    <div id="game" style="display: none;">
+        <header>
+            <h1 id="game-title">{{GAME_NAME}}</h1>
+            <nav class="game-controls">
+                <button id="save-btn" title="Save game">Save</button>
+                <button id="load-btn" title="Load game">Load</button>
+                <button id="restart-btn" title="Restart game">Restart</button>
+            </nav>
+        </header>
+
+        <main>
+            <article id="story-content">
+                <!-- Passage content renders here -->
+            </article>
+
+            <section id="choices">
+                <!-- Choice buttons render here -->
+            </section>
+        </main>
+
+        <footer>
+            <p>Powered by <a href="https://github.com/katelouie/bardic" target="_blank">Bardic</a></p>
+        </footer>
+    </div>
+
+    <!-- Load Pyodide from local files -->
+    <script src="./pyodide/pyodide.js"></script>
+
+    <script type="module">
+        // Game state
+        let pyodide = null;
+        let engine = null;
+
+        // Progress updates
+        function updateLoading(status, hint = '', progress = null) {
+            document.getElementById('loading-status').textContent = status;
+            document.getElementById('loading-hint').textContent = hint;
+            if (progress !== null) {
+                document.getElementById('progress-bar').style.width = `${progress}%`;
+            }
+        }
+
+        // Initialize Pyodide and the game
+        async function init() {
+            try {
+                updateLoading('Loading Python runtime...', 'This may take a moment', 10);
+
+                // Load Pyodide from local files
+                pyodide = await loadPyodide({
+                    indexURL: './pyodide/'
+                });
+
+                updateLoading('Loading packages...', '', 40);
+
+                // Load our bundled packages
+                await pyodide.loadPackage(['micropip'], { messageCallback: () => {} });
+
+                // Install packages from local wheels
+                updateLoading('Installing dependencies...', '', 60);
+                await pyodide.runPythonAsync(`
+import micropip
+import sys
+
+# Install from local wheel files
+local_packages = [
+    './pyodide/pyyaml-6.0.2-cp313-cp313-pyodide_2025_0_wasm32.whl',
+    './pyodide/regex-2024.11.6-cp313-cp313-pyodide_2025_0_wasm32.whl',
+    './pyodide/pillow-11.3.0-cp313-cp313-pyodide_2025_0_wasm32.whl',
+    './pyodide/numpy-2.2.5-cp313-cp313-pyodide_2025_0_wasm32.whl',
+    './pyodide/python_dateutil-2.9.0.post0-py2.py3-none-any.whl',
+    './pyodide/networkx-3.4.2-py3-none-any.whl',
+    './pyodide/jinja2-3.1.6-py3-none-any.whl',
+    './pyodide/markupsafe-3.0.2-cp313-cp313-pyodide_2025_0_wasm32.whl',
+    './pyodide/more_itertools-10.6.0-py3-none-any.whl',
+    './pyodide/sortedcontainers-2.4.0-py2.py3-none-any.whl',
+    './pyodide/attrs-25.2.0-py3-none-any.whl',
+    './pyodide/nltk-3.9.1-py3-none-any.whl',
+    './pyodide/rich-13.9.4-py3-none-any.whl',
+    './pyodide/sympy-1.13.3-py3-none-any.whl',
+    './pyodide/pygments-2.19.1-py3-none-any.whl',
+]
+
+for pkg in local_packages:
+    try:
+        await micropip.install(pkg)
+    except Exception as e:
+        print(f"Note: Could not install {pkg}: {e}")
+`);
+
+                updateLoading('Loading game engine...', '', 70);
+
+                // Load the engine code
+                const engineCode = await (await fetch('./engine_browser.py')).text();
+
+                // Load the stdlib modules
+                const stdlibModules = [
+                    'dice.py',
+                    'inventory.py',
+                    'economy.py',
+                    'relationship.py',
+                    '__init__.py'
+                ];
+
+                updateLoading('Loading Bardic stdlib...', '', 75);
+
+                // Create the bardic.stdlib package structure and load modules
+                await pyodide.runPythonAsync(`
+import sys
+import types
+
+# Create bardic package
+bardic_pkg = types.ModuleType('bardic')
+bardic_pkg.__path__ = ['/bardic']
+sys.modules['bardic'] = bardic_pkg
+
+# Create bardic.stdlib package
+stdlib_pkg = types.ModuleType('bardic.stdlib')
+stdlib_pkg.__path__ = ['/bardic/stdlib']
+sys.modules['bardic.stdlib'] = stdlib_pkg
+bardic_pkg.stdlib = stdlib_pkg
+`);
+
+                // Write stdlib files to virtual filesystem and import them
+                for (const filename of stdlibModules) {
+                    try {
+                        const response = await fetch('./bardic/stdlib/' + filename);
+                        if (response.ok) {
+                            const code = await response.text();
+                            pyodide.FS.mkdirTree('/bardic/stdlib');
+                            pyodide.FS.writeFile('/bardic/stdlib/' + filename, code);
+                        }
+                    } catch (e) {
+                        console.log('Note: Could not load ' + filename);
+                    }
+                }
+
+                // Now import the stdlib modules properly
+                await pyodide.runPythonAsync(`
+import sys
+import importlib.util
+
+# Load each stdlib module
+stdlib_files = {
+    'dice': '/bardic/stdlib/dice.py',
+    'inventory': '/bardic/stdlib/inventory.py',
+    'economy': '/bardic/stdlib/economy.py',
+    'relationship': '/bardic/stdlib/relationship.py',
+}
+
+for name, path in stdlib_files.items():
+    try:
+        spec = importlib.util.spec_from_file_location(f'bardic.stdlib.{name}', path)
+        if spec and spec.loader:
+            module = importlib.util.module_from_spec(spec)
+            sys.modules[f'bardic.stdlib.{name}'] = module
+            spec.loader.exec_module(module)
+            # Also add to stdlib package
+            setattr(sys.modules['bardic.stdlib'], name, module)
+            # Export key items to stdlib namespace
+            for item in dir(module):
+                if not item.startswith('_'):
+                    setattr(sys.modules['bardic.stdlib'], item, getattr(module, item))
+    except Exception as e:
+        print(f"Note: Could not load {name}: {e}")
+`);
+
+                updateLoading('Loading game engine...', '', 85);
+
+                // Now load the engine
+                await pyodide.runPythonAsync(engineCode);
+
+                // Load the game data
+                const gameResponse = await fetch('./game.json');
+                const gameText = await gameResponse.text();
+
+                updateLoading('Starting game...', '', 95);
+
+                // Store game data in Python via a file-like approach
+                pyodide.FS.writeFile('/game.json', gameText);
+
+                // Initialize the engine
+                await pyodide.runPythonAsync(`
+import json
+
+with open('/game.json', 'r') as f:
+    game_data = json.load(f)
+
+engine = BardEngine(game_data)
+`);
+
+                // Hide loading, show game
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('game').style.display = 'block';
+
+                // Render initial passage
+                renderPassage();
+
+                // Set up event listeners
+                setupEventListeners();
+
+            } catch (error) {
+                updateLoading('Error loading game', error.message, 0);
+                console.error('Failed to initialize:', error);
+            }
+        }
+
+        // Render the current passage
+        async function renderPassage() {
+            const result = await pyodide.runPythonAsync(`
+import json
+output = engine.current()
+json.dumps({
+    'content': output.content,
+    'choices': output.choices,
+    'passage_id': output.passage_id
+})
+`);
+
+            const output = JSON.parse(result);
+
+            // Update content
+            const contentDiv = document.getElementById('story-content');
+            contentDiv.innerHTML = renderMarkdown(output.content);
+
+            // Update choices
+            const choicesDiv = document.getElementById('choices');
+            choicesDiv.innerHTML = '';
+
+            if (output.choices && output.choices.length > 0) {
+                output.choices.forEach((choice, index) => {
+                    const btn = document.createElement('button');
+                    btn.className = 'choice-btn';
+                    btn.textContent = choice.text;
+                    btn.addEventListener('click', () => makeChoice(index));
+                    choicesDiv.appendChild(btn);
+                });
+            } else {
+                // End of story
+                const endDiv = document.createElement('div');
+                endDiv.className = 'end-screen';
+                endDiv.innerHTML = '<h2>The End</h2><p>Thank you for playing!</p>';
+
+                const restartBtn = document.createElement('button');
+                restartBtn.className = 'restart-btn';
+                restartBtn.textContent = 'Play Again';
+                restartBtn.addEventListener('click', restartGame);
+                endDiv.appendChild(restartBtn);
+
+                choicesDiv.appendChild(endDiv);
+            }
+
+            // Scroll to top
+            contentDiv.scrollTop = 0;
+            window.scrollTo(0, 0);
+        }
+
+        // Handle player choice
+        async function makeChoice(index) {
+            await pyodide.runPythonAsync(`engine.choose(${index})`);
+            renderPassage();
+        }
+
+        // Save game
+        async function saveGame() {
+            const slotName = prompt('Enter save name:', 'quicksave');
+            if (slotName) {
+                try {
+                    await pyodide.runPythonAsync(`engine.save_to_browser("${slotName}")`);
+                    showNotification(`Game saved to '${slotName}'`);
+                } catch (e) {
+                    showNotification('Failed to save: ' + e.message, true);
+                }
+            }
+        }
+
+        // Load game
+        async function loadGame() {
+            const saves = await pyodide.runPythonAsync(`
+import json
+json.dumps(engine.list_browser_saves())
+`);
+            const saveList = JSON.parse(saves);
+
+            if (saveList.length === 0) {
+                showNotification('No saves found');
+                return;
+            }
+
+            const savesStr = saveList.map((s, i) => `${i + 1}. ${s}`).join('\n');
+            const choice = prompt(`Available saves:\n${savesStr}\n\nEnter save name:`, saveList[0]);
+
+            if (choice) {
+                try {
+                    const loaded = await pyodide.runPythonAsync(`engine.load_from_browser("${choice}")`);
+                    if (loaded) {
+                        renderPassage();
+                        showNotification(`Loaded '${choice}'`);
+                    } else {
+                        showNotification(`Save '${choice}' not found`, true);
+                    }
+                } catch (e) {
+                    showNotification('Failed to load: ' + e.message, true);
+                }
+            }
+        }
+
+        // Restart game
+        async function restartGame() {
+            await pyodide.runPythonAsync(`
+# Reload from the file we already saved
+with open('/game.json', 'r') as f:
+    game_data = json.load(f)
+
+engine = BardEngine(game_data)
+`);
+            renderPassage();
+            showNotification('Game restarted');
+        }
+
+        // Simple markdown to HTML
+        function renderMarkdown(text) {
+            if (!text) return '';
+
+            // Escape HTML
+            text = text.replace(/&/g, '&amp;')
+                       .replace(/</g, '&lt;')
+                       .replace(/>/g, '&gt;');
+
+            // Bold: **text**
+            text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+
+            // Italic: *text*
+            text = text.replace(/\*(.+?)\*/g, '<em>$1</em>');
+
+            // Paragraphs
+            const paragraphs = text.split('\n\n');
+            const htmlParagraphs = paragraphs
+                .map(p => p.replace(/\n/g, '<br>'))
+                .filter(p => p.trim())
+                .map(p => `<p>${p}</p>`);
+
+            return htmlParagraphs.join('\n');
+        }
+
+        // Show notification
+        function showNotification(message, isError = false) {
+            const notif = document.createElement('div');
+            notif.className = 'notification' + (isError ? ' error' : '');
+            notif.textContent = message;
+            document.body.appendChild(notif);
+
+            setTimeout(() => {
+                if (notif.parentNode) {
+                    notif.parentNode.removeChild(notif);
+                }
+            }, 3000);
+        }
+
+        // Set up button event listeners
+        function setupEventListeners() {
+            document.getElementById('save-btn').addEventListener('click', saveGame);
+            document.getElementById('load-btn').addEventListener('click', loadGame);
+            document.getElementById('restart-btn').addEventListener('click', restartGame);
+        }
+
+        // Start the game
+        init();
+    </script>
+</body>
+</html>

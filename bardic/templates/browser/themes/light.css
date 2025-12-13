@@ -1,0 +1,17 @@
+/*
+ * Light Theme - Clean and readable
+ * A bright, paper-like theme for comfortable reading
+ */
+
+:root {
+    --bg-color: #f5f5f0;
+    --bg-secondary: #ffffff;
+    --text-color: #2d2d2d;
+    --text-muted: #666666;
+    --accent-color: #c0392b;
+    --accent-hover: #e74c3c;
+    --link-color: #2980b9;
+
+    /* Adjust shadow for light theme */
+    --shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
