@@ -620,7 +620,12 @@ def serve(port, frontend_port, no_browser):
     is_flag=True,
     help="Create a ZIP file ready for upload to itch.io"
 )
-def bundle(story_file: str, output: str, name: str, theme: str, zip: bool):
+@click.option(
+    "--minimal", "-m",
+    is_flag=True,
+    help="Minimal bundle with only Python core (~6 MB instead of ~17 MB)"
+)
+def bundle(story_file: str, output: str, name: str, theme: str, zip: bool, minimal: bool):
     """
     Bundle a Bardic game for browser distribution.
 
@@ -637,6 +642,7 @@ def bundle(story_file: str, output: str, name: str, theme: str, zip: bool):
         bardic bundle story.bard -o ./release -n "My Epic Adventure"
         bardic bundle story.bard --theme retro
         bardic bundle story.bard --zip
+        bardic bundle story.bard --minimal --zip  # Smaller ~6 MB bundle
 
     \b
     After bundling:
@@ -644,8 +650,8 @@ def bundle(story_file: str, output: str, name: str, theme: str, zip: bool):
         2. For itch.io: Use --zip flag, then upload the ZIP file
 
     \b
-    Note: First load takes 10-15 seconds (Pyodide download).
-    Subsequent loads are fast (cached by browser).
+    Note: First load takes a few seconds (Pyodide initialization).
+    Use --minimal for faster loads if you don't need numpy/pillow/etc.
     """
     from bardic.cli.bundler import create_browser_bundle
 
@@ -655,6 +661,7 @@ def bundle(story_file: str, output: str, name: str, theme: str, zip: bool):
             output_dir=Path(output),
             game_name=name,
             theme=theme,
+            minimal=minimal,
         )
 
         click.echo(click.style("✓", fg="green", bold=True) + " Bundle created!")

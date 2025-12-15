@@ -1,0 +1,1474 @@
+{
+  "version": "0.1.0",
+  "initial_passage": "Start",
+  "metadata": {
+    "title": "The Coffee Shop Encounter",
+    "author": "Bardic Examples",
+    "version": "1.0.0",
+    "story_id": "coffee_shop",
+    "description": "A simple romance story teaching relationship tracking"
+  },
+  "imports": [
+    "from bardic.stdlib.relationship import Relationship",
+    ""
+  ],
+  "passages": {
+    "Start": {
+      "id": "Start",
+      "params": [],
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "You're wiping down the counter when Alex, your most reliable regular, actually sits down instead of taking their coffee to go."
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\"Hey,\" they say, fidgeting with their cup. \"Got a minute?\""
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": [
+            {
+              "type": "text",
+              "value": "Sit down with them"
+            }
+          ],
+          "target": "FirstTalk",
+          "args": "",
+          "condition": null,
+          "sticky": true,
+          "tags": []
+        },
+        {
+          "text": [
+            {
+              "type": "text",
+              "value": "Keep working, but chat"
+            }
+          ],
+          "target": "KeepWorking",
+          "args": "",
+          "condition": null,
+          "sticky": true,
+          "tags": []
+        }
+      ],
+      "execute": [
+        {
+          "type": "python_statement",
+          "code": "alex = Relationship(name=\"Alex\", trust=50, comfort=45, openness=50)"
+        }
+      ],
+      "tags": []
+    },
+    "FirstTalk": {
+      "id": "FirstTalk",
+      "params": [],
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "You slide into the seat across from them. Alex relaxes slightly."
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\"I just... needed to talk to someone,\" they admit."
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "conditional",
+          "branches": [
+            {
+              "condition": "alex.comfort >= 50",
+              "content": [
+                {
+                  "type": "text",
+                  "value": "Their shoulders drop. They're starting to feel safe here."
+                },
+                {
+                  "type": "text",
+                  "value": "\n"
+                }
+              ]
+            },
+            {
+              "condition": "True",
+              "content": [
+                {
+                  "type": "text",
+                  "value": "They still seem tense, hands wrapped tight around their cup."
+                },
+                {
+                  "type": "text",
+                  "value": "\n"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": [
+            {
+              "type": "text",
+              "value": "Ask what's wrong"
+            }
+          ],
+          "target": "AskWrong",
+          "args": "",
+          "condition": null,
+          "sticky": true,
+          "tags": []
+        },
+        {
+          "text": [
+            {
+              "type": "text",
+              "value": "Just listen"
+            }
+          ],
+          "target": "Listen",
+          "args": "",
+          "condition": null,
+          "sticky": true,
+          "tags": []
+        }
+      ],
+      "execute": [
+        {
+          "type": "python_statement",
+          "code": "alex.add_comfort(5)"
+        },
+        {
+          "type": "python_statement",
+          "code": "alex.add_trust(5)"
+        }
+      ],
+      "tags": []
+    },
+    "KeepWorking": {
+      "id": "KeepWorking",
+      "params": [],
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "You keep wiping tables, but hover nearby. Alex looks disappointed."
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\"Yeah, no worries. You're busy.\" They stand up to leave."
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": [
+            {
+              "type": "text",
+              "value": "Stop them"
+            }
+          ],
+          "target": "StopThem",
+          "args": "",
+          "condition": null,
+          "sticky": true,
+          "tags": []
+        },
+        {
+          "text": [
+            {
+              "type": "text",
+              "value": "Let them go"
+            }
+          ],
+          "target": "BadEnding",
+          "args": "",
+          "condition": null,
+          "sticky": true,
+          "tags": []
+        }
+      ],
+      "execute": [
+        {
+          "type": "python_statement",
+          "code": "alex.add_comfort(-5)"
+        }
+      ],
+      "tags": []
+    },
+    "StopThem": {
+      "id": "StopThem",
+      "params": [],
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\"Wait,\" you say, dropping the cleaning rag on the counter. \"I'm sorry, I'm not busy. Not for this. Please, sit down.\""
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Alex hesitates, looking at the door, then at you. They slowly return to the seat, a flicker of relief in their eyes."
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\"I just... needed to talk to someone,\" they repeat, quieter this time."
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": [
+            {
+              "type": "text",
+              "value": "Ask what's wrong"
+            }
+          ],
+          "target": "AskWrong",
+          "args": "",
+          "condition": null,
+          "sticky": true,
+          "tags": []
+        },
+        {
+          "text": [
+            {
+              "type": "text",
+              "value": "Just listen"
+            }
+          ],
+          "target": "Listen",
+          "args": "",
+          "condition": null,
+          "sticky": true,
+          "tags": []
+        }
+      ],
+      "execute": [
+        {
+          "type": "python_statement",
+          "code": "alex.add_comfort(10) "
+        },
+        {
+          "type": "python_statement",
+          "code": "alex.add_trust(5)"
+        }
+      ],
+      "tags": []
+    },
+    "AskWrong": {
+      "id": "AskWrong",
+      "params": [],
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\"It's work,\" they sigh. \"My boss is... god, I sound like I'm complaining.\""
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": [
+            {
+              "type": "text",
+              "value": "\"You're not complaining\""
+            }
+          ],
+          "target": "Reassure",
+          "args": "",
+          "condition": null,
+          "sticky": true,
+          "tags": []
+        },
+        {
+          "text": [
+            {
+              "type": "text",
+              "value": "\"Want advice or just venting?\""
+            }
+          ],
+          "target": "CheckIntent",
+          "args": "",
+          "condition": null,
+          "sticky": true,
+          "tags": []
+        }
+      ],
+      "execute": [
+        {
+          "type": "python_statement",
+          "code": "alex.discuss_topic(\"work_stress\")"
+        },
+        {
+          "type": "python_statement",
+          "code": "alex.add_openness(2)"
+        }
+      ],
+      "tags": []
+    },
+    "CheckIntent": {
+      "id": "CheckIntent",
+      "params": [],
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Alex looks surprised, then genuinely appreciative. \"Wow. Uh... mostly just venting, I think.\""
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "They laugh, a little self-consciously. \"I don't think there's any advice that could fix this, short of 'quit your job,' and I can't do that.\""
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": [
+            {
+              "type": "text",
+              "value": "\"Then vent away. I am all ears.\""
+            }
+          ],
+          "target": "VentingSession",
+          "args": "",
+          "condition": null,
+          "sticky": true,
+          "tags": []
+        },
+        {
+          "text": [
+            {
+              "type": "text",
+              "value": "\"(Offer advice anyway) You should report them to HR.\""
+            }
+          ],
+          "target": "BadAdvice",
+          "args": "",
+          "condition": null,
+          "sticky": true,
+          "tags": []
+        }
+      ],
+      "execute": [
+        {
+          "type": "python_statement",
+          "code": "alex.add_trust(15) "
+        },
+        {
+          "type": "python_statement",
+          "code": "alex.add_comfort(5)"
+        }
+      ],
+      "tags": []
+    },
+    "VentingSession": {
+      "id": "VentingSession",
+      "params": [],
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "And they do. For ten minutes, you just nod and make sympathetic noises as they get it all out."
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\"Okay,\" they say finally, slumping back in their seat. \"Okay. I feel... 100 pounds lighter. You're a lifesaver.\""
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "**ENDING: The Confidante**"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Trust: "
+        },
+        {
+          "type": "expression",
+          "code": "alex.trust"
+        },
+        {
+          "type": "text",
+          "value": "/100"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Comfort: "
+        },
+        {
+          "type": "expression",
+          "code": "alex.comfort"
+        },
+        {
+          "type": "text",
+          "value": "/100"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [],
+      "execute": [
+        {
+          "type": "python_statement",
+          "code": "alex.discuss_topic(\"work_stress\")"
+        },
+        {
+          "type": "python_statement",
+          "code": "alex.add_comfort(15)"
+        },
+        {
+          "type": "python_statement",
+          "code": "alex.add_openness(5)"
+        }
+      ],
+      "tags": []
+    },
+    "BadAdvice": {
+      "id": "BadAdvice",
+      "params": [],
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "You jump in. \"You should definitely just report them to HR. That's what they're for.\""
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Alex's face shutters. \"Yeah. Right. It's... not that simple.\" They stand up, gathering their things. \"I should go. Thanks for the coffee.\""
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "They leave before you can say anything else."
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "jump",
+          "target": "BadEnding",
+          "args": ""
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [],
+      "execute": [
+        {
+          "type": "python_statement",
+          "code": "alex.add_trust(-10)"
+        },
+        {
+          "type": "python_statement",
+          "code": "alex.add_comfort(-10)"
+        }
+      ],
+      "tags": []
+    },
+    "Reassure": {
+      "id": "Reassure",
+      "params": [],
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\"You're not complaining,\" you say softly. \"You're venting. It's different, and you're allowed to.\""
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Alex lets out a breath they seemed to be holding. \"Thanks. It's just... it feels like I'm stuck in a loop there.\""
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": [
+            {
+              "type": "text",
+              "value": "\"Tell me more about it.\""
+            }
+          ],
+          "target": "DeeperWorkTalk",
+          "args": "",
+          "condition": null,
+          "sticky": true,
+          "tags": []
+        },
+        {
+          "text": [
+            {
+              "type": "text",
+              "value": "\"That sounds really tough. I'm sorry.\""
+            }
+          ],
+          "target": "SimpleSupport",
+          "args": "",
+          "condition": null,
+          "sticky": true,
+          "tags": []
+        }
+      ],
+      "execute": [
+        {
+          "type": "python_statement",
+          "code": "alex.add_comfort(10)"
+        },
+        {
+          "type": "python_statement",
+          "code": "alex.add_trust(5)"
+        }
+      ],
+      "tags": []
+    },
+    "DeeperWorkTalk": {
+      "id": "DeeperWorkTalk",
+      "params": [],
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Alex leans in and tells you about a project they've been working on, and how their boss is taking all the credit. You listen, nodding and asking questions."
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\"...and I know it's just a job, but it sucks,\" they finish, looking much lighter. \"Wow. Thanks for listening.\""
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "**ENDING: A Friendly Ear**"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Trust: "
+        },
+        {
+          "type": "expression",
+          "code": "alex.trust"
+        },
+        {
+          "type": "text",
+          "value": "/100"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Comfort: "
+        },
+        {
+          "type": "expression",
+          "code": "alex.comfort"
+        },
+        {
+          "type": "text",
+          "value": "/100"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [],
+      "execute": [
+        {
+          "type": "python_statement",
+          "code": "alex.discuss_topic(\"boss_problems\")"
+        },
+        {
+          "type": "python_statement",
+          "code": "alex.add_openness(5)"
+        }
+      ],
+      "tags": []
+    },
+    "SimpleSupport": {
+      "id": "SimpleSupport",
+      "params": [],
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\"It is tough,\" Alex agrees, but they give you a small, real smile. \"Just saying it out loud to someone who *gets* it helps, though. Thank you.\""
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "They finish their coffee, seeming much more at peace than when they sat down."
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "**ENDING: A Moment of Peace**"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Trust: "
+        },
+        {
+          "type": "expression",
+          "code": "alex.trust"
+        },
+        {
+          "type": "text",
+          "value": "/100"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Comfort: "
+        },
+        {
+          "type": "expression",
+          "code": "alex.comfort"
+        },
+        {
+          "type": "text",
+          "value": "/100"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [],
+      "execute": [
+        {
+          "type": "python_statement",
+          "code": "alex.add_comfort(15)"
+        }
+      ],
+      "tags": []
+    },
+    "Listen": {
+      "id": "Listen",
+      "params": [],
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "You just wait. After a moment, Alex starts talking."
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\"I've been coming here for months,\" they say quietly. \"And I realized... this is the only place I feel okay anymore.\""
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "inline_conditional",
+          "condition": "alex.is_vulnerable",
+          "truthy": [
+            {
+              "type": "text",
+              "value": "Their eyes are shining. They're really opening up."
+            }
+          ],
+          "falsy": [
+            {
+              "type": "text",
+              "value": "They're holding back, but trying."
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": [
+            {
+              "type": "text",
+              "value": "Reach across the table"
+            }
+          ],
+          "target": "Touch",
+          "args": "",
+          "condition": null,
+          "sticky": true,
+          "tags": []
+        },
+        {
+          "text": [
+            {
+              "type": "text",
+              "value": "Say something comforting"
+            }
+          ],
+          "target": "Comfort",
+          "args": "",
+          "condition": null,
+          "sticky": true,
+          "tags": []
+        }
+      ],
+      "execute": [
+        {
+          "type": "python_statement",
+          "code": "alex.add_comfort(10)"
+        },
+        {
+          "type": "python_statement",
+          "code": "alex.add_openness(3)"
+        }
+      ],
+      "tags": []
+    },
+    "Comfort": {
+      "id": "Comfort",
+      "params": [],
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\"I'm really glad you feel safe here, Alex,\" you say, your voice gentle. \"That means a lot to me.\""
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Alex's eyes soften, and they meet your gaze. \"It means a lot to me, too. More than you know.\""
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "The air is thick with unsaid things."
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": [
+            {
+              "type": "text",
+              "value": "They're ready for a deep conversation"
+            }
+          ],
+          "target": "DeepConnection",
+          "args": "",
+          "condition": "alex.is_ready_for_deep_conversation",
+          "sticky": true,
+          "tags": []
+        },
+        {
+          "text": [
+            {
+              "type": "text",
+              "value": "Take things slow"
+            }
+          ],
+          "target": "SlowBuild",
+          "args": "",
+          "condition": "not alex.is_ready_for_deep_conversation",
+          "sticky": true,
+          "tags": []
+        }
+      ],
+      "execute": [
+        {
+          "type": "python_statement",
+          "code": "alex.add_comfort(10)"
+        },
+        {
+          "type": "python_statement",
+          "code": "alex.add_trust(10)"
+        }
+      ],
+      "tags": []
+    },
+    "SlowBuild": {
+      "id": "SlowBuild",
+      "params": [],
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Alex holds your gaze for a long moment, a small, warm smile playing on their lips. They seem to want to say more, but instead, they just sigh and look down at their cup."
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\"I... I should probably get going,\" they say, though they don't seem to want to. \"But... thank you. Seriously. This helped a lot.\""
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "They stand up, looking more relaxed than you've ever seen them."
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\"I'll see you tomorrow?\" they ask."
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": [
+            {
+              "type": "text",
+              "value": "\"Definitely.\""
+            }
+          ],
+          "target": "SeeYouTomorrow",
+          "args": "",
+          "condition": null,
+          "sticky": true,
+          "tags": []
+        }
+      ],
+      "execute": [
+        {
+          "type": "python_statement",
+          "code": "alex.add_comfort(5)"
+        }
+      ],
+      "tags": []
+    },
+    "SeeYouTomorrow": {
+      "id": "SeeYouTomorrow",
+      "params": [],
+      "content": [
+        {
+          "type": "text",
+          "value": "You smile back. \"Definitely.\""
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "As they head for the door, you can't help but feel that something has changed. For the better."
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "**ENDING: A New Understanding**"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Trust: "
+        },
+        {
+          "type": "expression",
+          "code": "alex.trust"
+        },
+        {
+          "type": "text",
+          "value": "/100"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Comfort: "
+        },
+        {
+          "type": "expression",
+          "code": "alex.comfort"
+        },
+        {
+          "type": "text",
+          "value": "/100"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [],
+      "execute": [],
+      "tags": []
+    },
+    "Touch": {
+      "id": "Touch",
+      "params": [],
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "You reach across and squeeze their hand. Alex freezes for a second, then squeezes back."
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\"Thank you,\" they whisper."
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "conditional",
+          "branches": [
+            {
+              "condition": "alex.is_ready_for_deep_work",
+              "content": [
+                {
+                  "type": "jump",
+                  "target": "DeepConnection"
+                }
+              ]
+            },
+            {
+              "condition": "True",
+              "content": [
+                {
+                  "type": "jump",
+                  "target": "SlowBuild"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [],
+      "execute": [
+        {
+          "type": "python_statement",
+          "code": "alex.add_trust(15)"
+        },
+        {
+          "type": "python_statement",
+          "code": "alex.add_openness(5)"
+        }
+      ],
+      "tags": []
+    },
+    "DeepConnection": {
+      "id": "DeepConnection",
+      "params": [],
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\"I think I've been coming here because of you,\" Alex says, not letting go of your hand."
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "The coffee shop fades away. It's just the two of you."
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": [
+            {
+              "type": "text",
+              "value": "Kiss them"
+            }
+          ],
+          "target": "Kiss",
+          "args": "",
+          "condition": null,
+          "sticky": true,
+          "tags": []
+        },
+        {
+          "text": [
+            {
+              "type": "text",
+              "value": "Say you feel the same"
+            }
+          ],
+          "target": "Confess",
+          "args": "",
+          "condition": null,
+          "sticky": true,
+          "tags": []
+        }
+      ],
+      "execute": [
+        {
+          "type": "python_statement",
+          "code": "alex.discuss_topic(\"feelings_revealed\")"
+        }
+      ],
+      "tags": []
+    },
+    "Kiss": {
+      "id": "Kiss",
+      "params": [],
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "You lean in. They meet you halfway."
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "**ENDING: First Kiss**"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Trust: "
+        },
+        {
+          "type": "expression",
+          "code": "alex.trust"
+        },
+        {
+          "type": "text",
+          "value": "/100"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Topics discussed: "
+        },
+        {
+          "type": "expression",
+          "code": "len(alex.topics_discussed)"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [],
+      "execute": [
+        {
+          "type": "python_statement",
+          "code": "alex.add_trust(20)"
+        }
+      ],
+      "tags": []
+    },
+    "Confess": {
+      "id": "Confess",
+      "params": [],
+      "content": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\"I feel the same,\" you say. Alex's face lights up."
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\"Can I take you to dinner? Like, not here?\" They laugh."
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "**ENDING: New Beginning**"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "Trust: "
+        },
+        {
+          "type": "expression",
+          "code": "alex.trust"
+        },
+        {
+          "type": "text",
+          "value": "/100"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [],
+      "execute": [
+        {
+          "type": "python_statement",
+          "code": "alex.add_trust(15)"
+        },
+        {
+          "type": "python_statement",
+          "code": "alex.discuss_topic(\"mutual_feelings\")"
+        }
+      ],
+      "tags": []
+    },
+    "BadEnding": {
+      "id": "BadEnding",
+      "params": [],
+      "content": [
+        {
+          "type": "text",
+          "value": "Alex leaves. You never see them again."
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "text",
+          "value": "**ENDING: Missed Connection**"
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "choices": [],
+      "execute": [],
+      "tags": []
+    }
+  }
+}

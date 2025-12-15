@@ -18,6 +18,7 @@ def create_browser_bundle(
     output_dir: Path,
     game_name: Optional[str] = None,
     theme: str = "dark",
+    minimal: bool = False,
 ) -> Path:
     """
     Bundle a .bard story for browser distribution.
@@ -30,6 +31,7 @@ def create_browser_bundle(
         output_dir: Directory to create the bundle in
         game_name: Display name for the game (from metadata if not specified)
         theme: Theme to use (dark, light, retro)
+        minimal: If True, only include Pyodide core (no extra packages)
 
     Returns:
         Path to the created bundle directory
@@ -87,7 +89,27 @@ def create_browser_bundle(
     pyodide_source = templates_dir / "pyodide"
     pyodide_dest = output_dir / "pyodide"
     if pyodide_source.exists():
-        shutil.copytree(pyodide_source, pyodide_dest, dirs_exist_ok=True)
+        if minimal:
+            # Only copy core Pyodide files (no extra packages)
+            pyodide_dest.mkdir(parents=True, exist_ok=True)
+            core_files = [
+                "pyodide.asm.wasm",
+                "pyodide.asm.js",
+                "pyodide.js",
+                "pyodide.mjs",
+                "python_stdlib.zip",
+                "pyodide-lock.json",
+            ]
+            for filename in core_files:
+                src = pyodide_source / filename
+                if src.exists():
+                    shutil.copy(src, pyodide_dest / filename)
+            # Also copy micropip for runtime package installation
+            for whl in pyodide_source.glob("micropip*.whl"):
+                shutil.copy(whl, pyodide_dest / whl.name)
+        else:
+            # Copy everything (core + all packages)
+            shutil.copytree(pyodide_source, pyodide_dest, dirs_exist_ok=True)
 
     # Step 7: Copy stdlib modules
     stdlib_dir = output_dir / "bardic" / "stdlib"

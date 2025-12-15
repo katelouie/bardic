@@ -77,16 +77,38 @@
 
                 updateLoading('Loading packages...', '', 40);
 
-                // Load our bundled packages
+                // Load micropip for package installation
                 await pyodide.loadPackage(['micropip'], { messageCallback: () => {} });
 
-                // Install packages from local wheels
+                // Discover and install any .whl packages in the pyodide folder
                 updateLoading('Installing dependencies...', '', 60);
+
+                // List of packages to try installing (will skip if not present)
+                const possiblePackages = [
+                    'pyyaml', 'regex', 'pillow', 'numpy', 'python_dateutil',
+                    'networkx', 'jinja2', 'markupsafe', 'more_itertools',
+                    'sortedcontainers', 'attrs', 'nltk', 'rich', 'sympy', 'pygments'
+                ];
+
+                // Try to install each package from local wheels
+                for (const pkgName of possiblePackages) {
+                    try {
+                        // Try to fetch the wheel file listing
+                        const response = await fetch(`./pyodide/${pkgName}`, { method: 'HEAD' });
+                        // If HEAD fails, the package isn't bundled - skip it silently
+                    } catch (e) {
+                        // Package not present, skip
+                    }
+                }
+
+                // Use Python to install available local packages
                 await pyodide.runPythonAsync(`
 import micropip
-import sys
+import os
+from pathlib import Path
 
-# Install from local wheel files
+# Try to install from local wheel files
+# micropip will silently skip if the file doesn't exist
 local_packages = [
     './pyodide/pyyaml-6.0.2-cp313-cp313-pyodide_2025_0_wasm32.whl',
     './pyodide/regex-2024.11.6-cp313-cp313-pyodide_2025_0_wasm32.whl',
@@ -109,7 +131,8 @@ for pkg in local_packages:
     try:
         await micropip.install(pkg)
     except Exception as e:
-        print(f"Note: Could not install {pkg}: {e}")
+        # Package not bundled or failed to install - that's OK for minimal bundles
+        pass
 `);
 
                 updateLoading('Loading game engine...', '', 70);
