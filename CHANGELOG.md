@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Include a `game_logic/` directory inside all generated projects from `bardic init`.
+
 ### Changed
 
 ### Fixed
