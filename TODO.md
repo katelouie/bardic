@@ -73,6 +73,22 @@ High priority fixes discovered through comprehensive test suite:
   - Consider caching for @include resolution
   - Profile runtime rendering for bottlenecks
 
+- [ ] **Mini-nodes and joins**
+  - Implement nameless mini-nodes with choice syntax + [Text] -> @join
+  - Afterwards collect all of the above "stay here" choices with @join (text)
+  - Functions similarly to Ink gathers
+  - Might be called @merge?
+
+- [ ] **Hooks and listener system**
+  - Implement @hook and @unhook to run a passage on every (X) event ie. `@hook turn_end HookTimeIncrement`
+  - Dynamically turn off the every-turn passage with @unhook
+  - Will need to keep track of these as the parser goes and enact on game loop turn
+
+- [ ] **Undo stacks**
+  - Implement "go back" and undo method in engine with <- UI element
+  - Set up N-length `state` stack, add/discard every "turn" (player action) and pop it on undo being called
+  - Alternatively, just store the deltas? And merge into "base" state. Might be more complicated but would be more memory-efficient.
+
 ## 📚 Documentation
 
 - [ ] Tutorial on new distribution method (HTML)
