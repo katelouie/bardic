@@ -173,11 +173,15 @@ bardic bundle my-story.bard --zip
 bardic bundle my-story.bard -o ./release -n "My Epic Adventure" --theme dark --zip
 ```
 
-This creates a ~17 MB ZIP file containing:
+This creates a ZIP file containing:
 - Your compiled story
 - The Bardic engine (browser version)
 - A complete Python runtime (Pyodide)
 - Pre-installed packages: numpy, pillow, networkx, pyyaml, regex, jinja2, nltk, and more
+
+**Bundle sizes:**
+- Full bundle: ~17 MB (all packages included)
+- Minimal bundle: ~5 MB (use `--minimal` flag for stories that don't need extra packages)
 
 **No server required** - everything runs in the browser via WebAssembly.
 
@@ -189,6 +193,7 @@ This creates a ~17 MB ZIP file containing:
 | `-n, --name` | Game title (uses story metadata if not specified) |
 | `-t, --theme` | Visual theme: `dark`, `light`, or `retro` |
 | `-z, --zip` | Create a ZIP file ready for upload |
+| `-m, --minimal` | Smaller bundle (~5 MB) with only core Pyodide |
 
 ### Uploading to itch.io
 

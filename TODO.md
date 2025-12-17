@@ -52,6 +52,12 @@ High priority fixes discovered through comprehensive test suite:
 
 ### Long-term (0.6.0+)
 
+- [ ] **Browser bundle v2** - Advanced customization for `bardic bundle`
+  - Custom frontend framework support (React, Vue, Svelte)
+  - Author provides their own `frontend/` directory
+  - Bundler generates API bridge between frontend and Pyodide engine
+  - Support for custom HTML/CSS/JS without modifying templates
+
 - [ ] **REPL mode** - Interactive testing of passages
   - `bardic repl story.json` starts interactive session
   - Can set variables, jump to passages, inspect state
