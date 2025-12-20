@@ -10,6 +10,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Include a `game_logic/` directory inside all generated projects from `bardic init`.
+- **Undo/Redo System** - Players can now rewind and replay choices
+  - `engine.undo()` / `engine.redo()` methods for programmatic control
+  - `engine.can_undo()` / `engine.can_redo()` for UI button state
+  - `GameSnapshot` dataclass captures complete game state (passage, variables, used choices)
+  - Stack-based architecture with configurable depth (default: 50)
+  - Redo stack clears on new choices (timeline branching)
+  - Snapshots taken before navigation for correct restore point
+  - Browser template includes ← → navigation buttons in header
 
 ### Changed
 

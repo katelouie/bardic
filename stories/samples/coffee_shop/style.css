@@ -65,7 +65,9 @@
    Reset & Base
    ========================================================================= */
 
-*, *::before, *::after {
+*,
+*::before,
+*::after {
     box-sizing: border-box;
 }
 
@@ -151,7 +153,9 @@ body {
 }
 
 @keyframes spin {
-    to { transform: rotate(360deg); }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 
@@ -208,6 +212,24 @@ header h1 {
 .game-controls button:hover {
     color: var(--accent-color);
     border-color: var(--accent-color);
+}
+
+.game-controls button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.game-controls button:disabled:hover {
+    color: var(--text-muted);
+    border-color: var(--text-muted);
+}
+
+.controls-separator {
+    width: 1px;
+    height: 24px;
+    background: var(--text-muted);
+    opacity: 0.3;
+    margin: 0 var(--spacing-sm);
 }
 
 
@@ -365,6 +387,7 @@ footer a:hover {
         opacity: 0;
         transform: translateX(-50%) translateY(20px);
     }
+
     to {
         opacity: 1;
         transform: translateX(-50%) translateY(0);
@@ -403,6 +426,7 @@ footer a:hover {
    ========================================================================= */
 
 /* Hide PyScript loading elements */
-py-script, py-config {
+py-script,
+py-config {
     display: none;
 }

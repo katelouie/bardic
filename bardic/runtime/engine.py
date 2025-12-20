@@ -2,14 +2,16 @@
 Runtime engine for executing compiled Bardic stories.
 """
 
-import sys
+import ast
+import copy
 import json
-from typing import Dict, Any, List, Optional
-from dataclasses import dataclass
+import sys
 import traceback
 import uuid
-import ast
+from collections import deque
+from dataclasses import dataclass
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 
 @dataclass
@@ -40,6 +42,40 @@ class PassageOutput:
             self.input_directives = []
 
 
+@dataclass
+class GameSnapshot:
+    """
+    Complete snapshot of game state at a point in time.
+
+    Used by the undo/redo system to capture and restore game state.
+    We store full copies (not diffs) for simplicity and reliability.
+
+    Attributes:
+        current_passage: The passage ID at the time of snapshot
+        state: Deep copy of all game variables
+        used_choices: Set of one-time choices that have been used
+    """
+
+    current_passage: str | None
+    state: dict[str, Any]
+    used_choices: set
+
+    @classmethod
+    def from_engine(cls, engine: "BardEngine") -> "GameSnapshot":
+        """Create a snapshot from the current game engine."""
+        return cls(
+            current_passage=engine.current_passage_id,
+            state=copy.deepcopy(engine.state),
+            used_choices=engine.used_choices.copy(),
+        )
+
+    def restore_to(self, engine: "BardEngine") -> None:
+        """Restore this snapshot to the engine."""
+        engine.current_passage_id = self.current_passage
+        engine.state = self.state
+        engine.used_choices = self.used_choices
+
+
 class BardEngine:
     """
     Runtime engine for Bard stories.
@@ -63,12 +99,16 @@ class BardEngine:
         self.passages = story_data["passages"]
         self.current_passage_id = None  # Will be set by goto()
         self.state = {}  # Game state (variables)
-        self.state['_inputs'] = {}  # Initialize empty inputs dict (always available)
+        self.state["_inputs"] = {}  # Initialize empty inputs dict (always available)
         self._local_scope_stack = []  # Stack of local parameter scopes (NEW for passage params)
         self.used_choices = set()  # Track which one-time choices have been used
         self.context = context or {}
         self.evaluate_directives = evaluate_directives
         self._current_output = None  # Cache for current passage output
+
+        # Undo/redo system
+        self.undo_stack: deque[GameSnapshot] = deque(maxlen=50)
+        self.redo_stack: list[GameSnapshot] = []
 
         # Add more frameworks as needed (eg for unity)
         self.framework_processors = {"react": self._process_for_react}
@@ -267,15 +307,11 @@ class BardEngine:
 
                 safe_builtins = self._get_safe_builtins()
                 result[param["name"]] = eval(
-                    param["default"],
-                    {"__builtins__": safe_builtins},
-                    eval_context
+                    param["default"], {"__builtins__": safe_builtins}, eval_context
                 )
             else:
                 # Required param not provided
-                raise ValueError(
-                    f"Required parameter '{param['name']}' not provided"
-                )
+                raise ValueError(f"Required parameter '{param['name']}' not provided")
 
         return result
 
@@ -489,10 +525,7 @@ class BardEngine:
             rendered_text, _, _ = self._render_content(choice_text)
 
         # Return choice with rendered text
-        return {
-            **choice,
-            "text": rendered_text
-        }
+        return {**choice, "text": rendered_text}
 
     def _is_choice_available(self, choice: dict) -> bool:
         """Check if a choice should be shown based on its condition and if used (1-time).
@@ -558,26 +591,28 @@ class BardEngine:
             RuntimeError: If a jump loop is detected
         """
         # Parse passage_spec to extract passage_id and args
-        if '(' in passage_spec:
-            paren_start = passage_spec.index('(')
+        if "(" in passage_spec:
+            paren_start = passage_spec.index("(")
             passage_id = passage_spec[:paren_start]
 
             # Find matching closing paren
             depth = 0
             paren_end = -1
             for i in range(paren_start, len(passage_spec)):
-                if passage_spec[i] == '(':
+                if passage_spec[i] == "(":
                     depth += 1
-                elif passage_spec[i] == ')':
+                elif passage_spec[i] == ")":
                     depth -= 1
                     if depth == 0:
                         paren_end = i
                         break
 
             if paren_end == -1:
-                raise ValueError(f"Unclosed parenthesis in passage spec: {passage_spec}")
+                raise ValueError(
+                    f"Unclosed parenthesis in passage spec: {passage_spec}"
+                )
 
-            args_str = passage_spec[paren_start + 1:paren_end]
+            args_str = passage_spec[paren_start + 1 : paren_end]
         else:
             passage_id = passage_spec
             args_str = ""
@@ -599,7 +634,9 @@ class BardEngine:
             safe_builtins = self._get_safe_builtins()
 
             if args_str:
-                arg_dict = self._parse_directive_args(args_str, eval_context, safe_builtins)
+                arg_dict = self._parse_directive_args(
+                    args_str, eval_context, safe_builtins
+                )
             else:
                 arg_dict = {}
 
@@ -642,13 +679,16 @@ class BardEngine:
 
                     # Combine accumulated content with jump result
                     if accumulated_content:
-                        combined = "\n\n".join(accumulated_content + [jump_output.content])
+                        combined = "\n\n".join(
+                            accumulated_content + [jump_output.content]
+                        )
                         jump_output = PassageOutput(
                             content=combined,
                             choices=jump_output.choices,
                             passage_id=jump_output.passage_id,
                             jump_target=None,
-                            render_directives=accumulated_directives + jump_output.render_directives,
+                            render_directives=accumulated_directives
+                            + jump_output.render_directives,
                             input_directives=jump_output.input_directives,
                         )
 
@@ -721,6 +761,8 @@ class BardEngine:
         Use this for: Player making choices in the story.
 
         Tracks one-time choices so they don't appear again.
+        Creates an undo snapshot before navigating.
+        Clears the redo stack (new choice = new timeline).
 
         Args:
             choice_index: Index of the choice (0-based, from filtered choices)
@@ -731,6 +773,12 @@ class BardEngine:
         Raises:
             IndexError: If choice_index is out of range
         """
+        # SNAPSHOT before any changes (for undo)
+        self.snapshot()
+
+        # Clear the redo stack -- making a new choice creates a new timeline
+        self.redo_stack.clear()
+
         # Get filtered choices from cached output
         current_output = self.current()
         filtered_choices = current_output.choices
@@ -774,11 +822,11 @@ class BardEngine:
         Args:
             input_data: Dict mapping input names to values (e.g., {"reader_name": "Alice"})
         """
-        if '_inputs' not in self.state:
-            self.state['_inputs'] = {}
+        if "_inputs" not in self.state:
+            self.state["_inputs"] = {}
 
         # Merge new inputs (overwrites duplicates)
-        self.state['_inputs'].update(input_data)
+        self.state["_inputs"].update(input_data)
 
     def _execute_commands(self, commands: list[dict]) -> None:
         """Execute passage commands (python statements, python blocks, etc)"""
@@ -814,9 +862,17 @@ class BardEngine:
 
             # Sync any new/modified variables back to state
             # Skip private vars (starting with _), context vars (read-only), and local params
-            local_param_names = set(self._local_scope_stack[-1].keys()) if self._local_scope_stack else set()
+            local_param_names = (
+                set(self._local_scope_stack[-1].keys())
+                if self._local_scope_stack
+                else set()
+            )
             for key, value in eval_context.items():
-                if not key.startswith("_") and key not in self.context and key not in local_param_names:
+                if (
+                    not key.startswith("_")
+                    and key not in self.context
+                    and key not in local_param_names
+                ):
                     self.state[key] = value
 
         except Exception as e:
@@ -1131,7 +1187,7 @@ class BardEngine:
                     condition_result = eval(
                         token["condition"],
                         {"__builtins__": safe_builtins},
-                        eval_context
+                        eval_context,
                     )
 
                     # Choose branch based on condition (truthy or falsy)
@@ -1155,18 +1211,25 @@ class BardEngine:
 
                             # Check for format spec in the branch expression
                             if ":" in branch_expr and not any(
-                                op in branch_expr for op in ["==", "!=", "<=", ">=", "::"]
+                                op in branch_expr
+                                for op in ["==", "!=", "<=", ">=", "::"]
                             ):
                                 # Has format spec
                                 colon_idx = branch_expr.find(":")
                                 expr = branch_expr[:colon_idx].strip()
-                                format_spec = branch_expr[colon_idx + 1:].strip()
+                                format_spec = branch_expr[colon_idx + 1 :].strip()
 
-                                value = eval(expr, {"__builtins__": safe_builtins}, eval_context)
+                                value = eval(
+                                    expr, {"__builtins__": safe_builtins}, eval_context
+                                )
                                 result.append(format(value, format_spec))
                             else:
                                 # No format spec
-                                value = eval(branch_expr, {"__builtins__": safe_builtins}, eval_context)
+                                value = eval(
+                                    branch_expr,
+                                    {"__builtins__": safe_builtins},
+                                    eval_context,
+                                )
                                 result.append(str(value))
                         else:
                             # Plain text - add as-is
@@ -1346,7 +1409,9 @@ class BardEngine:
 
                 if result:
                     # This branch is true -- render its content
-                    content, jump_target, directives = self._render_content(branch["content"])
+                    content, jump_target, directives = self._render_content(
+                        branch["content"]
+                    )
 
                     # Add branch choices to directives (if any)
                     if "choices" in branch:
@@ -1372,6 +1437,74 @@ class BardEngine:
             spec = code[colon_idx + 1 :].strip()
             return expr, spec
         return code, None
+
+    def snapshot(self) -> None:
+        """
+        Capture current state to the undo stack.
+
+        Call this BEFORE making any state changes. The snapshot captures
+        the state at the moment before a choice is made, so undo returns
+        the player to that decision point.
+        """
+        snapshot = GameSnapshot.from_engine(self)
+        self.undo_stack.append(snapshot)
+
+    def undo(self) -> bool:
+        """
+        Restore previous state from undo stack.
+
+        Moves current state to redo stack before restoring, so the player
+        can redo if they change their mind.
+
+        Returns:
+            True if undo was successful, False if nothing to undo.
+        """
+        if not self.undo_stack:
+            return False
+
+        # Save current state to redo stack before restoring
+        current = GameSnapshot.from_engine(self)
+        self.redo_stack.append(current)
+
+        # Restore previous state
+        previous = self.undo_stack.pop()
+        previous.restore_to(self)
+
+        # Re-render the restored passage (updates _current_output cache)
+        self._current_output = self._render_passage(self.current_passage_id)
+
+        return True
+
+    def redo(self) -> bool:
+        """
+        Restore next state from redo stack.
+
+        Returns:
+            True if redo was successful, False if nothing to redo.
+        """
+        if not self.redo_stack:
+            return False
+
+        # Save current state to undo stack before restoring
+        current = GameSnapshot.from_engine(self)
+        self.undo_stack.append(current)
+
+        # Restore next state
+        next_state = self.redo_stack.pop()
+        next_state.restore_to(self)
+
+        # Re-render the restored passage
+        self._current_output = self._render_passage(self.current_passage_id)
+
+        return True
+
+    def can_undo(self) -> bool:
+        """Check if undo is available (for UI button state)."""
+        return len(self.undo_stack) > 0
+
+    def can_redo(self) -> bool:
+        """Check if redo is available (for UI button state)."""
+        return len(self.redo_stack) > 0
 
     def get_story_info(self) -> Dict[str, Any]:
         """
@@ -1541,6 +1674,10 @@ class BardEngine:
         # Restore state
         self.state = self._deserialize_state(save_data.get("state", {}))
         self.used_choices = set(save_data.get("used_choices", []))
+
+        # Clear undo/redo stacks on load (fresh start, new session)
+        self.undo_stack.clear()
+        self.redo_stack.clear()
 
         # Navigate to saved passage (this re-renders with restored state)
         self.goto(target_passage)

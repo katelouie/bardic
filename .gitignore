@@ -479,3 +479,6 @@ saves/
 
 # Compiled story outputs (generated)
 compiled_stories/
+
+# Testing stories
+stories/samples/

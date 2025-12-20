@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,6 +9,7 @@
     <!-- Game styles -->
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
     <!-- Loading screen (shown while Pyodide loads) -->
     <div id="loading">
@@ -27,6 +29,9 @@
         <header>
             <h1 id="game-title">{{GAME_NAME}}</h1>
             <nav class="game-controls">
+                <button id="undo-btn" title="Undo (go back)" disabled>←</button>
+                <button id="redo-btn" title="Redo (go forward)" disabled>→</button>
+                <span class="controls-separator"></span>
                 <button id="save-btn" title="Save game">Save</button>
                 <button id="load-btn" title="Load game">Load</button>
                 <button id="restart-btn" title="Restart game">Restart</button>
@@ -78,7 +83,7 @@
                 updateLoading('Loading packages...', '', 40);
 
                 // Load micropip for package installation
-                await pyodide.loadPackage(['micropip'], { messageCallback: () => {} });
+                await pyodide.loadPackage(['micropip'], { messageCallback: () => { } });
 
                 // Discover and install any .whl packages in the pyodide folder
                 updateLoading('Installing dependencies...', '', 60);
@@ -300,6 +305,9 @@ json.dumps({
             // Scroll to top
             contentDiv.scrollTop = 0;
             window.scrollTo(0, 0);
+
+            // Update undo/redo button states
+            updateUndoRedoButtons();
         }
 
         // Handle player choice
@@ -365,14 +373,45 @@ engine = BardEngine(game_data)
             showNotification('Game restarted');
         }
 
+        // Undo last choice
+        async function undoChoice() {
+            const result = await pyodide.runPythonAsync(`engine.undo()`);
+            if (result) {
+                renderPassage();
+                showNotification('Undid last choice');
+            } else {
+                showNotification('Nothing to undo', true);
+            }
+        }
+
+        // Redo undone choice
+        async function redoChoice() {
+            const result = await pyodide.runPythonAsync(`engine.redo()`);
+            if (result) {
+                renderPassage();
+                showNotification('Redid choice');
+            } else {
+                showNotification('Nothing to redo', true);
+            }
+        }
+
+        // Update undo/redo button states
+        async function updateUndoRedoButtons() {
+            const canUndo = await pyodide.runPythonAsync(`engine.can_undo()`);
+            const canRedo = await pyodide.runPythonAsync(`engine.can_redo()`);
+
+            document.getElementById('undo-btn').disabled = !canUndo;
+            document.getElementById('redo-btn').disabled = !canRedo;
+        }
+
         // Simple markdown to HTML
         function renderMarkdown(text) {
             if (!text) return '';
 
             // Escape HTML
             text = text.replace(/&/g, '&amp;')
-                       .replace(/</g, '&lt;')
-                       .replace(/>/g, '&gt;');
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
 
             // Bold: **text**
             text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
@@ -409,10 +448,13 @@ engine = BardEngine(game_data)
             document.getElementById('save-btn').addEventListener('click', saveGame);
             document.getElementById('load-btn').addEventListener('click', loadGame);
             document.getElementById('restart-btn').addEventListener('click', restartGame);
+            document.getElementById('undo-btn').addEventListener('click', undoChoice);
+            document.getElementById('redo-btn').addEventListener('click', redoChoice);
         }
 
         // Start the game
         init();
     </script>
 </body>
+
 </html>
