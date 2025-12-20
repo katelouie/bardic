@@ -1,6 +1,6 @@
 # Bardic TODO
 
-Last updated: 2025-11-09
+Last updated: 2025-12-20
 
 ## 🐛 Parser Bugs (Found by Tests)
 
@@ -84,10 +84,13 @@ High priority fixes discovered through comprehensive test suite:
   - Dynamically turn off the every-turn passage with @unhook
   - Will need to keep track of these as the parser goes and enact on game loop turn
 
-- [ ] **Undo stacks**
-  - Implement "go back" and undo method in engine with <- UI element
-  - Set up N-length `state` stack, add/discard every "turn" (player action) and pop it on undo being called
-  - Alternatively, just store the deltas? And merge into "base" state. Might be more complicated but would be more memory-efficient.
+- [x] **Undo stacks** - ✅ CORE COMPLETED (Dec 2025)
+  - [x] Engine-side: `GameSnapshot`, `undo()`, `redo()`, `can_undo()`, `can_redo()`
+  - [x] Browser template (`bardic bundle`): ← → buttons in header
+  - [ ] CLI player (`bardic play`): Add undo/redo keyboard shortcuts
+  - [ ] NiceGUI template (`bardic init nicegui`): Add undo/redo buttons
+  - [ ] Reflex template (`bardic init reflex`): Add undo/redo buttons
+  - [ ] React/web template (`bardic init web`): Add undo/redo buttons
 
 ## 📚 Documentation
 
