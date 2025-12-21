@@ -11,7 +11,7 @@ import time
 import webbrowser
 import shutil
 from bardic.runtime.engine import BardEngine
-
+from bardic.compiler.compiler import BardCompiler
 from bardic import __version__
 
 
@@ -23,6 +23,10 @@ def cli():
 
     Create branching narratives with Python integration for
     modern web applications.
+
+    \b
+    Quick start:
+        bardic play story.bard  # Play directly (auto-compiles)
 
     \b
     Common workflow:
@@ -56,13 +60,14 @@ def compile(input_file, output):
 
         # Show success message
         # Calculate total input size (including all @include files)
-        with open(input_file, 'r', encoding='utf-8') as f:
+        with open(input_file, "r", encoding="utf-8") as f:
             source = f.read()
 
         # Resolve includes to get the ACTUAL total source size
         from bardic.compiler.parsing.preprocessing import resolve_includes
+
         resolved_source, _ = resolve_includes(source, str(Path(input_file).resolve()))
-        input_size = len(resolved_source.encode('utf-8'))
+        input_size = len(resolved_source.encode("utf-8"))
 
         output_size = Path(output_path).stat().st_size
 
@@ -82,14 +87,13 @@ def play(story_file: str, no_color: bool):
     """
     Play a compiled story in the terminal.
 
-    Loads a compiled JSON story file and presents it as an interactive text adventure.
-    Navigate using numbered choices.
-
-    The story file must be a completed Bardic story (use 'bardic compile' first).
+    Accepts either a .bard source file or a compiled .json file. If given a .bard file,
+    it will be compiled automatically.
 
     \b
     Example:
-        bardic play story.json
+        bardic play story.bard # Auto-compiles and plays
+        bardic play story.json # Plays compiled story
         bardic play story.json --no-color
 
     \b
@@ -101,23 +105,40 @@ def play(story_file: str, no_color: bool):
     if no_color:
         click.style = lambda text, **kwargs: text
 
-    # Load the story
-    try:
-        with open(story_file) as f:
-            story = json.load(f)
-    except json.JSONDecodeError as e:
-        click.echo(
-            click.style("✗ Error: ", fg="red", bold=True) + f"Invalid JSON: {e}",
-            err=True,
-        )
-        sys.exit(1)
-    except Exception as e:
-        click.echo(
-            click.style("✗ Error: ", fg="red", bold=True)
-            + f"Could not load story: {e}",
-            err=True,
-        )
-        sys.exit(1)
+    # Load the story (auto-compile if .bard file)
+    story_path = Path(story_file)
+
+    if story_path.suffix.lower() == ".bard":
+        # Auto-compile .bard file
+        try:
+            click.echo(click.style("Compiling", fg="cyan") + f" {story_file}...")
+            compiler = BardCompiler()
+            story = compiler.compile_string(story_path.read_text(encoding="utf-8"))
+            click.echo(click.style("✓", fg="green") + " Compiled successfully")
+            click.echo()
+        except Exception as e:
+            click.echo(
+                click.style("✗ Compile Error: ", fg="red", bold=True) + str(e), err=True
+            )
+            sys.exit(1)
+    else:
+        # Load pre-compiled JSON
+        try:
+            with open(story_file) as f:
+                story = json.load(f)
+        except json.JSONDecodeError as e:
+            click.echo(
+                click.style("✗ Error: ", fg="red", bold=True) + f"Invalid JSON: {e}",
+                err=True,
+            )
+            sys.exit(1)
+        except Exception as e:
+            click.echo(
+                click.style("✗ Error: ", fg="red", bold=True)
+                + f"Could not load story: {e}",
+                err=True,
+            )
+            sys.exit(1)
 
     # Create engine
     try:
@@ -607,25 +628,29 @@ def serve(port, frontend_port, no_browser):
 
 @cli.command()
 @click.argument("story_file", type=click.Path(exists=True))
-@click.option("--output", "-o", default="./dist", help="Output directory for the bundle")
+@click.option(
+    "--output", "-o", default="./dist", help="Output directory for the bundle"
+)
 @click.option("--name", "-n", help="Game name (uses metadata title if not specified)")
 @click.option(
-    "--theme", "-t",
+    "--theme",
+    "-t",
     default="dark",
     type=click.Choice(["dark", "light", "retro"]),
-    help="Visual theme for the game"
+    help="Visual theme for the game",
 )
 @click.option(
-    "--zip", "-z",
-    is_flag=True,
-    help="Create a ZIP file ready for upload to itch.io"
+    "--zip", "-z", is_flag=True, help="Create a ZIP file ready for upload to itch.io"
 )
 @click.option(
-    "--minimal", "-m",
+    "--minimal",
+    "-m",
     is_flag=True,
-    help="Minimal bundle with only Python core (~6 MB instead of ~17 MB)"
+    help="Minimal bundle with only Python core (~6 MB instead of ~17 MB)",
 )
-def bundle(story_file: str, output: str, name: str, theme: str, zip: bool, minimal: bool):
+def bundle(
+    story_file: str, output: str, name: str, theme: str, zip: bool, minimal: bool
+):
     """
     Bundle a Bardic game for browser distribution.
 
@@ -671,23 +696,35 @@ def bundle(story_file: str, output: str, name: str, theme: str, zip: bool, minim
         if zip:
             zip_path = shutil.make_archive(
                 str(output_path),  # Base name (without .zip)
-                'zip',             # Format
+                "zip",  # Format
                 output_path.parent,  # Root directory
-                output_path.name     # Base directory to zip
+                output_path.name,  # Base directory to zip
             )
             click.echo()
             click.echo(click.style("✓", fg="green", bold=True) + " ZIP created!")
             click.echo(f"  → {zip_path}")
             click.echo()
             click.echo("To upload to itch.io:")
-            click.echo(click.style(f"  Upload {zip_path} and mark as 'playable in browser'", fg="cyan"))
+            click.echo(
+                click.style(
+                    f"  Upload {zip_path} and mark as 'playable in browser'", fg="cyan"
+                )
+            )
         else:
             click.echo()
             click.echo("To test locally:")
-            click.echo(click.style(f"  cd {output_path} && python -m http.server 8000", fg="cyan"))
+            click.echo(
+                click.style(
+                    f"  cd {output_path} && python -m http.server 8000", fg="cyan"
+                )
+            )
             click.echo()
             click.echo("To create a ZIP for itch.io:")
-            click.echo(click.style("  Re-run with --zip flag, or manually zip the folder", fg="cyan"))
+            click.echo(
+                click.style(
+                    "  Re-run with --zip flag, or manually zip the folder", fg="cyan"
+                )
+            )
 
     except Exception as e:
         click.echo(click.style("✗ Error: ", fg="red", bold=True) + str(e), err=True)

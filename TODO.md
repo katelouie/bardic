@@ -161,5 +161,3 @@ Wishlist for the 1.0 release:
 ---
 
 *This TODO is a living document. Update it as priorities shift, items complete, or new ideas emerge.*
-
-*Co-maintained with love by Kate & Claude 💙🦝*
