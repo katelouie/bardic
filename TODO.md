@@ -79,14 +79,18 @@ High priority fixes discovered through comprehensive test suite:
   - Functions similarly to Ink gathers
   - Might be called @merge?
 
-- [ ] **Hooks and listener system**
-  - Implement @hook and @unhook to run a passage on every (X) event ie. `@hook turn_end HookTimeIncrement`
-  - Dynamically turn off the every-turn passage with @unhook
-  - Will need to keep track of these as the parser goes and enact on game loop turn
+- [x] **Hooks and listener system** - ✅ COMPLETED (Dec 2025)
+  - [x] @hook and @unhook directives in parser
+  - [x] register_hook/unregister_hook/trigger_event in engine
+  - [x] turn_end event fires after every choose()
+  - [x] Hooks work inside @if/@for blocks
+  - [x] Hook state included in undo/redo snapshots
+  - [x] pytest tests: `tests/test_hooks.py` (11 tests)
 
 - [x] **Undo stacks** - ✅ CORE COMPLETED (Dec 2025)
   - [x] Engine-side: `GameSnapshot`, `undo()`, `redo()`, `can_undo()`, `can_redo()`
   - [x] Browser template (`bardic bundle`): ← → buttons in header
+  - [x] pytest tests: `tests/test_undo_redo.py` (14 tests)
   - [ ] CLI player (`bardic play`): Add undo/redo keyboard shortcuts
   - [ ] NiceGUI template (`bardic init nicegui`): Add undo/redo buttons
   - [ ] Reflex template (`bardic init reflex`): Add undo/redo buttons

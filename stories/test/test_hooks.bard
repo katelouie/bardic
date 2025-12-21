@@ -1,0 +1,30 @@
+:: Start
+~ health = 100
+
+Welcome to the poison test!
+
++ [Drink poison] -> Drink_Poison
++ [Go safely] -> Safe
+
+:: Drink_Poison
+@hook turn_end Effect_Poison
+You drink the mysterious vial.
+
++ [Continue] -> Cave
+
+:: Effect_Poison
+You feel the poison burning in your veins.
+~ health = health - 10
+
+:: Safe
+You decide not to drink.
++ [Continue] -> Cave
+
+:: Cave
+The cave is dark and cold.
+{health ? HP: {health} |}
++ [Go deeper] -> Deep
+
+:: Deep
+You venture deeper.
++ [Return] -> Cave

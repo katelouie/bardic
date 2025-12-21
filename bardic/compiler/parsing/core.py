@@ -6,8 +6,19 @@ from typing import Dict, Any, Optional, List
 from .errors import format_error, SourceLocation
 from .preprocessing import extract_imports, extract_metadata, strip_inline_comment
 from .blocks import extract_python_block, extract_conditional_block, extract_loop_block
-from .content import parse_content_line, parse_choice_line, parse_tags, extract_passage_params, parse_passage_params, extract_target_and_args
-from .directives import parse_render_line, parse_input_line, extract_multiline_expression
+from .content import (
+    parse_content_line,
+    parse_choice_line,
+    parse_tags,
+    extract_passage_params,
+    parse_passage_params,
+    extract_target_and_args,
+)
+from .directives import (
+    parse_render_line,
+    parse_input_line,
+    extract_multiline_expression,
+)
 from .validation import (
     BlockStack,
     validate_passage_name,
@@ -23,7 +34,7 @@ from .validation import (
 def parse(
     source: str,
     filename: Optional[str] = None,
-    line_map: Optional[List[SourceLocation]] = None
+    line_map: Optional[List[SourceLocation]] = None,
 ) -> Dict[str, Any]:
     """
     Parse a .bard source string into structured data.
@@ -50,7 +61,9 @@ def parse(
     block_stack = BlockStack()  # Track open control blocks
 
     # State for inline preprocessing
-    in_imports_section = True  # True at start, becomes False after first non-import line
+    in_imports_section = (
+        True  # True at start, becomes False after first non-import line
+    )
     in_metadata_block = False  # True when we see @metadata, False when block ends
 
     i = 0
@@ -118,7 +131,9 @@ def parse(
 
             # Extract parameters from passage name (before parsing tags)
             # Format: PassageName(param1, param2=default) ^tag1 ^tag2
-            passage_name_with_params, params_str = extract_passage_params(passage_header)
+            passage_name_with_params, params_str = extract_passage_params(
+                passage_header
+            )
 
             # Extract tags from passage name (tags can appear after params)
             passage_name, passage_tags = parse_tags(passage_name_with_params)
@@ -170,7 +185,9 @@ def parse(
 
         # Conditional block: <<if or @if:
         if line.strip().startswith("<<if ") or line.strip().startswith("@if "):
-            conditional, lines_consumed = extract_conditional_block(lines, i, filename, line_map)
+            conditional, lines_consumed = extract_conditional_block(
+                lines, i, filename, line_map
+            )
             current_passage["content"].append(conditional)
             i += lines_consumed
             continue
@@ -201,17 +218,75 @@ def parse(
             i += 1
             continue
 
+        # Hook directive: @hook event_name passage_name
+        if line.strip().startswith("@hook "):
+            parts = line.strip().split()
+            if len(parts) != 3:
+                raise SyntaxError(
+                    format_error(
+                        error_type="Syntax Error",
+                        line_num=i + 1,
+                        lines=lines,
+                        message="@hook requires exactly 2 arguments: event_name and passage_name",
+                        pointer_length=len(line.strip()),
+                        suggestion="Example: @hook turn_end System_Clock",
+                        filename=filename,
+                        line_map=line_map,
+                    )
+                )
+            _, event_name, passage_name = parts
+            current_passage["execute"].append(
+                {
+                    "type": "hook",
+                    "action": "add",
+                    "event": event_name,
+                    "target": passage_name,
+                }
+            )
+            i += 1
+            continue
+
+        # Unhook directive: @unhook event_name passage_name
+        if line.strip().startswith("@unhook "):
+            parts = line.strip().split()
+            if len(parts) != 3:
+                raise SyntaxError(
+                    format_error(
+                        error_type="Syntax Error",
+                        line_num=i + 1,
+                        lines=lines,
+                        message="@unhook requires exactly 2 arguments: event_name and passage_name",
+                        pointer_length=len(line.strip()),
+                        suggestion="Example: @unhook turn_end Effect_Poison",
+                        filename=filename,
+                        line_map=line_map,
+                    )
+                )
+            _, event_name, passage_name = parts
+            current_passage["execute"].append(
+                {
+                    "type": "hook",
+                    "action": "remove",
+                    "event": event_name,
+                    "target": passage_name,
+                }
+            )
+            i += 1
+            continue
+
         # Immediate jump to target
         if line.strip().startswith("->"):
             match = re.match(r"->\s*(.+)", line.strip())
             if match:
                 target_with_args = match.group(1).strip()
                 target, args = extract_target_and_args(target_with_args)
-                current_passage["content"].append({
-                    "type": "jump",
-                    "target": target,
-                    "args": args  # NEW: store argument expressions
-                })
+                current_passage["content"].append(
+                    {
+                        "type": "jump",
+                        "target": target,
+                        "args": args,  # NEW: store argument expressions
+                    }
+                )
             i += 1
             continue
 
@@ -222,28 +297,29 @@ def parse(
             code, _ = strip_inline_comment(code)
 
             # Check if this is a multi-line statement
-            complete_code, lines_consumed = extract_multiline_expression(
-                lines, i, code
-            )
+            complete_code, lines_consumed = extract_multiline_expression(lines, i, code)
 
             # Validate Python syntax at compile time
             import ast
+
             try:
                 ast.parse(complete_code)
             except SyntaxError as e:
                 # Calculate actual line number (accounting for multi-line statements)
                 error_line = i + 1 + (e.lineno - 1 if e.lineno else 0)
-                raise SyntaxError(format_error(
-                    error_type="Invalid Python Syntax",
-                    line_num=error_line,
-                    lines=lines,
-                    message=f"Python syntax error: {e.msg}",
-                    pointer_col=e.offset - 1 if e.offset else 0,
-                    pointer_length=1,
-                    suggestion="Check your Python syntax. Common issues: missing colons, unmatched parentheses, unclosed strings",
-                    filename=filename,
-                    line_map=line_map
-                ))
+                raise SyntaxError(
+                    format_error(
+                        error_type="Invalid Python Syntax",
+                        line_num=error_line,
+                        lines=lines,
+                        message=f"Python syntax error: {e.msg}",
+                        pointer_col=e.offset - 1 if e.offset else 0,
+                        pointer_length=1,
+                        suggestion="Check your Python syntax. Common issues: missing colons, unmatched parentheses, unclosed strings",
+                        filename=filename,
+                        line_map=line_map,
+                    )
+                )
 
             # Store as Python statement (executed via exec)
             current_passage["execute"].append(
@@ -284,11 +360,15 @@ def parse(
             if line.rstrip().endswith("<>"):
                 # Remove <> and parse (glue: no newline after)
                 content_line = line.rstrip()[:-2]
-                content_tokens = parse_content_line(content_line, i + 1, lines, filename, line_map)
+                content_tokens = parse_content_line(
+                    content_line, i + 1, lines, filename, line_map
+                )
                 current_passage["content"].extend(content_tokens)
             else:
                 # Normal: add newline after content
-                content_tokens = parse_content_line(line, i + 1, lines, filename, line_map)
+                content_tokens = parse_content_line(
+                    line, i + 1, lines, filename, line_map
+                )
                 current_passage["content"].extend(content_tokens)
                 current_passage["content"].append({"type": "text", "value": "\n"})
             i += 1
@@ -307,15 +387,19 @@ def parse(
             # Check for @-directives that look wrong
             if stripped.startswith("@") and not stripped.startswith("@include"):
                 # Might be a typo like @iff, @elseif, @endif:, @endfor:, etc.
-                raise SyntaxError(format_error(
-                    error_type="Syntax Error",
-                    line_num=i,
-                    lines=lines,
-                    message=f"Unrecognized directive: {stripped.split()[0] if ' ' in stripped else stripped}",
-                    pointer_length=len(stripped.split()[0] if ' ' in stripped else stripped),
-                    suggestion="Check for typos in directives. Valid directives: @if, @elif, @else, @endif, @for, @endfor, @py, @endpy, @include, @render, @input",
-                    line_map=line_map,
-                ))
+                raise SyntaxError(
+                    format_error(
+                        error_type="Syntax Error",
+                        line_num=i,
+                        lines=lines,
+                        message=f"Unrecognized directive: {stripped.split()[0] if ' ' in stripped else stripped}",
+                        pointer_length=len(
+                            stripped.split()[0] if " " in stripped else stripped
+                        ),
+                        suggestion="Check for typos in directives. Valid directives: @if, @elif, @else, @endif, @for, @endfor, @py, @endpy, @include, @render, @input",
+                        line_map=line_map,
+                    )
+                )
 
         i += 1
 

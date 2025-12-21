@@ -13,11 +13,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Undo/Redo System** - Players can now rewind and replay choices
   - `engine.undo()` / `engine.redo()` methods for programmatic control
   - `engine.can_undo()` / `engine.can_redo()` for UI button state
-  - `GameSnapshot` dataclass captures complete game state (passage, variables, used choices)
+  - `GameSnapshot` dataclass captures complete game state (passage, variables, used choices, hooks)
   - Stack-based architecture with configurable depth (default: 50)
   - Redo stack clears on new choices (timeline branching)
   - Snapshots taken before navigation for correct restore point
   - Browser template includes ← → navigation buttons in header
+
+- **Hooks System** - Background systems that run every turn
+  - `@hook event_name PassageName` - Register a passage to run on an event
+  - `@unhook event_name PassageName` - Unregister a hooked passage
+  - `engine.register_hook()` / `engine.unregister_hook()` for programmatic control
+  - `engine.trigger_event()` executes all passages hooked to an event
+  - Built-in `turn_end` event fires after every `choose()` call
+  - FIFO execution order (first registered, first run)
+  - Idempotent registration (duplicate hooks ignored)
+  - Hooks can self-remove inside `@if` blocks
+  - Hook state included in undo/redo snapshots
 
 ### Changed
 
