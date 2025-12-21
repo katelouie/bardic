@@ -1,0 +1,22 @@
+:: Start
+Testing hook that removes itself...
+~ countdown = 3
+@hook turn_end CountdownHook
+
++ [Continue] -> Room1
+
+:: CountdownHook
+Countdown: {countdown}
+~ countdown = countdown - 1
+@if countdown <= 0:
+@unhook turn_end CountdownHook
+Countdown finished! Hook removed.
+@endif
+
+:: Room1
+Still going...
++ [Continue] -> Room1
++ [End] -> End
+
+:: End
+Done!

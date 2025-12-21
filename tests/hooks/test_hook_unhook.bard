@@ -1,0 +1,32 @@
+:: Start
+You feel fine.
+~ health = 100
++ [Drink poison] -> DrinkPoison
++ [Skip poison] -> Safe
+
+:: DrinkPoison
+You drink the mysterious vial!
+@hook turn_end PoisonEffect
++ [Continue] -> Wandering
+
+:: Safe
+You wisely avoid the vial.
++ [Continue] -> Wandering
+
+:: Wandering
+Your health: {health}
++ [Drink antidote] -> DrinkAntidote
++ [Keep wandering] -> Wandering
++ [End] -> End
+
+:: PoisonEffect
+The poison burns! You lose 10 HP.
+~ health = health - 10
+
+:: DrinkAntidote
+You drink the antidote!
+@unhook turn_end PoisonEffect
++ [Continue] -> Wandering
+
+:: End
+Final health: {health}

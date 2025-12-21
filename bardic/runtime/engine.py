@@ -59,6 +59,7 @@ class GameSnapshot:
     current_passage: str | None
     state: dict[str, Any]
     used_choices: set
+    hooks: dict[str, list[str]]  # Include hook registrations
 
     @classmethod
     def from_engine(cls, engine: "BardEngine") -> "GameSnapshot":
@@ -67,6 +68,7 @@ class GameSnapshot:
             current_passage=engine.current_passage_id,
             state=copy.deepcopy(engine.state),
             used_choices=engine.used_choices.copy(),
+            hooks=copy.deepcopy(engine.hooks),
         )
 
     def restore_to(self, engine: "BardEngine") -> None:
@@ -74,6 +76,7 @@ class GameSnapshot:
         engine.current_passage_id = self.current_passage
         engine.state = self.state
         engine.used_choices = self.used_choices
+        engine.hooks = self.hooks
 
 
 class BardEngine:
@@ -99,6 +102,7 @@ class BardEngine:
         self.passages = story_data["passages"]
         self.current_passage_id = None  # Will be set by goto()
         self.state = {}  # Game state (variables)
+        self.hooks: dict[str, list[str]] = {}  # Event -> list of passage IDs
         self.state["_inputs"] = {}  # Initialize empty inputs dict (always available)
         self._local_scope_stack = []  # Stack of local parameter scopes (NEW for passage params)
         self.used_choices = set()  # Track which one-time choices have been used
@@ -807,7 +811,27 @@ class BardEngine:
             self.used_choices.add(choice_id)
 
         # Navigate to target (executes and caches)
-        return self.goto(passage_spec)
+        result = self.goto(passage_spec)
+
+        # Trigger turn end hooks and append any output
+        hook_output = self.trigger_event("turn_end")
+
+        if hook_output:
+            # Append hook output to the passage content
+            result = PassageOutput(
+                content=result.content + "\n\n" + hook_output
+                if result.content
+                else hook_output,
+                choices=result.choices,
+                passage_id=result.passage_id,
+                render_directives=result.render_directives,
+                input_directives=result.input_directives,
+                jump_target=result.jump_target,
+            )
+            # Update cache with combined output
+            self._current_output = result
+
+        return result
 
     def submit_inputs(self, input_data: dict) -> None:
         """
@@ -840,6 +864,8 @@ class BardEngine:
                 self._execute_set_var(cmd)
             elif cmd["type"] == "expression_statement":
                 self._execute_expression_statement(cmd)
+            elif cmd["type"] == "hook":
+                self._execute_hook_command(cmd)
 
     def _execute_python_statement(self, cmd: dict) -> None:
         """
@@ -962,6 +988,17 @@ class BardEngine:
                 f"  Error: {e}\n"
                 f"  Current state: {list(self.state.keys())}"
             )
+
+    def _execute_hook_command(self, cmd: dict) -> None:
+        """Execute a hook registration/unregistration command."""
+        action = cmd["action"]
+        event = cmd["event"]
+        target = cmd["target"]
+
+        if action == "add":
+            self.register_hook(event, target)
+        elif action == "remove":
+            self.unregister_hook(event, target)
 
     def _get_safe_builtins(self) -> dict[str, Any]:
         """
@@ -1282,6 +1319,11 @@ class BardEngine:
             elif token["type"] == "jump":
                 # Jump found - stop rendering HERE and return the target
                 return "".join(result), token["target"], directives
+            elif token["type"] == "hook":
+                # Execute hook registration/unregistration during render
+                # (for hooks inside conditionals/loops)
+                self._execute_hook_command(token)
+                # Hooks don't produce text output
 
         return "".join(result), None, directives
 
@@ -1506,6 +1548,74 @@ class BardEngine:
         """Check if redo is available (for UI button state)."""
         return len(self.redo_stack) > 0
 
+    def register_hook(self, event: str, passage_id: str) -> None:
+        """Register a passage to be called when an event fires.
+
+        Hooks are stored in FIFO order and executed in registration order.
+        Duplicate regs are ignored (idempotent)
+
+        Args:
+            event: Event name (eg "turn_end")
+            passage_id: Passage to execute when event fires
+        """
+        if event not in self.hooks:
+            self.hooks[event] = []
+
+        # Prevent dupes
+        if passage_id not in self.hooks[event]:
+            self.hooks[event].append(passage_id)
+
+    def unregister_hook(self, event: str, passage_id: str) -> None:
+        """
+        Remove a passage from an event's hook list.
+
+        Silently succeeds if the passage wasn't hooked (idempotent).
+
+        Args:
+            event: Event name
+            passage_id: Passage to remove
+        """
+        if event in self.hooks and passage_id in self.hooks[event]:
+            self.hooks[event].remove(passage_id)
+
+    def trigger_event(self, event: str) -> str:
+        """
+        Execute all passages hooked to an event.
+
+        Passages are executed in FIFO order (first registered, first run).
+        Uses a copy of the hook list to safely allow hooks to unregister themselves.
+
+        Args:
+            event: Event name to trigger
+
+        Returns:
+            Combined text output from all hook passages (for appending to current output)
+        """
+        if event not in self.hooks:
+            return ""
+
+        # Copy the list! Hooks might unregister themselves during execution
+        active_hooks = list(self.hooks[event])
+
+        combined_output = []
+
+        for passage_id in active_hooks:
+            if passage_id not in self.passages:
+                print(f"Warning: Hooked passage '{passage_id}' not found, skipping")
+                continue
+
+            # Execute the passage (runs commands, modifies state)
+            self._execute_passage(passage_id)
+
+            # Render the passage (gets text output)
+            hook_output = self._render_passage(passage_id)
+
+            # Only append non-empty output
+            if hook_output.content.strip():
+                combined_output.append(hook_output.content)
+
+        return "\n".join(combined_output)
+
     def get_story_info(self) -> Dict[str, Any]:
         """
         Get metadata about loaded story.
@@ -1617,6 +1727,7 @@ class BardEngine:
                 "passage_count": len(self.passages),
                 "initial_passage": self.story["initial_passage"],
             },
+            "hooks": self.hooks,
         }
 
     def load_state(self, save_data: dict[str, Any]) -> None:
@@ -1678,6 +1789,9 @@ class BardEngine:
         # Clear undo/redo stacks on load (fresh start, new session)
         self.undo_stack.clear()
         self.redo_stack.clear()
+
+        # Restore hooks
+        self.hooks = save_data.get("hooks", {})
 
         # Navigate to saved passage (this re-renders with restored state)
         self.goto(target_passage)

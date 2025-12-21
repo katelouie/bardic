@@ -1,0 +1,40 @@
+:: Start
+Edge case tests.
+~ test_var = 0
+
++ [Test duplicate registration] -> TestDuplicate
++ [Test unhook non-existent] -> TestUnhookMissing
++ [Test hook with underscores] -> TestUnderscores
+
+:: TestDuplicate
+Registering same hook twice...
+@hook turn_end Counter
+@hook turn_end Counter
+~ test_var = 0
++ [Make a choice] -> CheckDuplicate
+
+:: Counter
+~ test_var = test_var + 1
+
+:: CheckDuplicate
+test_var should be 1 (not 2): {test_var}
++ [Back] -> Start
+
+:: TestUnhookMissing
+Unhooking something that was never hooked...
+@unhook turn_end NonExistentHook
+This should not crash!
++ [Back] -> Start
+
+:: TestUnderscores
+Testing hook names with underscores...
+@hook turn_end My_Custom_Hook_Name
++ [Continue] -> CheckUnderscore
+
+:: My_Custom_Hook_Name
+~ test_var = 999
+
+:: CheckUnderscore
+test_var should be 999: {test_var}
+@unhook turn_end My_Custom_Hook_Name
++ [Back] -> Start

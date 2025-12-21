@@ -1,0 +1,31 @@
+:: Start
+Setting up multiple hooks...
+@hook turn_end Hook_A
+@hook turn_end Hook_B
+@hook turn_end Hook_C
+~ log = []
+
++ [Continue] -> Room1
+
+:: Hook_A
+~ log = log + ["A"]
+
+:: Hook_B
+~ log = log + ["B"]
+
+:: Hook_C
+~ log = log + ["C"]
+
+:: Room1
+Hooks fired: {log}
++ [Remove B] -> RemoveB
++ [Continue] -> Room1
++ [End] -> End
+
+:: RemoveB
+Removing hook B...
+@unhook turn_end Hook_B
++ [Continue] -> Room1
+
+:: End
+Final log: {log}

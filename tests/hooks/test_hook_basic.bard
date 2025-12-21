@@ -1,0 +1,22 @@
+:: Start
+Welcome to the hook test!
+@hook turn_end Tick_Clock
+~ turns = 0
+
++ [Continue] -> Room1
+
+:: Tick_Clock
+~ turns = turns + 1
+
+:: Room1
+You are in room 1. Turns: {turns}
++ [Go to room 2] -> Room2
++ [Stay here] -> Room1
+
+:: Room2
+You are in room 2. Turns: {turns}
++ [Go back] -> Room1
++ [End] -> End
+
+:: End
+Game over! Total turns: {turns}
