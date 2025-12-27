@@ -34,6 +34,10 @@ Quick reference for all Bardic syntax elements:
 | `@py:` / `@endpy` | Python code block | `@py:\ncode\n@endpy` |
 | `@if:` / `@elif:` / `@else:` / `@endif` | Conditional | `@if condition:` |
 | `@for:` / `@endfor` | Loop | `@for item in list:` |
+| `@hook` | Register event hook | `@hook turn_end MyPassage` |
+| `@unhook` | Unregister event hook | `@unhook turn_end MyPassage` |
+| `@join` | Merge point for inline blocks | `@join` |
+| `-> @join` | Choice with inline block | `+ [Text] -> @join` |
 | `~` | Variable assignment | `~ health = 100` |
 | `~ var += value` | Augmented assignment | `~ count += 1` |
 | `{}` | Expression | `{variable}` or `{function()}` or `{var:.2f}` |
@@ -1233,6 +1237,77 @@ Output: `URL: https://example.com`
 - Not rendered in output
 
 **Status:** ✅ Implemented
+
+---
+
+### Hooks (@hook / @unhook)
+
+Register passages to run automatically on specific events. Useful for background systems like poison effects, timers, or turn counters.
+
+**Syntax:**
+```bard
+@hook event_name PassageName    # Register a hook
+@unhook event_name PassageName  # Unregister a hook
+```
+
+**Built-in Events:**
+- `turn_end` - Fires after every `choose()` call
+
+**Example: Poison System**
+```bard
+:: Start
+You feel fine.
++ [Drink poison] -> DrinkPoison
++ [Continue] -> Room
+
+:: DrinkPoison
+You drink the mysterious liquid...
+@hook turn_end PoisonTick
+~ poison_damage = 5
+~ health = 100
+-> Room
+
+:: PoisonTick
+~ health = health - poison_damage
+@if health <= 0:
+    @unhook turn_end PoisonTick
+@endif
+
+:: Room
+Health: {health}
++ [Wait] -> Room
++ [Find antidote] -> Antidote
+
+:: Antidote
+You found the cure!
+@unhook turn_end PoisonTick
++ [Continue] -> Room
+```
+
+**How It Works:**
+
+1. `@hook turn_end PassageName` registers a passage to run after each turn
+2. The hooked passage executes silently (content not shown, just side effects)
+3. `@unhook turn_end PassageName` removes the registration
+4. Multiple passages can hook the same event (FIFO order)
+5. Hook registration is idempotent (duplicate registrations ignored)
+6. Hooks can self-remove with `@unhook` inside `@if` blocks
+
+**Engine API:**
+```python
+engine.register_hook("turn_end", "MyPassage")
+engine.unregister_hook("turn_end", "MyPassage")
+engine.trigger_event("turn_end")  # Returns combined output
+```
+
+**Rules:**
+
+- Hook/unhook inside `@if`/`@for` blocks work correctly
+- Hook state is included in undo/redo snapshots
+- Hooked passages execute their `execute` commands only (content is hidden)
+- A passage can unregister itself (for one-time effects)
+
+**Status:** ✅ Implemented (Dec 2025)
 
 ---
 
@@ -3317,6 +3392,130 @@ Raises: `ValueError: Jump target 'NonExistentPassage' not found (in passage 'Sta
 
 ---
 
+### Join Blocks (@join)
+
+Create choices with inline content that merge back together. Similar to Ink's "gather" pattern but with explicit syntax.
+
+**Syntax:**
+```bard
++ [Choice text] -> @join
+    Indented block content.
+    ~ variable = value
+
+@join
+Content after all choices merge here.
+```
+
+**Basic Example:**
+```bard
+:: Start
+What fruit do you want?
+
++ [Apple] -> @join
+    You pick up the red apple.
+    ~ fruit = "apple"
+
++ [Pear] -> @join
+    You grab the green pear.
+    ~ fruit = "pear"
+
+@join
+You chose the {fruit}. Delicious!
++ [Continue] -> End
+
+:: End
+Thanks for playing!
+```
+
+**How It Works:**
+
+1. Choices with `-> @join` have indented block content below them
+2. When a choice is selected, its block content renders
+3. Variables set in the block persist after the merge
+4. Execution continues from the `@join` marker
+5. Choices after `@join` appear in the next "section"
+
+**Multiple @join Markers (Sections):**
+
+Each `@join` marker divides the passage into sections. Players progress through sections sequentially:
+
+```bard
+:: Tournament
+Round 1: Attack or Defend?
+
++ [Attack] -> @join
+    You strike fiercely!
+    ~ damage = 10
+
++ [Defend] -> @join
+    You raise your shield.
+    ~ defense = 5
+
+@join
+Round 1 complete.
+Round 2: Finish or Mercy?
+
++ [Finish them] -> @join
+    A decisive blow!
+    ~ victory = "brutal"
+
++ [Show mercy] -> @join
+    You stay your hand.
+    ~ victory = "merciful"
+
+@join
+The battle is over. You won with a {victory} victory.
++ [Continue] -> NextScene
+```
+
+**Mixed with Regular Choices:**
+
+Regular choices exit the @join flow entirely:
+
+```bard
+:: Crossroads
+You see something interesting.
+
++ [Investigate] -> @join
+    You look closer...
+
++ [Leave immediately] -> OtherPlace
+
+@join
+After investigating, you continue.
++ [Done] -> End
+```
+
+If player chooses "Leave immediately", they go to OtherPlace. If they choose "Investigate", they see the block content and then "Done" appears.
+
+**Works With:**
+
+- **Conditional choices:** `+ {has_key} [Use key] -> @join`
+- **One-time choices:** `* [One-time option] -> @join`
+- **Hooks:** `@hook`/`@unhook` inside block content
+- **Variables:** `~ var = value` in blocks
+- **Undo/redo:** Section index included in snapshots
+
+**Block Termination:**
+
+Block content ends when the parser encounters:
+- Another choice line (`+ [` or `* [`)
+- The `@join` marker
+- A new passage header (`::`)
+- Block directives (`@if`, `@endif`, `@for`, `@endfor`, `@py`, `@endpy`)
+
+**Rules:**
+
+- `@join` is a reserved target name (cannot have a passage named "@join")
+- Empty blocks are valid (choice just continues to @join)
+- Block content must be indented more than the choice line
+- Multiple @join markers create sequential sections
+- Section index resets when re-entering a passage
+
+**Status:** ✅ Implemented (Dec 2025)
+
+---
+
 ### Tags (Custom Markup)
 
 Mark text for special frontend treatment.
@@ -3589,6 +3788,71 @@ Bardic compiles `.bard` files to JSON for runtime execution.
 - Immediate diverts (`->`) jump without player input
 - Can pass parameters during navigation
 - Engine tracks current passage ID
+
+### Undo/Redo
+
+Players can rewind and replay their choices. The engine maintains undo and redo stacks.
+
+**Engine API:**
+```python
+# Check if undo/redo is available
+if engine.can_undo():
+    engine.undo()  # Go back one choice
+
+if engine.can_redo():
+    engine.redo()  # Replay undone choice
+```
+
+**How It Works:**
+
+1. Before each `choose()` call, a snapshot is taken
+2. Snapshot captures: current passage, all variables, used choices, hooks, @join section index
+3. `undo()` restores the previous snapshot and re-renders
+4. `redo()` restores the undone state (if no new choices were made)
+5. Making a new choice after undo clears the redo stack (timeline branching)
+
+**GameSnapshot Contents:**
+```python
+@dataclass
+class GameSnapshot:
+    current_passage: str
+    state: dict[str, Any]        # All game variables
+    used_choices: set            # One-time choices used
+    hooks: dict[str, list[str]]  # Registered hooks
+    join_section_index: dict     # @join section tracking
+```
+
+**Stack Configuration:**
+```python
+# Default: 50 undo levels
+engine = BardEngine(story)
+engine.undo_stack.maxlen  # 50
+```
+
+**Browser Template:**
+
+The browser bundle (`bardic bundle`) includes ← → buttons in the header for undo/redo. Button states update automatically based on `can_undo()` / `can_redo()`.
+
+**Integration Example:**
+```python
+@app.post("/story/undo")
+async def undo_choice(session_id: str):
+    engine = sessions[session_id]
+    if engine.can_undo():
+        engine.undo()
+        return {"success": True, "output": engine.current()}
+    return {"success": False, "message": "Nothing to undo"}
+```
+
+**Rules:**
+
+- Snapshots taken BEFORE navigation (so undo returns to choice point)
+- Deep copies of state prevent reference issues
+- New choice after undo clears redo stack
+- Stack is bounded (default 50) to prevent memory issues
+- Hook state and @join section index included in snapshots
+
+**Status:** ✅ Implemented (Dec 2025)
 
 ---
 

@@ -1,0 +1,17 @@
+:: Start
+Welcome! Choose your fruit.
+
++ [Apple] -> @join
+    You pick up the red apple.
+    ~ choice = "apple"
+
++ [Pear] -> @join
+    You grab the green pear.
+    ~ choice = "pear"
+
+@join
+You chose the {choice}. Delicious!
++ [Continue] -> End
+
+:: End
+Thanks for playing!

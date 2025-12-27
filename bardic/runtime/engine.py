@@ -60,6 +60,7 @@ class GameSnapshot:
     state: dict[str, Any]
     used_choices: set
     hooks: dict[str, list[str]]  # Include hook registrations
+    join_section_index: dict[str, int]
 
     @classmethod
     def from_engine(cls, engine: "BardEngine") -> "GameSnapshot":
@@ -69,6 +70,7 @@ class GameSnapshot:
             state=copy.deepcopy(engine.state),
             used_choices=engine.used_choices.copy(),
             hooks=copy.deepcopy(engine.hooks),
+            join_section_index=copy.deepcopy(engine._join_section_index),
         )
 
     def restore_to(self, engine: "BardEngine") -> None:
@@ -77,6 +79,7 @@ class GameSnapshot:
         engine.state = self.state
         engine.used_choices = self.used_choices
         engine.hooks = self.hooks
+        engine._join_section_index = self.join_section_index
 
 
 class BardEngine:
@@ -109,6 +112,10 @@ class BardEngine:
         self.context = context or {}
         self.evaluate_directives = evaluate_directives
         self._current_output = None  # Cache for current passage output
+        # Key: passage_id, Val: current section 0-index
+        self._join_section_index: dict[
+            str, int
+        ] = {}  # @join section tracking (which one we're in)
 
         # Undo/redo system
         self.undo_stack: deque[GameSnapshot] = deque(maxlen=50)
@@ -487,8 +494,10 @@ class BardEngine:
 
         # Filter merged choices based on conditions AND render text with interpolation
         available_choices = []
+        current_section = self._join_section_index.get(passage_id, 0)
         for choice in all_choices:
-            if self._is_choice_available(choice):
+            choice_section = choice.get("section", 0)
+            if self._is_choice_available(choice) and choice_section == current_section:
                 # Render choice text (interpolates variables)
                 rendered_choice = self._render_choice_text(choice)
                 available_choices.append(rendered_choice)
@@ -542,7 +551,9 @@ class BardEngine:
         sticky = choice.get("sticky", True)
         if not sticky:
             # This is a one-time choice - check if used
-            choice_id = f"{self.current_passage_id}:{choice['text']}:{choice['target']}"
+            # Need to render choice text to match ID format used in choose()
+            rendered = self._render_choice_text(choice)
+            choice_id = f"{self.current_passage_id}:{rendered['text']}:{choice['target']}"
             if choice_id in self.used_choices:
                 return False  # Already used, hide it
 
@@ -657,6 +668,9 @@ class BardEngine:
             accumulated_content = []
             accumulated_directives = []
             visited = set()
+
+            # Reset join section index when visiting a new passage
+            self._join_section_index[passage_id] = 0
 
             # Start with the requested passage
             current_id = passage_id
@@ -794,6 +808,20 @@ class BardEngine:
 
         chosen_choice = filtered_choices[choice_index]
         target = chosen_choice["target"]
+
+        # Track this choice if it's one-time (not sticky)
+        # Must happen BEFORE @join check so one-time @join choices are tracked too
+        if not chosen_choice.get(
+            "sticky", True
+        ):  # Default to True for backwards compatability
+            # Create a unique ID for this choice based on passage + choice index + target
+            choice_id = f"{current_output.passage_id}:{chosen_choice['text']}:{target}"
+            self.used_choices.add(choice_id)
+
+        # Handle @join choice differently
+        if target == "@join":
+            return self._execute_join_choice(chosen_choice)
+
         args_str = chosen_choice.get("args", "")
 
         # Build passage spec with arguments
@@ -801,14 +829,6 @@ class BardEngine:
             passage_spec = f"{target}({args_str})"
         else:
             passage_spec = target
-
-        # Track this choice if it's one-time (not sticky)
-        if not chosen_choice.get(
-            "sticky", True
-        ):  # Default to True for backwards compatability
-            # Create a unique ID for this choice based on passage + choice index + target
-            choice_id = f"{current_output.passage_id}:{chosen_choice['text']}:{target}"
-            self.used_choices.add(choice_id)
 
         # Navigate to target (executes and caches)
         result = self.goto(passage_spec)
@@ -832,6 +852,138 @@ class BardEngine:
             self._current_output = result
 
         return result
+
+    def _execute_join_choice(self, choice: dict) -> PassageOutput:
+        """
+        Execute a @join choice: run its block, then continue from later @join marker.
+
+        Unlike regular choices which navigate to a new passage, @join choices:
+
+        1. Execute the block's block_execute commands
+        2. Render the choice's block_content
+        3. Continue from the @join marker in the same passage
+        4. Incremement section index for next @join group
+        """
+        passage_id = self.current_passage_id
+
+        # Block commands are already executed in _render_content
+
+        # Render block content
+        block_content_str = ""
+        block_directives = []
+        block_content = choice.get("block_content", [])
+        if block_content:
+            block_content_str, _, block_directives = self._render_content(block_content)
+
+        # Get the current section index and find @join marker
+        section_idx = self._join_section_index.get(passage_id, 0)
+        # Render from the marker onwards
+        post_join_output = self._render_from_join_marker(section_idx)
+        # Increment section counter for next time
+        self._join_section_index[passage_id] = section_idx + 1
+
+        # Combine outputs
+        combined_content = block_content_str
+        if post_join_output.content:
+            if combined_content and not combined_content.endswith("\n"):
+                combined_content += "\n"
+            combined_content += post_join_output.content
+
+        result = PassageOutput(
+            content=combined_content,
+            choices=post_join_output.choices,
+            passage_id=passage_id,
+            render_directives=block_directives + post_join_output.render_directives,
+            input_directives=post_join_output.input_directives,
+            jump_target=post_join_output.jump_target,
+        )
+
+        # Update cache
+        self._current_output = result
+
+        # Trigger turn_end hooks
+        hook_output = self.trigger_event("turn_end")
+        if hook_output:
+            result = PassageOutput(
+                content=result.content + "\n\n" + hook_output
+                if result.content
+                else hook_output,
+                choices=result.choices,
+                passage_id=result.passage_id,
+                render_directives=result.render_directives,
+                input_directives=result.input_directives,
+                jump_target=result.jump_target,
+            )
+            self._current_output = result
+
+        return result
+
+    def _render_from_join_marker(self, section_idx: int) -> PassageOutput:
+        """
+        Render the current passage starting from after a specific @join marker.
+
+        Finds the Nth join_marker in content (where N = section_idx),
+        then renders everything after it until the next @join or end.
+
+        Args:
+            section_idx: Which @join marker to start from (0 = first)
+
+        Returns:
+            PassageOutput with content and choices from after the @join
+        """
+        passage = self.passages[self.current_passage_id]
+        content_tokens = passage.get("content", [])
+
+        # Find the Nth join_marker
+        join_markers_found = 0
+        start_idx = 0
+
+        for i, token in enumerate(content_tokens):
+            if isinstance(token, dict) and token.get("type") == "join_marker":
+                if join_markers_found == section_idx:
+                    start_idx = i + 1  # Start AFTER the marker
+                    break
+                join_markers_found += 1
+
+        if start_idx == 0 and section_idx > 0:
+            # Didn't find the requested join marker
+            raise RuntimeError(
+                f"@join marker {section_idx} not found in passage '{self.current_passage_id}'"
+            )
+
+        # Find where to stop (next @join or end)
+        end_idx = len(content_tokens)
+        for i in range(start_idx, len(content_tokens)):
+            token = content_tokens[i]
+            if isinstance(token, dict) and token.get("type") == "join_marker":
+                end_idx = i
+                break
+
+        # Render content between markers
+        section_tokens = content_tokens[start_idx:end_idx]
+        content, jump_target, directives = self._render_content(section_tokens)
+
+        # Get choices for current section only
+        current_section = section_idx + 1  # We're now IN section N+1
+
+        section_choices = []
+        for choice in passage.get("choices", []):
+            choice_section = choice.get("section", 0)
+
+            if choice_section == current_section:
+                # This choice belongs to the current section
+                if self._is_choice_available(choice):
+                    rendered = self._render_choice_text(choice)
+                    section_choices.append(rendered)
+
+        return PassageOutput(
+            content=content,
+            choices=section_choices,
+            passage_id=self.current_passage_id,
+            render_directives=directives,
+            input_directives=[],
+            jump_target=jump_target,
+        )
 
     def submit_inputs(self, input_data: dict) -> None:
         """
@@ -1324,6 +1476,9 @@ class BardEngine:
                 # (for hooks inside conditionals/loops)
                 self._execute_hook_command(token)
                 # Hooks don't produce text output
+            elif token["type"] == "join_marker":
+                # Stop rendering at @join marker - content after @join comes later
+                break
 
         return "".join(result), None, directives
 

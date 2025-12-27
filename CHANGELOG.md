@@ -32,6 +32,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Hooks can self-remove inside `@if` blocks
   - Hook state included in undo/redo snapshots
 
+- **@join Directive** - Inline choice blocks that merge back together (like Ink gathers)
+  - `+ [Choice] -> @join` with indented block content below the choice
+  - `@join` marker where all choices merge back together
+  - Block content renders only when that choice is selected
+  - Variables set in blocks persist after the merge
+  - Multiple sequential `@join` markers per passage (sections)
+  - Works with conditional choices (`+ {cond} [Text] -> @join`)
+  - Works with one-time choices (`* [Text] -> @join`)
+  - Compatible with hooks (`@hook`/`@unhook` in blocks)
+  - Full undo/redo support (section index in snapshots)
+  - pytest tests: `tests/test_join.py`
+
 ### Changed
 
 ### Fixed

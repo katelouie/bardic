@@ -5,7 +5,12 @@ from typing import Dict, Any, Optional, List
 
 from .errors import format_error, SourceLocation
 from .preprocessing import extract_imports, extract_metadata, strip_inline_comment
-from .blocks import extract_python_block, extract_conditional_block, extract_loop_block
+from .blocks import (
+    extract_join_choice_block,
+    extract_python_block,
+    extract_conditional_block,
+    extract_loop_block,
+)
 from .content import (
     parse_content_line,
     parse_choice_line,
@@ -274,6 +279,22 @@ def parse(
             i += 1
             continue
 
+        # Join marker (@join on its own line)
+        if stripped == "@join":
+            # Get the current join count for this passage and increment
+            join_id = current_passage.get("_join_count", 0)
+            current_passage["_join_count"] = join_id + 1
+
+            # Add join marker token to content
+            current_passage["content"].append({"type": "join_marker", "id": join_id})
+
+            # Increment section counter for subsequent choices
+            current_passage["current_section"] = (
+                current_passage.get("current_section", 0) + 1
+            )
+            i += 1
+            continue
+
         # Immediate jump to target
         if line.strip().startswith("->"):
             match = re.match(r"->\s*(.+)", line.strip())
@@ -330,12 +351,41 @@ def parse(
 
         # Choice: +/* [Text] -> Target or +/* {condition} [Text] -> Target
         if line.startswith("+ ") or line.startswith("* "):
+            # Track current section (incremented when we see @join marker)
+            if "current_section" not in current_passage:
+                current_passage["current_section"] = 0
+
             # Validate choice syntax first (errors if malformed)
             validate_choice_syntax(line, i, lines, filename, line_map)
 
             # Now parse (should always succeed if validation passed)
             choice = parse_choice_line(line, current_passage)
             if choice:
+                # Assign section to choice
+                choice["section"] = current_passage["current_section"]
+
+                # Check if this is a @join choice - if so extract block content
+                if choice.get("target") == "@join":
+                    # Get indendation of this choice line
+                    choice_indent = len(line) - len(line.lstrip())
+                    # Look ahead for block content
+                    block_content, block_execute, lines_consumed = (
+                        extract_join_choice_block(
+                            lines,
+                            i + 1,  # Start looking at next line
+                            choice_indent,
+                            filename,
+                            line_map,
+                        )
+                    )
+                    # Attach to choice
+                    if block_content:
+                        choice["block_content"] = block_content
+                    if block_execute:
+                        choice["block_execute"] = block_execute
+                    # Skip consumed lines
+                    i += lines_consumed
+
                 current_passage["choices"].append(choice)
             else:
                 # This should never happen after validation, but just in case
