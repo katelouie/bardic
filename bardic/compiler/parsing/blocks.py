@@ -14,6 +14,56 @@ from .directives import (
 from .preprocessing import strip_inline_comment
 
 
+def _is_join_block_terminator(line: str) -> bool:
+    """
+    Check if a line terminates a @join choice block.
+
+    Block terminators are structural elements that clearly end the choice-specific
+    content:
+    - Another choice line (+ [ or * [)
+    - @join marker
+    - New passage (::)
+    - Block markers (@if, @endif, @for, @endfor, @py, @endpy)
+    """
+    stripped = line.strip()
+
+    # Empty line is NOT a terminator (allows blank lines in blocks)
+    if not stripped:
+        return False
+
+    # Choice line
+    if stripped.startswith("+ [") or stripped.startswith("* ["):
+        return True
+    if stripped.startswith("+ {") or stripped.startswith("* {"):
+        # Conditional choice: + {cond} [text]
+        return True
+
+    # @join marker
+    if stripped == "@join":
+        return True
+
+    # New passage
+    if stripped.startswith(":: "):
+        return True
+
+    # Block markers
+    block_markers = [
+        "@if ",
+        "@elif ",
+        "@else:",
+        "@endif",
+        "@for ",
+        "@endfor",
+        "@py:",
+        "@endpy",
+    ]
+    for marker in block_markers:
+        if stripped.startswith(marker) or stripped == marker.rstrip(":"):
+            return True
+
+    return False
+
+
 def extract_python_block(
     lines: list[str],
     start_index: int,
@@ -928,3 +978,124 @@ def extract_loop_block(
     lines_consumed = i - start_index
 
     return loop, lines_consumed
+
+
+def extract_join_choice_block(
+    lines: list[str],
+    start_index: int,
+    choice_indent: int,
+    filename: str | None = None,
+    line_map: list[SourceLocation] | None = None,
+) -> tuple[list[dict], list[dict], int]:
+    """
+    Extract indented choice content after a -> @join choice.
+
+    Collects all lines that are more indented than the choice line, stopping when
+    we hit a terminator (next choice, @join, passage, etc.)
+
+    Args:
+        lines: All lines in the file
+        start_index: Line index AFTER the choice line (first potential block line)
+        choice_indent: Indentation level of the choice line
+        filename: For error messages
+        line_map: For @include source mapping
+
+    Returns:
+        tuple of:
+            - content_tokens: List of content tokens (text, expressions, etc.)
+            - execute_commands: List of commands (~ statements, @hook, etc.)
+            - lines_consumed: How many lines were part of the block
+    """
+    content_tokens = []
+    execute_commands = []
+    block_lines = []
+    i = start_index
+
+    # Collect indents lines until term
+    while i < len(lines):
+        line = lines[i]
+
+        # Check for terminator (must do BEFORE indent check)
+        if _is_join_block_terminator(line):
+            break
+
+        # Allow empty lines
+        if not line.strip():
+            block_lines.append(line)
+            i += 1
+            continue
+
+        # Check indent - must be MORE indented than choice line
+        line_indent = len(line) - len(line.lstrip())
+        if line_indent <= choice_indent:
+            # End of block - deindented
+            break
+
+        block_lines.append(line)
+        i += 1
+
+    lines_consumed = i - start_index
+
+    # If there's no block content
+    if not block_lines:
+        return [], [], 0
+
+    # Strip the uniform indent from the block
+    dedented = detect_and_strip_indentation(block_lines)
+
+    # Parse each line of the block
+    for j, line in enumerate(dedented):
+        stripped = line.strip()
+
+        # Skip empty lines, but keep the newlines
+        if not stripped:
+            content_tokens.append({"type": "text", "value": "\n"})
+            continue
+
+        # Python statement: ~ code
+        if stripped.startswith("~"):
+            code = stripped[2:].strip()
+            # Strip inline comment
+            code, _ = strip_inline_comment(code)
+
+            cmd = {"type": "python_statement", "code": code}
+            execute_commands.append(cmd)
+            content_tokens.append(cmd)  # Also in content for rendering order
+            continue
+
+        # @hook directive
+        if stripped.startswith("@hook "):
+            parts = stripped.split()
+            if len(parts) == 3:
+                _, event, target = parts
+                cmd = {
+                    "type": "hook",
+                    "action": "add",
+                    "event": event,
+                    "target": target,
+                }
+                execute_commands.append(cmd)
+                content_tokens.append(cmd)
+            continue
+
+        # @unhook directive
+        if stripped.startswith("@unhook "):
+            parts = stripped.split()
+            if len(parts) == 3:
+                _, event, target = parts
+                cmd = {
+                    "type": "hook",
+                    "action": "remove",
+                    "event": event,
+                    "target": target,
+                }
+                execute_commands.append(cmd)
+                content_tokens.append(cmd)
+            continue
+
+        # Regular content line
+        tokens = parse_content_line(line, start_index + j, lines, filename, line_map)
+        content_tokens.extend(tokens)
+        content_tokens.append({"type": "text", "value": "\n"})
+
+    return content_tokens, execute_commands, lines_consumed

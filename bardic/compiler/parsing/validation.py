@@ -8,8 +8,11 @@ from .errors import format_error
 
 
 def validate_choice_syntax(
-    line: str, line_num: int, lines: List[str], filename: Optional[str] = None,
-    line_map: Optional[List] = None
+    line: str,
+    line_num: int,
+    lines: List[str],
+    filename: Optional[str] = None,
+    line_map: Optional[List] = None,
 ) -> None:
     """
     Validate choice line syntax before parsing.
@@ -254,7 +257,7 @@ def validate_passage_name(
     line_num: int,
     lines: List[str],
     filename: Optional[str] = None,
-    line_map: Optional[List] = None
+    line_map: Optional[List] = None,
 ) -> None:
     """
     Validate that a passage name follows strict naming rules.
@@ -316,7 +319,7 @@ def validate_passage_name(
             for i, char in enumerate(passage_name):
                 if not (char.isalnum() or char in "_."):
                     suggestion = (
-                        f"Invalid character '{char}' at position {i+1}. "
+                        f"Invalid character '{char}' at position {i + 1}. "
                         f"Passage names can only contain letters, numbers, underscores, and dots."
                     )
                     break
@@ -543,7 +546,7 @@ def check_duplicate_passages(
     passage_locations: Dict[str, List[int]],
     lines: List[str],
     filename: Optional[str] = None,
-    line_map: Optional[List] = None
+    line_map: Optional[List] = None,
 ) -> None:
     """
     Check for duplicate passage names and error with complete summary.
@@ -577,7 +580,9 @@ def check_duplicate_passages(
 
     # List each duplicate with all its locations
     for passage_name, locations in sorted(duplicates.items()):
-        error_parts.append(f"  Passage '{passage_name}' defined {len(locations)} times:\n")
+        error_parts.append(
+            f"  Passage '{passage_name}' defined {len(locations)} times:\n"
+        )
         for i, line_num in enumerate(locations):
             # line_num is 1-indexed, convert to 0-indexed for line_map lookup
             line_idx = line_num - 1
@@ -595,13 +600,19 @@ def check_duplicate_passages(
             # Show snippet of that line
             line_content = lines[line_idx].strip() if line_idx < len(lines) else ""
             if i == 0:
-                error_parts.append(f"    Line {display_line:4}{file_prefix}: {line_content}  ← First definition\n")
+                error_parts.append(
+                    f"    Line {display_line:4}{file_prefix}: {line_content}  ← First definition\n"
+                )
             else:
-                error_parts.append(f"    Line {display_line:4}{file_prefix}: {line_content}  ← Duplicate!\n")
+                error_parts.append(
+                    f"    Line {display_line:4}{file_prefix}: {line_content}  ← Duplicate!\n"
+                )
         error_parts.append("\n")
 
     error_parts.append("  Hint: Each passage must have a unique name.\n")
-    error_parts.append("        Consider renaming duplicates or removing redundant definitions.\n")
+    error_parts.append(
+        "        Consider renaming duplicates or removing redundant definitions.\n"
+    )
 
     raise ValueError("".join(error_parts))
 
@@ -609,7 +620,7 @@ def check_duplicate_passages(
 def validate_passage_arguments(
     passages: Dict[str, Any],
     filename: Optional[str] = None,
-    line_map: Optional[List] = None
+    line_map: Optional[List] = None,
 ) -> None:
     """
     Validate that all passage calls provide required arguments.
@@ -642,7 +653,7 @@ def validate_passage_arguments(
                 caller_passage=passage_id,
                 call_context=f"choice {choice_idx + 1}",
                 filename=filename,
-                line_map=line_map
+                line_map=line_map,
             )
 
         # Check all jumps
@@ -655,7 +666,7 @@ def validate_passage_arguments(
                     caller_passage=passage_id,
                     call_context="immediate jump",
                     filename=filename,
-                    line_map=line_map
+                    line_map=line_map,
                 )
 
 
@@ -666,7 +677,7 @@ def _validate_single_call(
     caller_passage: str,
     call_context: str,
     filename: Optional[str],
-    line_map: Optional[List]
+    line_map: Optional[List],
 ) -> None:
     """
     Validate a single passage call.
@@ -685,11 +696,19 @@ def _validate_single_call(
     """
     import ast
 
+    # Skip validation for special reserved targets
+    if target == "@join":
+        return
+
     # 1. Check target passage exists
     if target not in passages:
         # Find similar passage names for helpful suggestion
         similar = _find_similar_passages(target, passages)
-        suggestion = f"Did you mean: {', '.join(similar)}?" if similar else "Check passage name spelling"
+        suggestion = (
+            f"Did you mean: {', '.join(similar)}?"
+            if similar
+            else "Check passage name spelling"
+        )
 
         raise SyntaxError(
             f"In passage '{caller_passage}' ({call_context}): "
@@ -714,7 +733,7 @@ def _validate_single_call(
     try:
         # Parse as function call to analyze structure
         call_str = f"_temp_({args_str})" if args_str else "_temp_()"
-        tree = ast.parse(call_str, mode='eval')
+        tree = ast.parse(call_str, mode="eval")
         call_node = tree.body
 
         positional_count = len(call_node.args)
@@ -781,7 +800,9 @@ def _validate_single_call(
             )
 
 
-def _find_similar_passages(target: str, passages: Dict[str, Any], max_results: int = 3) -> List[str]:
+def _find_similar_passages(
+    target: str, passages: Dict[str, Any], max_results: int = 3
+) -> List[str]:
     """
     Find passage names similar to target using basic string similarity.
 

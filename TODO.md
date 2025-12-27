@@ -1,6 +1,6 @@
 # Bardic TODO
 
-Last updated: 2025-12-20
+Last updated: 2025-12-27
 
 ## 🐛 Parser Bugs (Found by Tests)
 
@@ -73,11 +73,17 @@ High priority fixes discovered through comprehensive test suite:
   - Consider caching for @include resolution
   - Profile runtime rendering for bottlenecks
 
-- [ ] **Mini-nodes and joins**
-  - Implement nameless mini-nodes with choice syntax + [Text] -> @join
-  - Afterwards collect all of the above "stay here" choices with @join (text)
-  - Functions similarly to Ink gathers
-  - Might be called @merge?
+- [x] **@join directive (inline choice blocks)** - ✅ COMPLETED (Dec 2025)
+  - [x] `+ [Text] -> @join` with indented block content
+  - [x] `@join` marker where choices merge back together
+  - [x] Block content/variables execute when choice selected
+  - [x] Multiple sequential @join markers (sections)
+  - [x] Works with conditional choices, one-time choices, hooks
+  - [x] Full undo/redo support (section index in snapshots)
+  - [x] pytest tests: `tests/test_join.py`
+
+- [ ] **Repeatable menus**
+  - Implement repeatable choices in "menu" blocks to be used in other passages
 
 - [x] **Hooks and listener system** - ✅ COMPLETED (Dec 2025)
   - [x] @hook and @unhook directives in parser
@@ -96,9 +102,18 @@ High priority fixes discovered through comprehensive test suite:
   - [ ] Reflex template (`bardic init reflex`): Add undo/redo buttons
   - [ ] React/web template (`bardic init web`): Add undo/redo buttons
 
+- [ ] Improve implementation of "engine copy" for bundle distribution
+  - Current process requires double-updating for all main engine changes
+
 ## 📚 Documentation
 
 - [ ] Tutorial on new distribution method (HTML)
+
+- [ ] Docs on new features
+  - [ ] Undo/redo
+  - [ ] hook/unhook
+  - [ ] @join directive
+  - [ ] Repeatable choices (menus)
 
 - [ ] **Tutorial Part 3C"" - Needs updating
   - Update final story and intermediate code examples to use for-loop generation of choices (iterating over the list of items) with `{cond}` pre-conditionals
