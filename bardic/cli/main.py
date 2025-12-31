@@ -2,8 +2,19 @@
 Command-line interface for Bardic.
 """
 
-import click
 import sys
+
+# Fix Windows console encoding for Unicode symbols (✓, ✗, etc.)
+# Must happen before any output occurs
+if sys.platform == "win32":
+    # Force UTF-8 encoding on stdout/stderr to support Unicode symbols
+    # This fixes "charmap codec can't encode character" errors
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    if hasattr(sys.stderr, "reconfigure"):
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
+import click
 from pathlib import Path
 import json
 import subprocess
