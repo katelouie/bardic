@@ -5,6 +5,12 @@ All notable changes to Bardic will be documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.1] - 2025-12-31
+
+### Fixed
+
+- Updated CLI output symbols to not throw errors on windows machines for vscode extension compiling messages.
+
 ## [0.6.0] - 2025-12-27
 
 ### Added
