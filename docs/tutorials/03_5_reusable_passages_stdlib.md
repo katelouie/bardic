@@ -497,15 +497,15 @@ can_buy_hoe = player_wallet.can_afford(hoe_price) and not player_inventory.is_fu
 **Your Status:**
 Gold: {player_wallet.gold}g | Weight: {player_inventory.current_weight}/{player_inventory.max_weight}
 
-+ {can_buy_wheat} [Buy Wheat Seeds - {wheat_price}g] -> BuyFromShop(item_name="Wheat Seeds", shop=farmer_shop, return_to="Encounter1")
++ {can_buy_wheat} [Buy Wheat Seeds - {wheat_price}g] -> BuyFromShop(item_name="Wheat Seeds", shop=farmer_shop)
 
-+ {can_buy_carrot} [Buy Carrot Seeds - {carrot_price}g] -> BuyFromShop(item_name="Carrot Seeds", shop=farmer_shop, return_to="Encounter1")
++ {can_buy_carrot} [Buy Carrot Seeds - {carrot_price}g] -> BuyFromShop(item_name="Carrot Seeds", shop=farmer_shop)
 
-+ {can_buy_hoe} [Buy Iron Hoe - {hoe_price}g] -> BuyFromShop(item_name="Iron Hoe", shop=farmer_shop, return_to="Encounter1")
++ {can_buy_hoe} [Buy Iron Hoe - {hoe_price}g] -> BuyFromShop(item_name="Iron Hoe", shop=farmer_shop)
 
 + [Move on] -> Encounter2
 
-:: BuyFromShop(item_name, shop, return_to)
+:: BuyFromShop(item_name, shop)
 @py:
 success = shop.buy(item_name, player_wallet, player_inventory)
 price = shop.get_buy_price(item_name)
@@ -516,10 +516,10 @@ price = shop.get_buy_price(item_name)
 
     Gold: {player_wallet.gold}g
 @else:
-    ✗ Can't buy {item_name} - {player_inventory.is_full ? "pack full" | "not enough gold"}!
+    Can't buy {item_name} - {player_inventory.is_full ? "pack full" | "not enough gold"}!
 @endif
 
-+ [Continue] -> {return_to}
++ [Continue] -> Encounter1
 
 :: Encounter2
 ---
@@ -653,6 +653,10 @@ profit = final_total - starting
 
 Try different strategies next time!
 ```
+
+## 10.5 Generating choices from `for`-loops
+
+See the [code here](https://github.com/katelouie/bardic/blob/main/bardic/examples/wandering_merchant/merchant.bard#L78) used in the "Wandering Merchant" story for an example of how to programmatically generate choices via iterating over a list or collection, rather than having to manually type up choices and pre-choice calculated values yourself (as shown in the above story).
 
 ---
 
