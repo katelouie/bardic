@@ -5,6 +5,21 @@ All notable changes to Bardic will be documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **@prev Target** - Navigate back to the previous passage
+  - Use `-> @prev` in jumps or `+ [Go back] -> @prev` in choices
+  - Tracks the immediately previous passage (not decision points like undo)
+  - Perfect for menus, inventory screens, side conversations, shop interfaces
+  - Works with automatic jumps: in chain `A -> B -> C`, @prev from C goes to B
+  - Persists through save/load (`previous_passage_id` in save data)
+  - Included in `GameSnapshot` for correct undo/redo behavior
+  - Clear error message if used at story start (no previous passage exists)
+  - `@prev` added to reserved targets alongside `@join`
+  - pytest tests: `tests/test_prev_target.py` (11 tests)
+
 ## [0.6.1] - 2025-12-31
 
 ### Fixed

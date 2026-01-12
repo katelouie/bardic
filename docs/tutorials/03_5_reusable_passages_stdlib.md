@@ -658,6 +658,10 @@ Try different strategies next time!
 
 See the [code here](https://github.com/katelouie/bardic/blob/main/bardic/examples/wandering_merchant/merchant.bard#L78) used in the "Wandering Merchant" story for an example of how to programmatically generate choices via iterating over a list or collection, rather than having to manually type up choices and pre-choice calculated values yourself (as shown in the above story).
 
+## 10.6 Dynamic "go back" navigation
+
+Bardic tracks the most recently-visited passage prior to the current one, and allows you to navigate to it via using `@prev` as a target for jumps or choices. You can see a more detailed explanation of the syntax in the language spec document.
+
 ---
 
 ## 11. The Power of Reusable Passages

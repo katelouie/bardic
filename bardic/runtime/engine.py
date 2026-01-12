@@ -52,11 +52,13 @@ class GameSnapshot:
 
     Attributes:
         current_passage: The passage ID at the time of snapshot
+        previous_passage: The passage we came from (for @prev target)
         state: Deep copy of all game variables
         used_choices: Set of one-time choices that have been used
     """
 
     current_passage: str | None
+    previous_passage: str | None
     state: dict[str, Any]
     used_choices: set
     hooks: dict[str, list[str]]  # Include hook registrations
@@ -67,6 +69,7 @@ class GameSnapshot:
         """Create a snapshot from the current game engine."""
         return cls(
             current_passage=engine.current_passage_id,
+            previous_passage=engine._previous_passage_id,
             state=copy.deepcopy(engine.state),
             used_choices=engine.used_choices.copy(),
             hooks=copy.deepcopy(engine.hooks),
@@ -76,6 +79,7 @@ class GameSnapshot:
     def restore_to(self, engine: "BardEngine") -> None:
         """Restore this snapshot to the engine."""
         engine.current_passage_id = self.current_passage
+        engine._previous_passage_id = self.previous_passage
         engine.state = self.state
         engine.used_choices = self.used_choices
         engine.hooks = self.hooks
@@ -104,6 +108,7 @@ class BardEngine:
         self.story = story_data
         self.passages = story_data["passages"]
         self.current_passage_id = None  # Will be set by goto()
+        self._previous_passage_id = None  # Tracks the passage we came from (for @prev)
         self.state = {}  # Game state (variables)
         self.hooks: dict[str, list[str]] = {}  # Event -> list of passage IDs
         self.state["_inputs"] = {}  # Initialize empty inputs dict (always available)
@@ -632,6 +637,15 @@ class BardEngine:
             passage_id = passage_spec
             args_str = ""
 
+        # Resolve @prev to the previous passage ID
+        if passage_id == "@prev":
+            if self._previous_passage_id is None:
+                raise ValueError(
+                    "Cannot navigate to @prev: no previous passage exists. "
+                    "This typically happens at the start of a story."
+                )
+            passage_id = self._previous_passage_id
+
         if passage_id not in self.passages:
             raise ValueError(f"Cannot navigate to unknown passage: '{passage_id}'")
 
@@ -683,6 +697,9 @@ class BardEngine:
                     raise RuntimeError(f"Jump loop detected: {jump_chain}")
 
                 visited.add(current_id)
+
+                # Track previous passage before updating current (for @prev target)
+                self._previous_passage_id = self.current_passage_id
 
                 # Update current passage
                 self.current_passage_id = current_id
@@ -1876,6 +1893,7 @@ class BardEngine:
             "story_id": story_metadata.get("story_id", "unknown"),
             "timestamp": self._get_timestamp(),
             "current_passage_id": self.current_passage_id,
+            "previous_passage_id": self._previous_passage_id,
             "state": self._serialize_state(self.state),
             "used_choices": list(self.used_choices),
             "metadata": {
@@ -1950,6 +1968,9 @@ class BardEngine:
 
         # Navigate to saved passage (this re-renders with restored state)
         self.goto(target_passage)
+
+        # Restore previous passage AFTER goto (goto would overwrite it)
+        self._previous_passage_id = save_data.get("previous_passage_id")
 
     def _serialize_state(self, state: dict[str, Any]) -> dict[str, Any]:
         """

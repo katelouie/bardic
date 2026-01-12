@@ -38,6 +38,7 @@ Quick reference for all Bardic syntax elements:
 | `@unhook` | Unregister event hook | `@unhook turn_end MyPassage` |
 | `@join` | Merge point for inline blocks | `@join` |
 | `-> @join` | Choice with inline block | `+ [Text] -> @join` |
+| `-> @prev` | Jump to previous passage | `+ [Go back] -> @prev` |
 | `~` | Variable assignment | `~ health = 100` |
 | `~ var += value` | Augmented assignment | `~ count += 1` |
 | `{}` | Expression | `{variable}` or `{function()}` or `{var:.2f}` |
@@ -3513,6 +3514,98 @@ Block content ends when the parser encounters:
 - Section index resets when re-entering a passage
 
 **Status:** ✅ Implemented (Dec 2025)
+
+---
+
+### Previous Passage Target (@prev)
+
+Navigate back to the previous passage. Useful for menus, inventory screens, side conversations, and any "go back to where I came from" pattern.
+
+**Syntax:** `-> @prev`
+
+```bard
+:: Tavern
+You're at the tavern.
++ [Open inventory] -> Inventory
++ [Talk to barkeep] -> Barkeep
+
+:: Inventory
+Your items:
+- Sword
+- Potion
++ [Close inventory] -> @prev   # Returns to Tavern!
+
+:: Barkeep
+The barkeep nods at you.
+"What'll it be?"
++ [Ask about rumors] -> Rumors
++ [Never mind] -> @prev        # Returns to Tavern!
+
+:: Rumors
+"I heard there's trouble in the north..."
+-> @prev                        # Auto-returns to Barkeep
+```
+
+**How It Works:**
+
+1. The engine tracks the previous passage (the one you were at immediately before the current one)
+2. When `@prev` is encountered as a jump or choice target, it resolves to that passage
+3. The previous passage is updated after each navigation
+4. Works with both choices (`+ [Text] -> @prev`) and immediate jumps (`-> @prev`)
+
+**Rules:**
+
+- `@prev` is a reserved target name (cannot have a passage named "@prev")
+- At story start, there is no previous passage - using `@prev` will raise an error
+- Tracks the *immediately previous* passage, not the last player decision point
+- In jump chains (`A -> B -> C`), @prev from C goes to B (the last passage visited)
+- Persists through save/load (saved in game state)
+- Restored correctly with undo/redo (included in snapshots)
+
+**Use Cases:**
+
+- **Menus and screens:** Return to gameplay from inventory/settings/map
+- **Side conversations:** Talk to an NPC, then return to the main scene
+- **Shop interfaces:** Browse items and return to where you were
+- **Information passages:** Read lore/help and go back
+- **Cutscenes with choices:** "Ask a question" then return to main dialogue
+
+**With Automatic Jumps:**
+
+When passages automatically jump to other passages, @prev tracks each step:
+
+```bard
+:: Hub
++ [Enter shop] -> ShopWelcome
+
+:: ShopWelcome
+Welcome to the shop!
+-> ShopMenu                     # Auto-jump to menu
+
+:: ShopMenu
+What would you like to buy?
++ [Go back] -> @prev            # Goes to ShopWelcome (not Hub)
+```
+
+**Error Handling:**
+
+Using @prev when there is no previous passage raises a clear error:
+
+```
+ValueError: Cannot navigate to @prev: no previous passage exists.
+This typically happens at the start of a story.
+```
+
+**Comparison with Undo:**
+
+| Feature | @prev | Undo |
+|---------|-------|------|
+| **Navigates to** | Previous passage | Previous decision point |
+| **Restores state** | No (state unchanged) | Yes (full state rollback) |
+| **Use case** | "Go back" in UI | "Try a different choice" |
+| **Tracks** | Every passage visited | Only when `choose()` is called |
+
+**Status:** ✅ Implemented (Jan 2026)
 
 ---
 

@@ -697,7 +697,7 @@ def _validate_single_call(
     import ast
 
     # Skip validation for special reserved targets
-    if target == "@join":
+    if target in ("@join", "@prev"):
         return
 
     # 1. Check target passage exists
