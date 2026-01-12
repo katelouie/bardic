@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+### Changed
+
+### Fixed
+
+## [0.7.0] - 2026-01-12
+
+### Added
+
 - **@prev Target** - Navigate back to the previous passage
   - Use `-> @prev` in jumps or `+ [Go back] -> @prev` in choices
   - Tracks the immediately previous passage (not decision points like undo)
