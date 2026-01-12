@@ -1,6 +1,6 @@
 """Bardic: Python-first interactive fiction engine"""
 
-__version__ = "0.6.1"
+__version__ = "0.7.0"
 
 from .compiler.compiler import BardCompiler
 from .compiler.parser import parse, parse_file
