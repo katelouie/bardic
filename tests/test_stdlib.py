@@ -7,6 +7,7 @@ from bardic.stdlib.dice import roll, skill_check, weighted_choice, advantage, di
 from bardic.stdlib.inventory import Inventory
 from bardic.stdlib.economy import Wallet, Shop
 from bardic.stdlib.relationship import Relationship
+from bardic.stdlib.quest import Quest, QuestJournal
 
 
 # ──────────────────────────────────────────────
@@ -504,3 +505,229 @@ class TestRelationshipSerialization:
         assert restored.openness == 3
         assert restored.has_discussed("work")
         assert restored.has_discussed("feelings")
+
+
+# ──────────────────────────────────────────────
+# Quest Module
+# ──────────────────────────────────────────────
+
+class TestQuestBasics:
+    def test_quest_dataclass(self):
+        q = Quest(quest_id="find_key", title="Find the Key")
+        assert q.quest_id == "find_key"
+        assert q.title == "Find the Key"
+        assert q.stage == "active"
+        assert q.is_active is True
+
+    def test_quest_with_description(self):
+        q = Quest(quest_id="x", title="X", description="Do the thing")
+        assert q.description == "Do the thing"
+
+    def test_quest_status_properties(self):
+        q = Quest(quest_id="x", title="X")
+        assert q.is_active is True
+        assert q.is_complete is False
+        assert q.is_failed is False
+
+        q.stage = "complete"
+        assert q.is_active is False
+        assert q.is_complete is True
+
+        q.stage = "failed"
+        assert q.is_failed is True
+        assert q.is_active is False
+
+    def test_custom_stage_is_still_active(self):
+        q = Quest(quest_id="x", title="X", stage="searched_garden")
+        assert q.is_active is True  # Not "complete" or "failed"
+
+
+class TestQuestJournalAdd:
+    def test_add_quest(self):
+        j = QuestJournal()
+        q = j.add("find_key", "Find the Key")
+        assert q.quest_id == "find_key"
+        assert j.has("find_key") is True
+
+    def test_add_duplicate_raises(self):
+        j = QuestJournal()
+        j.add("find_key", "Find the Key")
+        with pytest.raises(ValueError, match="already exists"):
+            j.add("find_key", "Find It Again")
+
+    def test_get_quest(self):
+        j = QuestJournal()
+        j.add("find_key", "Find the Key")
+        q = j.get("find_key")
+        assert q is not None
+        assert q.title == "Find the Key"
+
+    def test_get_nonexistent(self):
+        j = QuestJournal()
+        assert j.get("ghost") is None
+
+    def test_has(self):
+        j = QuestJournal()
+        j.add("find_key", "Find the Key")
+        assert j.has("find_key") is True
+        assert j.has("ghost") is False
+
+
+class TestQuestJournalStatus:
+    def setup_method(self):
+        self.j = QuestJournal()
+        self.j.add("main", "Main Quest")
+        self.j.add("side", "Side Quest")
+        self.j.add("done", "Done Quest")
+        self.j.complete("done")
+
+    def test_is_active(self):
+        assert self.j.is_active("main") is True
+        assert self.j.is_active("done") is False
+
+    def test_is_complete(self):
+        assert self.j.is_complete("done") is True
+        assert self.j.is_complete("main") is False
+
+    def test_is_failed(self):
+        self.j.fail("side")
+        assert self.j.is_failed("side") is True
+
+    def test_status_of_nonexistent(self):
+        assert self.j.is_active("ghost") is False
+        assert self.j.is_complete("ghost") is False
+        assert self.j.is_failed("ghost") is False
+
+    def test_stage_of(self):
+        assert self.j.stage_of("main") == "active"
+        assert self.j.stage_of("done") == "complete"
+        assert self.j.stage_of("ghost") is None
+
+
+class TestQuestJournalStages:
+    def test_set_stage(self):
+        j = QuestJournal()
+        j.add("mystery", "Solve the Mystery")
+        j.set_stage("mystery", "found_clue")
+        assert j.stage_of("mystery") == "found_clue"
+        assert j.is_active("mystery") is True  # Custom stage = still active
+
+    def test_complete(self):
+        j = QuestJournal()
+        j.add("quest", "A Quest")
+        j.complete("quest")
+        assert j.is_complete("quest") is True
+
+    def test_fail(self):
+        j = QuestJournal()
+        j.add("quest", "A Quest")
+        j.fail("quest")
+        assert j.is_failed("quest") is True
+
+    def test_set_stage_nonexistent_raises(self):
+        j = QuestJournal()
+        with pytest.raises(KeyError, match="not found"):
+            j.set_stage("ghost", "anything")
+
+    def test_complete_nonexistent_raises(self):
+        j = QuestJournal()
+        with pytest.raises(KeyError):
+            j.complete("ghost")
+
+    def test_multi_stage_progression(self):
+        j = QuestJournal()
+        j.add("murder", "Solve the Murder")
+        j.set_stage("murder", "found_body")
+        j.set_stage("murder", "interviewed_witnesses")
+        j.set_stage("murder", "identified_suspect")
+        j.complete("murder")
+        assert j.is_complete("murder") is True
+
+
+class TestQuestJournalLog:
+    def test_add_log_entry(self):
+        j = QuestJournal()
+        j.add("quest", "A Quest")
+        j.log("quest", "Found a clue near the fountain.")
+        entries = j.get_log("quest")
+        assert len(entries) == 1
+        assert "fountain" in entries[0]
+
+    def test_multiple_entries_in_order(self):
+        j = QuestJournal()
+        j.add("quest", "A Quest")
+        j.log("quest", "First")
+        j.log("quest", "Second")
+        j.log("quest", "Third")
+        entries = j.get_log("quest")
+        assert entries == ["First", "Second", "Third"]
+
+    def test_log_nonexistent_raises(self):
+        j = QuestJournal()
+        with pytest.raises(KeyError, match="not found"):
+            j.log("ghost", "Boo!")
+
+    def test_get_log_nonexistent_returns_empty(self):
+        j = QuestJournal()
+        assert j.get_log("ghost") == []
+
+
+class TestQuestJournalViews:
+    def setup_method(self):
+        self.j = QuestJournal()
+        self.j.add("active1", "Active 1")
+        self.j.add("active2", "Active 2")
+        self.j.add("done1", "Done 1")
+        self.j.complete("done1")
+        self.j.add("failed1", "Failed 1")
+        self.j.fail("failed1")
+
+    def test_active_quests(self):
+        active = self.j.active_quests
+        assert len(active) == 2
+        assert all(q.is_active for q in active)
+
+    def test_completed_quests(self):
+        done = self.j.completed_quests
+        assert len(done) == 1
+        assert done[0].quest_id == "done1"
+
+    def test_failed_quests(self):
+        failed = self.j.failed_quests
+        assert len(failed) == 1
+        assert failed[0].quest_id == "failed1"
+
+    def test_all_quests(self):
+        assert len(self.j.all_quests) == 4
+
+    def test_count_active(self):
+        assert self.j.count_active == 2
+
+    def test_count_complete(self):
+        assert self.j.count_complete == 1
+
+
+class TestQuestJournalSerialization:
+    def test_roundtrip(self):
+        j = QuestJournal()
+        j.add("main", "Main Quest", description="Save the world")
+        j.set_stage("main", "found_artifact")
+        j.log("main", "The artifact glows with ancient power.")
+        j.add("side", "Side Quest")
+        j.complete("side")
+
+        data = j.to_dict()
+        restored = QuestJournal.from_dict(data)
+
+        assert restored.has("main")
+        assert restored.has("side")
+        assert restored.stage_of("main") == "found_artifact"
+        assert restored.is_complete("side")
+        assert restored.get("main").description == "Save the world"
+        assert len(restored.get_log("main")) == 1
+
+    def test_empty_journal_roundtrip(self):
+        j = QuestJournal()
+        data = j.to_dict()
+        restored = QuestJournal.from_dict(data)
+        assert len(restored.all_quests) == 0

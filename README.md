@@ -137,6 +137,39 @@ pip install -r requirements.txt
 - **Browser distribution.** `bardic bundle` packages your game for itch.io with a full Python runtime (Pyodide). No server required.
 - **VS Code Integration:** Syntax highlighting, snippets, code folding, live preview, and graph-based navigation. Install "Bardic" from the marketplace or run `code --install-extension katelouie.bardic`.
 
+## Batteries Included: Standard Library
+
+Bardic ships with pre-built modules for common game mechanics — no need to write them from scratch.
+
+```bard
+from bardic.stdlib.inventory import Inventory
+from bardic.stdlib.economy import Wallet, Shop
+from bardic.stdlib.quest import QuestJournal
+from bardic.stdlib.relationship import Relationship
+from bardic.stdlib.dice import roll, skill_check
+```
+
+| Module | What it does |
+|--------|-------------|
+| **`inventory`** | Weight-limited item management with add/remove/filter |
+| **`economy`** | Wallets, shops, buying/selling with automatic refunds |
+| **`quest`** | Quest tracking with custom stages, journal entries, completion |
+| **`relationship`** | NPC trust/comfort/openness with threshold events |
+| **`dice`** | Dice rolls (`3d6+5`), skill checks, advantage/disadvantage |
+
+Plus built-in special variables — `_visits` tracks how many times each passage has been entered, and `_turns` counts player choices.
+
+```bard
+:: Tavern
+@if _visits.get("Tavern", 0) == 1:
+    You push open the tavern door for the first time.
+@else:
+    The bartender nods. "The usual?"
+@endif
+
++ {_turns >= 10} [I've been here a while...] -> Leave
+```
+
 ## CLI Reference
 
 | Command | Description |
