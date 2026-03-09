@@ -1,7 +1,6 @@
 # Bardic Language Specification v1.0
 
-**Status:** Living Document (Updated as features are implemented)
-**Target Completion:** v1.0 by Week 8
+**Status:** Current as of v0.7.0
 **Philosophy:** Build for real needs, not hypothetical ones
 
 ---
@@ -28,7 +27,6 @@ Quick reference for all Bardic syntax elements:
 |--------|---------|---------|
 | `::` | Passage definition | `:: PassageName` |
 | `@include` | Include external file | `@include shared/file.bard` |
-| `@section` / `@endsection` | Scoped section (future) | `@section Name` |
 | `@render` | Render directive | `@render render_spread(cards)` |
 | `@input` | Input directive | `@input name="player_name" label="Your Name"` |
 | `@py:` / `@endpy` | Python code block | `@py:\ncode\n@endpy` |
@@ -48,9 +46,7 @@ Quick reference for all Bardic syntax elements:
 | `<>` | Glue (suppress newline) | `Text<>` |
 | `#` | Full-line comment | `# This whole line is a comment` |
 | `//` | Inline comment | `Text here // rest is comment` |
-| `[!tag]` | Custom markup | `[!whisper]text[/!whisper]` |
-
-> **Legacy Syntax:** The `<<if>>`, `<<for>>`, and `<<py>>` syntax is still supported for backward compatibility, but may be deprecated in future versions. The `@` syntax with colons is recommended for new stories as it's more consistent with Python and other Bardic directives.
+| `[!tag]` | Custom markup (TBA) | `[!whisper]text[/!whisper]` |
 
 **Import statements** use standard Python syntax with no prefix.
 
@@ -92,8 +88,6 @@ The fundamental unit of narrative. Every story is a collection of passages.
 - Name can contain letters, numbers, underscores, dots
 - Dots create namespace conventions (e.g., `Client.Aria.Session1`)
 
-**Status:** ✅ Implemented (Week 1)
-
 ### Start Passage
 
 Every story needs an initial passage. Bardic determines the start passage using this priority:
@@ -129,8 +123,6 @@ Becomes start with a warning printed.
 - Use `:: Start` for most stories (clear convention)
 - Use `@start CustomName` when you need a different entry point
 - Always include a passage named "Start" to avoid surprises
-
-**Status:** ✅ Implemented (Week 2, Session 6)
 
 ---
 
@@ -197,12 +189,6 @@ You can sense her ~~fear~~ anxiety.
 * [Soften the blow] -> Gentle
 ```
 
-**Status:**
-
-- Basic text: ✅ Implemented (Week 1)
-- Markdown: 📅 Week 5
-- Whitespace & glue: ✅ Implemented
-
 ---
 
 ### Glue Operator `<>`
@@ -260,8 +246,6 @@ The spread contains<>
 - Works in passages, conditionals (`@if`), and loops (`@for`)
 - The glue operator is inspired by Ink's glue syntax
 
-**Status:** ✅ Implemented
-
 ---
 
 ### Choices
@@ -298,13 +282,6 @@ Allow player navigation between passages.
 
 + [Draw cards] -> DrawCards(count=3, spread='celtic_cross')
 ```
-
-**Status:**
-
-- Basic choices: ✅ Implemented (Week 1)
-- Conditional: ✅ Implemented (Week 1)
-- One-time (*): ✅ Implemented (Week 3)
-- Parameters: 📅 Week 4
 
 ---
 
@@ -575,10 +552,6 @@ RuntimeError: Error executing statement in passage 'MyPassage'
 
 ---
 
-**Status:** ✅ Implemented (Week 2, Session 6)
-
----
-
 ### Python Code Blocks
 
 Execute multi-line Python code in passages.
@@ -596,7 +569,6 @@ rolls = []
 for i in range(5):
     roll = random.randint(1, 6)
     rolls.append(roll)
-
 total = sum(rolls)
 average = total / len(rolls)
 
@@ -666,8 +638,6 @@ greeting = greet("Hero")
 - Runtime errors show full traceback
 - Undefined variables list available variables
 
-**Status:** ✅ Implemented (Week 3, Session 7)
-
 ---
 
 ### Python Expressions
@@ -690,7 +660,7 @@ The card is {card.get_display_name()}.
   - All variables in `self.state`
   - All functions in `context`
   - Safe builtins (len, str, int, sum, max, etc.)
-  - Imported modules (from `<<py>>` blocks)
+  - Imported modules (from `@py:` blocks)
 
 **Safe Builtins Available:**
 
@@ -731,8 +701,6 @@ Average: {sum(values) / len(values):.2f}
 Status: {"alive" if health > 0 else "dead"}
 ```
 
-**Status:** ✅ Implemented (Week 3, Session 8)
-
 **Format Specifiers:**
 
 Expressions support optional format specifications using Python's format spec syntax:
@@ -768,8 +736,6 @@ Name: {player_name:^20}               # Centered: "    Alice    "
 - Format spec must be a valid Python format specification
 - Uses rightmost `:` to split expression from format spec
 - Invalid format specs will show an error in the output
-
-**Status:** ✅ Implemented (Week 2, Session 6)
 
 **Object Attributes and Methods:**
 
@@ -809,8 +775,6 @@ Best: {max(clients.values(), key=lambda c: c.trust).name}
 - Method chaining supported
 - Dictionary and list operations work naturally
 
-**Status:** ✅ Implemented (Week 3, Session 9)
-
 ---
 
 ### Special Variables
@@ -843,6 +807,7 @@ Total vars: {len(_state)}
 ```
 
 **Common use cases:**
+
 - Safe variable access: `{_state.get('optional_var', 'default')}`
 - Existence checking: `{'var_name' in _state}`
 - Debugging: `{sorted(_state.keys())}`
@@ -867,6 +832,7 @@ Params: {list(_local.keys())}
 ```
 
 **Common use cases:**
+
 - Optional parameters: `{_local.get('param', 'default')}`
 - Parameter existence: `{'param' in _local}`
 - Reusable passages that work with/without params
@@ -910,12 +876,14 @@ Dictionary tracking how many times each passage has been entered. Automatically 
 ```
 
 **Common use cases:**
+
 - First-visit content: `@if _visits.get("Room", 0) == 1: ...`
 - Returning content: `@if _visits.get("Room", 0) >= 2: ...`
 - Conditional choices: `+ {_visits.get("Library", 0) >= 3} [Secret passage] -> Hidden`
 - Visit display: `You've been here {_visits.get("Tavern", 0)} times.`
 
 **Notes:**
+
 - Passages not yet visited are absent from the dict — always use `.get()` with a default
 - The initial passage starts at visit count 1 (the engine navigates to it on startup)
 - Jump targets (via `->`) are also counted
@@ -939,17 +907,17 @@ Turns elapsed: {_turns}
 ```
 
 **Common use cases:**
+
 - Pacing: Show different text after N turns
 - Urgency: `The bomb detonates in {50 - _turns} turns!`
 - Scoring: `You escaped in {_turns} turns!`
 - Unlocking content: `+ {_turns >= 10} [New option] -> Secret`
 
 **Notes:**
+
 - Starts at 0
 - Only incremented by player choices (`choose()`), not `goto()`
 - Survives undo/redo and save/load
-
-**Status:** ✅ `_state`, `_local` implemented (Nov 2025). `_visits`, `_turns` implemented (Mar 2026).
 
 ---
 
@@ -1038,8 +1006,6 @@ Standard reading.
 - Story continues with next branch
 - Missing `@endif` causes parse error
 - Missing colon on `@if`, `@elif`, or `@else` causes helpful syntax error
-
-**Status:** ✅ Implemented (Week 3, Session 10)
 
 ---
 
@@ -1134,8 +1100,6 @@ You walk through the {locked ? locked | unlocked} door and see {inventory ? your
 
 Inline conditionals are for **simple, readable text choices**. For complex nested logic or multiple conditions, use multi-line `@if/@elif/@else` blocks instead. This keeps your story text maintainable and easy to read.
 
-**Status:** ✅ Implemented (Week 4, Session 11)
-
 ---
 
 ### Loops
@@ -1225,8 +1189,6 @@ Card {i+1}: {card.name}
 @endfor
 ```
 
-**Status:** ✅ Implemented (Week 3, Session 11)
-
 ---
 
 ### Comments
@@ -1294,8 +1256,6 @@ Output: `URL: https://example.com`
 - Ignored by compiler
 - Not rendered in output
 
-**Status:** ✅ Implemented
-
 ---
 
 ### Hooks (@hook / @unhook)
@@ -1303,15 +1263,18 @@ Output: `URL: https://example.com`
 Register passages to run automatically on specific events. Useful for background systems like poison effects, timers, or turn counters.
 
 **Syntax:**
+
 ```bard
 @hook event_name PassageName    # Register a hook
 @unhook event_name PassageName  # Unregister a hook
 ```
 
 **Built-in Events:**
+
 - `turn_end` - Fires after every `choose()` call
 
 **Example: Poison System**
+
 ```bard
 :: Start
 You feel fine.
@@ -1352,6 +1315,7 @@ You found the cure!
 6. Hooks can self-remove with `@unhook` inside `@if` blocks
 
 **Engine API:**
+
 ```python
 engine.register_hook("turn_end", "MyPassage")
 engine.unregister_hook("turn_end", "MyPassage")
@@ -1364,8 +1328,6 @@ engine.trigger_event("turn_end")  # Returns combined output
 - Hook state is included in undo/redo snapshots
 - Hooked passages execute their `execute` commands only (content is hidden)
 - A passage can unregister itself (for one-time effects)
-
-**Status:** ✅ Implemented (Dec 2025)
 
 ---
 
@@ -1422,8 +1384,6 @@ from services.tarot import TarotService
 - Import errors show clear messages
 - Missing modules are caught at engine initialization
 - Imports after other content raise parse errors
-
-**Status:** ✅ Implemented (Week 3, Session 9.5)
 
 ---
 
@@ -1533,14 +1493,12 @@ story_id = story_metadata.get("story_id", filename)
 
 **Benefits:**
 
-- ✅ Clean separation of metadata from story content
-- ✅ Consistent place for story information
-- ✅ Used automatically by save/load system
-- ✅ No pollution of game state
-- ✅ Easy to read and edit
-- ✅ Optional - stories work fine without it
-
-**Status:** ✅ Implemented (Session 12)
+- Clean separation of metadata from story content
+- Consistent place for story information
+- Used automatically by save/load system
+- No pollution of game state
+- Easy to read and edit
+- Optional - stories work fine without it
 
 ---
 
@@ -1577,22 +1535,20 @@ Content here ^CALLOUT
 - Game state: `^TUTORIAL:ACTIVE`, `^CUTSCENE`
 - Ambient control: `^MUSIC:THEME`, `^AMBIENT:DARK`
 
-**Status:** ✅ Implemented
-
 ### Passage Parameters
-
-**Status:** ✅ Implemented (v0.3.0)
 
 Pass data between passages like function arguments. Enables dynamic content patterns like shops, NPC conversations, and combat encounters.
 
 #### Syntax
 
 **Declaration:**
+
 ```bard
 :: PassageName(param1, param2=default_value)
 ```
 
 **Navigation:**
+
 ```bard
 -> PassageName(value1, value2)              # Positional
 -> PassageName(param2=value2, param1=value1) # Keyword
@@ -1602,6 +1558,7 @@ Pass data between passages like function arguments. Enables dynamic content patt
 #### Examples
 
 **Basic parameters:**
+
 ```bard
 :: Start
 ~ health = 100
@@ -1614,6 +1571,7 @@ Your health: {hp}
 ```
 
 **Default values:**
+
 ```bard
 :: Greet(name="World", greeting="Hi")
 {greeting}, {name}!
@@ -1624,6 +1582,7 @@ Your health: {hp}
 ```
 
 **Shop system (the killer use case!):**
+
 ```bard
 :: Shop
 ~ gold = 500
@@ -1661,27 +1620,11 @@ You bought {item.name}!
 
 ### Render Directives
 
-**Status:** ✅ Implemented (Week 4)
+Tell the frontend to handle custom presentation logic. Render directives emit structured data that your runtime interprets — whether that's rendering React components, instantiating Unity GameObjects, or formatting terminal output.
 
-Tell the frontend to handle custom presentation logic. Render directives emit structured data that your runtime interprets - whether that's rendering React components, instantiating Unity GameObjects, or formatting terminal output.
+> **Full reference:** [Render Directives Guide](render-directives.md) — compilation modes, framework hints, frontend integration (React, Unity, CLI), error handling, and complete examples.
 
-#### Concept
-
-Bardic stories run in a **backend engine** (Python) that produces **structured output** for a **frontend runtime** (React, Unity, CLI, etc.). Most content is just text, but sometimes you need custom UI elements:
-
-- **Card spread visualization** - Show tarot cards in specific layouts
-- **Character portraits** - Display character art with expressions
-- **Mini-games** - Embed interactive elements
-- **Data visualizations** - Charts, graphs, dashboards
-- **Custom animations** - Trigger specific visual effects
-
-**Render directives** let you specify these custom elements directly in your story, without breaking out of the narrative flow.
-
-**Philosophy:** Bardic doesn't know how to render cards or portraits - your frontend does. Bardic just provides the data in a structured format your frontend can consume.
-
-#### Basic Syntax
-
-**Format:** `@render directive_name(args)`
+**Syntax:** `@render directive_name(args)`
 
 ```bard
 @render card_spread(cards, layout='celtic_cross')
@@ -1691,997 +1634,38 @@ Bardic stories run in a **backend engine** (Python) that produces **structured o
 
 **Rules:**
 
-- Start with `@render` followed by space
 - Function-call syntax with Python expressions as arguments
-- Arguments can be variables, literals, or complex expressions
-- Not rendered as text - produces no output in story content
-- Compiled to structured data sent to frontend
-- Can appear anywhere in passage content
+- Not rendered as text — produces structured data for the frontend
+- Can appear anywhere: passages, conditionals, loops
 - Multiple directives per passage allowed
-- Works in conditionals, loops, and regular content
+- Directives are **declarative** — you specify data, the frontend decides how to display it
 
-**Important:** Directives are **declarative**, not imperative. You're saying "here's data about a card spread," not "render this component." The frontend decides how to interpret it.
+**Framework hints** (optional): `@render:react card_spread(cards)` adds React-specific fields (PascalCase component names, unique keys, props).
 
----
-
-#### Examples
-
-##### Simple Directive
+**With conditionals and loops:**
 
 ```bard
-:: DrawCards
-~ cards = [Card("The Fool", 0), Card("The Magician", 1)]
-
-You draw two cards from the deck...
-
-@render card_spread(cards, layout='two_card')
-
-The first card is {cards[0].name}.
-```
-
-**Compiled output:**
-
-```json
-{
-  "render_directives": [
-    {
-      "type": "render_directive",
-      "name": "card_spread",
-      "mode": "evaluated",
-      "data": {
-        "cards": [
-          {"name": "The Fool", "number": 0},
-          {"name": "The Magician", "number": 1}
-        ],
-        "layout": "two_card"
-      }
-    }
-  ]
-}
-```
-
-##### Multiple Directives
-
-```bard
-:: Reading
-@render card_spread(cards, layout='three_card', animation='flip')
-
-The cards reveal:
-{cards[0].name}, {cards[1].name}, {cards[2].name}
-
-@render interpretation_panel(cards, style='traditional')
-
-Do you understand their meaning?
-```
-
-Each directive is collected and returned in the `render_directives` list.
-
-##### With Conditionals
-
-```bard
-:: ShowReaction
-<<if client.trust > 75>>
+@if client.trust > 75:
 @render character_portrait(client, emotion='happy', size='large')
-<<elif client.trust > 25>>
+@else:
 @render character_portrait(client, emotion='neutral', size='medium')
-<<else>>
-@render character_portrait(client, emotion='worried', size='small')
-<<endif>>
+@endif
 
-{client.name}'s reaction speaks volumes.
+@for card in hand:
+@render card_detail(card, interactive=True)
+@endfor
 ```
 
-Only the directive from the true branch is collected.
-
-##### In Loops
-
-```bard
-:: DisplayDeck
-<<for card in hand>>
-@render card_detail(card, position=loop.index, interactive=True)
-<<endfor>>
-
-Your hand is complete.
-```
-
-One directive is emitted per loop iteration. All are collected.
-
-##### Complex Arguments
-
-```bard
-:: AdvancedReading
-~ interpretation = analyze_spread(cards, client.past_readings)
-~ confidence = calculate_confidence(cards)
-
-@render spread_visualization(
-    cards=cards,
-    layout='celtic_cross',
-    highlights=[c for c in cards if c.is_major_arcana()],
-    metadata={
-        'confidence': confidence,
-        'timestamp': current_time(),
-        'reader_notes': interpretation.notes
-    }
-)
-```
-
-Arguments can be any valid Python expression.
-
----
-
-#### Framework Hints (Optional)
-
-**Syntax:** `@render:framework directive_name(args)`
-
-Tell Bardic to optimize the data structure for a specific framework. This is **optional** - the default format works for any runtime.
-
-```bard
-@render:react card_spread(cards, layout='celtic_cross')
-@render:unity spawn_cards(cards, transform='hand')
-@render:godot display_cards(cards, scene='CardLayout')
-```
-
-**When to use framework hints:**
-
-- You want React-specific optimizations (PascalCase component names, unique keys)
-- You're building for multiple platforms and want framework-specific data shapes
-- Your frontend code expects a particular structure
-
-**When NOT to use framework hints:**
-
-- You only have one frontend (just use the default format)
-- You control both backend and frontend (customize as needed)
-- You want maximum flexibility (default format is most generic)
-
-##### React Framework Hint
-
-**Syntax:** `@render:react directive_name(args)`
-
-```bard
-@render:react card_spread(cards, layout='celtic_cross')
-```
-
-**Additional fields in output:**
+**Compiled output** is returned in `PassageOutput.render_directives`:
 
 ```json
 {
   "type": "render_directive",
   "name": "card_spread",
   "mode": "evaluated",
-  "data": {
-    "cards": [...],
-    "layout": "celtic_cross"
-  },
-  "framework": "react",
-  "react": {
-    "componentName": "CardSpread",
-    "key": "card_spread_a4b3c2d1",
-    "props": {
-      "cards": [...],
-      "layout": "celtic_cross"
-    }
-  }
+  "data": {"cards": [...], "layout": "celtic_cross"}
 }
 ```
-
-**React benefits:**
-
-- `componentName`: Suggested component name in PascalCase
-- `key`: Unique key for list rendering
-- `props`: Arguments formatted as React props
-
-**Usage in React:**
-
-```jsx
-const componentRegistry = {
-  CardSpread: CardSpreadComponent,
-  CharacterPortrait: CharacterPortraitComponent,
-  // ... other components
-};
-
-{passage.render_directives.map((directive, i) => {
-  if (directive.react) {
-    const Component = componentRegistry[directive.react.componentName];
-    return <Component key={directive.react.key} {...directive.react.props} />;
-  }
-  // Fallback for directives without React hint
-  const Component = componentRegistry[directive.name];
-  return <Component key={i} {...directive.data} />;
-})}
-```
-
-##### Future Framework Hints
-
-**Unity (not yet implemented):**
-
-```bard
-@render:unity spawn_cards(cards, transform='hand', prefab='CardPrefab')
-```
-
-Might compile to:
-
-```json
-{
-  "unity": {
-    "prefab": "CardPrefab",
-    "instanceId": "cards_a4b3c2d1",
-    "args": {
-      "cards": [...],
-      "transform": "hand"
-    }
-  }
-}
-```
-
-**Godot (not yet implemented):**
-
-```bard
-@render:godot display_scene(cards, scene_path='res://CardLayout.tscn')
-```
-
-Might compile to:
-
-```json
-{
-  "godot": {
-    "scenePath": "res://CardLayout.tscn",
-    "instanceId": "scene_a4b3c2d1",
-    "args": {
-      "cards": [...]
-    }
-  }
-}
-```
-
-**Want to add a framework hint?** See "Extending Bardic" below.
-
----
-
-#### Compilation Modes
-
-Bardic can compile render directives in two modes:
-
-##### Evaluated Mode (Default)
-
-**Configuration:** `BardEngine(story, evaluate_directives=True)`
-
-Python expressions in directive arguments are **evaluated at runtime** in the backend. The frontend receives fully evaluated data.
-
-```bard
-@render card_spread(cards, layout='celtic_cross')
-```
-
-**Backend evaluates:** `cards` variable, `'celtic_cross'` literal
-
-**Frontend receives:**
-
-```json
-{
-  "name": "card_spread",
-  "mode": "evaluated",
-  "data": {
-    "cards": [
-      {"name": "The Fool", "number": 0},
-      {"name": "The Magician", "number": 1}
-    ],
-    "layout": "celtic_cross"
-  }
-}
-```
-
-**Use when:**
-
-- ✅ Standard use case for most apps
-- ✅ Backend has full game logic and state
-- ✅ Frontend just displays data
-- ✅ You want type-safe, validated data
-
-##### Raw Mode (Advanced)
-
-**Configuration:** `BardEngine(story, evaluate_directives=False)`
-
-Expressions are **NOT evaluated**. The frontend receives raw expressions and must evaluate them.
-
-```bard
-@render card_spread(cards, layout='celtic_cross')
-```
-
-**Backend does NOT evaluate!**
-
-**Frontend receives:**
-
-```json
-{
-  "name": "card_spread",
-  "mode": "raw",
-  "raw_args": "cards, layout='celtic_cross'",
-  "state_snapshot": {
-    "cards": [...],
-    "layout": "...",
-    "health": 100
-  }
-}
-```
-
-**Frontend must:**
-
-1. Parse the expression
-2. Use `state_snapshot` to resolve variables
-3. Evaluate the expression in JavaScript
-
-**Use when:**
-
-- ⚠️ You want client-side evaluation for some reason
-- ⚠️ You need the exact expression string
-- ⚠️ Building a dev tool that shows raw expressions
-
-**Most users should use evaluated mode.**
-
-#### Behavior with Story Features
-
-##### With Jumps
-
-Directives from all passages in a jump chain are collected:
-
-```bard
-:: Start
-@render title_screen(game_title)
--> Intro
-
-:: Intro
-@render fade_in()
-
-The game begins...
-```
-
-**Output combines both:**
-
-```json
-{
-  "content": "The game begins...",
-  "render_directives": [
-    {"name": "title_screen", "data": {...}},
-    {"name": "fade_in", "data": {}}
-  ]
-}
-```
-
-##### With Conditionals (Again)
-
-Only directives from the true branch are collected:
-
-```bard
-<<if health > 50>>
-@render health_bar(health, color='green')
-<<else>>
-@render health_bar(health, color='red')
-<<endif>>
-```
-
-If `health = 75`, only the green health bar directive is emitted.
-
-##### With Loops
-
-One directive per iteration:
-
-```bard
-<<for card in cards>>
-@render card_icon(card, index=loop.index)
-<<endfor>>
-```
-
-If `cards` has 3 items, you get 3 directives.
-
----
-
-#### Frontend Integration
-
-##### Generic JavaScript/TypeScript
-
-```typescript
-interface RenderDirective {
-  type: "render_directive";
-  name: string;
-  mode: "evaluated" | "raw" | "error";
-  data?: Record<string, any>;
-  framework?: string;
-  react?: {
-    componentName: string;
-    key: string;
-    props: Record<string, any>;
-  };
-  error?: string;
-  raw_args?: string;
-  state_snapshot?: Record<string, any>;
-}
-
-// Handle directives
-passageData.render_directives.forEach((directive: RenderDirective) => {
-  switch (directive.name) {
-    case "card_spread":
-      renderCardSpread(directive.data.cards, directive.data.layout);
-      break;
-    case "character_portrait":
-      renderPortrait(directive.data.character, directive.data.emotion);
-      break;
-    default:
-      console.warn(`Unknown directive: ${directive.name}`);
-  }
-});
-```
-
-##### React
-
-**With React hint:**
-
-```jsx
-const componentRegistry = {
-  CardSpread: CardSpreadComponent,
-  CharacterPortrait: CharacterPortraitComponent,
-  InterpretationPanel: InterpretationPanelComponent,
-};
-
-function PassageRenderer({ passage }) {
-  return (
-    <div>
-      {/* Regular content */}
-      <ReactMarkdown>{passage.content}</ReactMarkdown>
-
-      {/* Render directives */}
-      {passage.render_directives.map((directive) => {
-        const Component = componentRegistry[directive.react.componentName];
-        if (!Component) {
-          console.warn(`Component not found: ${directive.react.componentName}`);
-          return null;
-        }
-        return (
-          <Component
-            key={directive.react.key}
-            {...directive.react.props}
-          />
-        );
-      })}
-
-      {/* Choices */}
-      <ChoiceButtons choices={passage.choices} />
-    </div>
-  );
-}
-```
-
-**Without React hint (generic):**
-
-```jsx
-function PassageRenderer({ passage }) {
-  return (
-    <div>
-      <ReactMarkdown>{passage.content}</ReactMarkdown>
-
-      {passage.render_directives.map((directive, i) => {
-        const Component = componentRegistry[directive.name];
-        if (!Component) return null;
-        return <Component key={i} {...directive.data} />;
-      })}
-
-      <ChoiceButtons choices={passage.choices} />
-    </div>
-  );
-}
-```
-
-##### Unity (Hypothetical)
-
-```csharp
-public class BardicRuntime : MonoBehaviour {
-    [SerializeField] private GameObject cardPrefab;
-    [SerializeField] private Transform cardParent;
-
-    void HandleRenderDirective(RenderDirective directive) {
-        switch (directive.name) {
-            case "spawn_cards":
-                SpawnCards(
-                    directive.data["cards"] as List<Card>,
-                    directive.data["transform"] as string
-                );
-                break;
-
-            case "display_effect":
-                PlayEffect(
-                    directive.data["effect_name"] as string,
-                    directive.data["duration"] as float
-                );
-                break;
-        }
-    }
-
-    void SpawnCards(List<Card> cards, string transformName) {
-        Transform target = transform.Find(transformName);
-        foreach (var card in cards) {
-            var go = Instantiate(cardPrefab, target);
-            go.GetComponent<CardDisplay>().SetCard(card);
-        }
-    }
-}
-```
-
-##### CLI/Terminal (Text Only)
-
-```python
-def render_directive_as_text(directive: dict) -> str:
-    """Render directives as ASCII art for terminal"""
-
-    if directive['name'] == 'card_spread':
-        cards = directive['data']['cards']
-        layout = directive['data']['layout']
-
-        if layout == 'three_card':
-            return format_three_card_ascii(cards)
-        elif layout == 'celtic_cross':
-            return format_celtic_cross_ascii(cards)
-
-    elif directive['name'] == 'character_portrait':
-        char = directive['data']['character']
-        emotion = directive['data']['emotion']
-
-        return f"""
-        ╔══════════════╗
-        ║ {char['name']:^12} ║
-        ║ [{emotion:^10}] ║
-        ╚══════════════╝
-        """
-
-    return ""
-```
-
----
-
-#### Error Handling
-
-##### Evaluation Errors
-
-If evaluation fails in evaluated mode, you get an error directive:
-
-```bard
-@render card_spread(undefined_variable, layout='bad')
-```
-
-**Output:**
-
-```json
-{
-  "type": "render_directive",
-  "name": "card_spread",
-  "mode": "error",
-  "error": "name 'undefined_variable' is not defined",
-  "raw_args": "undefined_variable, layout='bad'"
-}
-```
-
-**Frontend handling:**
-
-```jsx
-if (directive.mode === "error") {
-  console.error(`Render directive failed: ${directive.error}`);
-  return null; // Or show error UI
-}
-```
-
-##### Missing Components
-
-If your component registry doesn't have a component:
-
-```jsx
-const Component = componentRegistry[directive.name];
-if (!Component) {
-  console.warn(`Component '${directive.name}' not found`);
-  return <div className="missing-component">
-    ⚠️ Component not implemented: {directive.name}
-  </div>;
-}
-```
-
----
-
-#### Extending Bardic (Adding Framework Hints)
-
-Want to add support for your own framework? Here's how:
-
-**1. Create a processor function:**
-
-```python
-# In your backend code
-def _process_for_my_framework(self, component_name: str, args: dict) -> dict:
-    """Format directive data for MyFramework."""
-    return {
-        "widget_name": component_name.upper(),
-        "instance_id": f"{component_name}_{uuid.uuid4().hex[:8]}",
-        "parameters": args
-    }
-```
-
-**2. Register it with the engine:**
-
-```python
-engine = BardEngine(story, context=context)
-engine.framework_processors['myframework'] = engine._process_for_my_framework
-```
-
-**3. Use it in stories:**
-
-```bard
-@render:myframework my_widget(param1=value1, param2=value2)
-```
-
-**4. Handle it in your frontend:**
-
-```python
-for directive in passage.render_directives:
-    if 'myframework' in directive:
-        my_framework_data = directive['myframework']
-        widget_name = my_framework_data['widget_name']
-        parameters = my_framework_data['parameters']
-        # Render in your framework
-```
-
-#### Design Philosophy
-
-##### Why Not Just Use Python Blocks?
-
-**You could do this:**
-
-```bard
-<<py
-component_data = {
-    'type': 'card_spread',
-    'cards': cards,
-    'layout': 'celtic_cross'
-}
-components.append(component_data)
->>
-```
-
-**But directives are better because:**
-
-- ✅ **Declarative** - Say what you want, not how to build it
-- ✅ **Compiled** - Validated at compile time, not runtime
-- ✅ **Visible** - Stand out in story text
-- ✅ **Framework-agnostic** - Frontend-specific details in one place
-- ✅ **Traceable** - Easy to find all custom UI in your story
-
-##### Why "Render" and Not "Component" or "Emit"?
-
-**Considered names:**
-
-- `@component` - Too React-specific
-- `@emit` - Sounds like event system
-- `@custom` - Too vague
-- `@visual` - Not always visual (could be audio, haptics)
-- `@render` - **Familiar** (React, game engines), **short**, **directional**
-
-**"Render" is framework-agnostic in practice:**
-
-- React devs: "Render a component"
-- Unity devs: "Render objects"
-- CLI devs: "Render formatted output"
-- Everyone understands: "Display this data somehow"
-
-With good docs (like this!), the term works for all platforms.
-
-#### Use Cases
-
-##### Tarot Reading Game
-
-```bard
-:: DrawCards
-~ cards = draw_tarot_cards(3)
-
-You draw three cards...
-
-@render:react card_spread(
-    cards=cards,
-    layout='past_present_future',
-    animation='flip',
-    interactive=True
-)
-
-+ [Interpret] -> Interpret
-```
-
-##### Character Dialogue
-
-```bard
-:: Conversation
-@render:react character_portrait(
-    character=aria,
-    emotion='worried',
-    position='left'
-)
-
-"I don't understand the cards," she says nervously.
-
-+ [Reassure her] -> Reassure
-+ [Be direct] -> Direct
-```
-
-##### Data Visualization
-
-```bard
-:: Statistics
-~ client_data = analyze_all_sessions()
-
-Here's how your clients are doing:
-
-@render:react progress_chart(
-    data=client_data,
-    type='bar',
-    labels=['Trust', 'Satisfaction', 'Growth']
-)
-
-+ [Continue] -> Next
-```
-
-##### Mini-Games
-
-```bard
-:: DiceGame
-Time to roll for destiny!
-
-@render:react dice_roller(
-    num_dice=3,
-    sides=6,
-    on_result='handle_dice_result',
-    animated=True
-)
-
-+ [Continue] -> AfterRoll
-```
-
-#### Common Patterns
-
-##### Progressive Disclosure
-
-Show UI elements only when relevant:
-
-```bard
-:: Reading
-You draw the cards.
-
-<<if show_tutorial>>
-@render:react tutorial_overlay(step='card_spread')
-<<endif>>
-
-@render:react card_spread(cards, layout='three_card')
-```
-
-##### Dynamic Layouts
-
-```bard
-:: DrawCards
-~ layout = choose_layout_for_question(question_type)
-
-@render:react card_spread(cards, layout=layout)
-```
-
-##### Conditional Rendering
-
-```bard
-:: ClientReaction
-<<if trust > 75>>
-@render:react character_portrait(client, emotion='happy', size='large')
-<<elif trust > 25>>
-@render:react character_portrait(client, emotion='neutral', size='medium')
-<<else>>
-@render:react character_portrait(client, emotion='worried', size='small')
-<<endif>>
-```
-
-##### Combining Multiple Directives
-
-```bard
-:: ComplexScene
-@render:react background(scene='mystic_shop', time='evening')
-@render:react character_portrait(client, position='left')
-@render:react card_spread(cards, position='center')
-@render:react mood_lighting(intensity=0.7, color='purple')
-
-The scene is set for the reading.
-```
-
-#### Limitations
-
-**Current limitations:**
-
-- ❌ No inline directives (`Text with @render inline(x) here`)
-- ❌ No directive nesting (`@render outer(@render inner())`)
-- ❌ No conditional directive expressions (`@render {var if cond else other}`)
-- ❌ Can't return values to story (`~ result = @render thing()`)
-
-**These are intentional design decisions.** Render directives are **one-way**: story → frontend. They produce UI, not story data.
-
-**If you need computed values:**
-
-```bard
-# ✅ Do this:
-<<py
-result = compute_something(args)
->>
-@render display(result)
-
-# ❌ Not this:
-~ result = @render compute(args)  # Won't work
-```
-
-#### Troubleshooting
-
-##### Directive not appearing in output?
-
-**Check:**
-
-1. Is it inside a false conditional?
-2. Is the passage being jumped over?
-3. Is there a Python error? (Check console/logs)
-4. Is `evaluate_directives=False` and frontend not handling raw mode?
-
-##### "Unknown directive" warnings in frontend?
-
-**Check:**
-
-1. Is the component registered in your component registry?
-2. Does the name match exactly? (case-sensitive)
-3. Did you rebuild your frontend after adding the component?
-
-##### Props not passing correctly?
-
-**Check:**
-
-1. Variable names in Bardic vs React props
-2. Data types (arrays vs objects)
-3. Framework hint format (`directive.react.props` vs `directive.data`)
-
-##### Directives rendering as text?
-
-**Check:**
-
-1. Frontend is actually handling `render_directives` array
-2. Not just displaying `passage.content` alone
-3. Component registry configured correctly
-
-#### Complete Example
-
-**Story file (`tarot_reading.bard`):**
-
-```bard
-from models.card import Card
-from services.tarot import TarotService
-
-:: Start
-~ client = load_client('aria')
-~ tarot = TarotService()
-
-Welcome back to your desk. {client.name} has arrived.
-
-@render:react character_portrait(client, emotion='neutral', position='left')
-
-She sits down nervously.
-
-+ [Begin reading] -> DrawCards
-
-:: DrawCards
-~ cards = tarot.draw_cards(3, pool='major_arcana')
-
-You shuffle the deck and draw three cards...
-
-@render:react card_spread(
-    cards=cards,
-    layout='past_present_future',
-    animation='flip',
-    interactive=False
-)
-
-**Past:** {cards[0].name}
-**Present:** {cards[1].name}
-**Future:** {cards[2].name}
-
-+ [Interpret] -> Interpret
-
-:: Interpret
-~ interpretation = tarot.interpret(cards, client)
-
-@render:react interpretation_panel(
-    interpretation=interpretation,
-    confidence=0.85,
-    style='traditional'
-)
-
-You explain the meaning...
-
-@render:react character_portrait(
-    client,
-    emotion='enlightened',
-    position='left'
-)
-
-She seems to understand.
-
-+ [End session] -> End
-
-:: End
-@render:react session_complete(client, cards)
-
-Session complete. Thank you!
-```
-
-**Backend (`main.py`):**
-
-```python
-from fastapi import FastAPI
-from bardic import BardEngine
-import json
-
-app = FastAPI()
-
-@app.post("/story/start")
-async def start_story(story_id: str, session_id: str):
-    with open(f'stories/{story_id}.json') as f:
-        story = json.load(f)
-
-    context = {
-        'load_client': load_client,
-        'TarotService': TarotService,
-    }
-
-    engine = BardEngine(story, context=context)
-    output = engine.current()
-
-    return {
-        'content': output.content,
-        'choices': output.choices,
-        'render_directives': output.render_directives
-    }
-```
-
-**Frontend (`App.jsx`):**
-
-```jsx
-import CardSpread from './components/CardSpread';
-import CharacterPortrait from './components/CharacterPortrait';
-import InterpretationPanel from './components/InterpretationPanel';
-import SessionComplete from './components/SessionComplete';
-
-const componentRegistry = {
-  CardSpread,
-  CharacterPortrait,
-  InterpretationPanel,
-  SessionComplete,
-};
-
-function PassageView({ passage }) {
-  return (
-    <div className="passage">
-      {/* Render custom components */}
-      {passage.render_directives?.map((directive) => {
-        const Component = componentRegistry[directive.react.componentName];
-        return Component ? (
-          <Component
-            key={directive.react.key}
-            {...directive.react.props}
-          />
-        ) : null;
-      })}
-
-      {/* Render text content */}
-      <ReactMarkdown>{passage.content}</ReactMarkdown>
-
-      {/* Render choices */}
-      <ChoiceButtons choices={passage.choices} />
-    </div>
-  );
-}
-```
-
-**Output:** A fully interactive tarot reading with custom card visualizations, animated character portraits, and rich interpretation panels - all defined in the story file!
-
-**Status:** ✅ Fully Implemented (Week 4)
 
 ---
 
@@ -2689,17 +1673,9 @@ function PassageView({ passage }) {
 
 Collect text input from players for names, answers, journal entries, and other custom data.
 
-**Status:** ✅ Implemented (Week 4)
+> **Full reference:** [Input Directives Guide](input-directives.md) — frontend integration (React, NiceGUI, FastAPI), the `_inputs` dictionary, validation patterns, and complete examples.
 
-#### Concept
-
-Input directives let you pause the narrative to collect information from the player. Unlike choices (which are pre-defined options), inputs let players enter free-form text that becomes part of the story state.
-
-**Philosophy:** Like render directives, input directives are declarative. You specify what input you want, and the frontend handles the actual UI. The engine manages the collected data in a persistent `_inputs` dictionary.
-
-#### Basic Syntax
-
-**Format:** `@input name="variable_name" [placeholder="..."] [label="..."]`
+**Syntax:** `@input name="variable_name" [placeholder="..."] [label="..."]`
 
 ```bard
 @input name="reader_name" placeholder="Enter your name..." label="Your Name"
@@ -2707,515 +1683,31 @@ Input directives let you pause the narrative to collect information from the pla
 
 **Rules:**
 
-- Start with `@input` followed by space
-- `name` attribute is required (used as dictionary key)
+- `name` attribute is required (used as dictionary key in `_inputs`)
 - `placeholder` and `label` are optional
-- If `label` is omitted, it's auto-generated from `name` (e.g., `reader_name` → `"Reader Name"`)
-- Input values are stored in the special `_inputs` dictionary
-- `_inputs` persists across all passages
-- Re-using the same `name` overwrites the previous value
-- Works anywhere: passages, conditionals, loops
+- Values stored in the `_inputs` dictionary, which persists across all passages
+- Access values with `{_inputs.get("reader_name", "Guest")}`
 
-#### The `_inputs` Dictionary
-
-All input data is automatically stored in `engine.state['_inputs']`:
-
-```python
-# After player submits "Kate" for reader_name:
-engine.state['_inputs']  # {'reader_name': 'Kate'}
-```
-
-**Access in stories:**
-
-```bard
-{_inputs.get("reader_name")}           # Display the value
-{_inputs.get("reader_name", "Guest")}  # With fallback
-```
-
-**Important:** `_inputs` is always available in all passages, conditionals, and Python blocks. It's automatically initialized as an empty dict when the engine starts.
-
-#### Common Pattern: Conditional Input Display
-
-Show the input form only when data hasn't been collected yet, then show a confirmation:
+**Common pattern — conditional input display:**
 
 ```bard
 :: AskName
-
+@if not _inputs.get("reader_name"):
 What is your name?
-
-<<if not _inputs.get("reader_name")>>
-@input name="reader_name" placeholder="Enter your name..." label="Your Name"
-<<else>>
+@input name="reader_name" placeholder="Enter your name..."
+@else:
 Thank you, **{_inputs.get("reader_name")}**!
-<<endif>>
+@endif
 
 + [Continue] -> NextPassage
-
-:: NextPassage
-<<py
-# Process the input
-name = _inputs.get("reader_name", "Stranger")
-player = Player(name)
->>
-
-Welcome, {player.name}!
 ```
 
-**Flow:**
-
-1. First visit: Conditional evaluates `not _inputs.get("reader_name")` → `True` → shows input form
-2. Player enters name and submits
-3. Frontend calls `engine.submit_inputs({'reader_name': 'Kate'})`
-4. Frontend re-navigates to same passage (`engine.goto('AskName')`)
-5. Second render: Conditional evaluates `not _inputs.get("reader_name")` → `False` → shows thank you message
-6. Player clicks Continue
-7. NextPassage receives the name via `_inputs`
-
-#### Examples
-
-##### Simple Name Input
-
-```bard
-:: GetName
-@input name="player_name" label="Your Name"
-
-+ [Submit] -> Greet
-
-:: Greet
-Hello, {_inputs.get("player_name", "friend")}!
-```
-
-##### Multiple Inputs Per Passage
-
-```bard
-:: Registration
-Please fill out your information:
-
-@input name="username" label="Username" placeholder="Choose a username"
-@input name="email" label="Email" placeholder="your@email.com"
-@input name="character_name" label="Character Name"
-
-+ [Submit] -> CreateAccount
-```
-
-##### Input in Conditionals
-
-```bard
-:: DivinationQuestion
-<<if not _inputs.get("question")>>
-What question do you bring to the cards?
-
-@input name="question" placeholder="Ask your question..." label="Your Question"
-<<else>>
-Your question: "{_inputs.get("question")}"
-
-The cards will answer...
-<<endif>>
-
-+ [Continue] -> DrawCards
-```
-
-##### Input in Loops
-
-```bard
-:: GatherNames
-We need names for all {count} characters:
-
-<<for i in range(count)>>
-Character {i+1}:
-@input name="char_{i}" label="Character {i+1} Name"
-<<endfor>>
-
-+ [Done] -> ProcessNames
-```
-
-##### Using Input in Python Blocks
-
-```bard
-:: ProcessDivination
-<<py
-# Get the question from inputs
-question = _inputs.get("question", "")
-
-# Analyze the question to choose appropriate spread
-if "love" in question.lower():
-    spread_type = "relationship_spread"
-elif "career" in question.lower():
-    spread_type = "career_spread"
-else:
-    spread_type = "general_spread"
-
-# Store for later use
-current_spread = spread_type
->>
-
-Based on your question, I'll use a {current_spread.replace('_', ' ')}.
-```
-
-##### Validation and Re-prompting
-
-```bard
-:: GetAge
-<<py
-age_str = _inputs.get("age", "")
-is_valid = age_str.isdigit() and int(age_str) >= 18
->>
-
-<<if not age_str or not is_valid>>
-Please enter your age (must be 18+):
-
-@input name="age" placeholder="18" label="Age"
-
-<<if age_str and not is_valid>>
-**Error:** Please enter a valid age (18 or older).
-<<endif>>
-<<else>>
-You are {age_str} years old.
-<<endif>>
-
-+ [Continue] -> NextStep
-```
-
-#### Compiled Output
-
-**Story:**
-
-```bard
-@input name="reader_name" placeholder="Enter your name..." label="Your Name"
-```
-
-**Compiled JSON:**
-
-```json
-{
-  "type": "input",
-  "name": "reader_name",
-  "placeholder": "Enter your name...",
-  "label": "Your Name"
-}
-```
-
-Input directives in conditionals are collected dynamically based on which branch evaluates to true.
-
-#### Frontend Integration
-
-The engine returns input directives in `PassageOutput.input_directives`:
+**Frontend submits input via:**
 
 ```python
-output = engine.goto('AskName')
-print(output.input_directives)
-# [{'type': 'input', 'name': 'reader_name', 'placeholder': '...', 'label': '...'}]
+engine.submit_inputs({'reader_name': 'Kate'})
+engine.goto(engine.current_passage_id)  # Re-render with new state
 ```
-
-##### Submitting Input
-
-Frontend calls `engine.submit_inputs()` with collected data:
-
-```python
-# Collect from UI
-input_data = {'reader_name': 'Kate'}
-
-# Submit to engine
-engine.submit_inputs(input_data)
-
-# Re-navigate to refresh display
-engine.goto(engine.current_passage_id)
-```
-
-##### Generic JavaScript/TypeScript
-
-```typescript
-interface InputDirective {
-  type: "input";
-  name: string;
-  label?: string;
-  placeholder?: string;
-}
-
-// Render input forms
-passageData.input_directives.forEach((input: InputDirective) => {
-  const element = createInputElement({
-    name: input.name,
-    label: input.label || input.name,
-    placeholder: input.placeholder || ''
-  });
-  container.appendChild(element);
-});
-
-// Submit handler
-function submitInputs() {
-  const data = collectInputValues(); // Get all input values
-  fetch('/api/submit-inputs', {
-    method: 'POST',
-    body: JSON.stringify({
-      session_id: sessionId,
-      inputs: data
-    })
-  });
-}
-```
-
-##### React Example
-
-```jsx
-function InputForm({ directives }) {
-  const [values, setValues] = useState({});
-
-  const handleSubmit = async () => {
-    await api.submitInputs(sessionId, values);
-    // Re-fetch passage to get updated state
-    await refetchPassage();
-  };
-
-  return (
-    <div className="input-form">
-      {directives.map(directive => (
-        <div key={directive.name} className="input-field">
-          <label>{directive.label || directive.name}</label>
-          <input
-            type="text"
-            placeholder={directive.placeholder || ''}
-            value={values[directive.name] || ''}
-            onChange={e => setValues({
-              ...values,
-              [directive.name]: e.target.value
-            })}
-          />
-        </div>
-      ))}
-      <button onClick={handleSubmit}>Submit</button>
-    </div>
-  );
-}
-```
-
-##### NiceGUI Example
-
-```python
-def render_input_form(input_directives: list[dict]):
-    """Render text input form from input directives."""
-    input_widgets = {}
-
-    with ui.column().classes('w-full gap-4 my-6 p-6 bg-purple-900/20 border border-purple-400/30 rounded-lg'):
-        # Render each input field
-        for spec in input_directives:
-            name = spec.get('name', '')
-            label = spec.get('label', name.replace('_', ' ').title())
-            placeholder = spec.get('placeholder', '')
-
-            input_widgets[name] = ui.input(
-                label=label,
-                placeholder=placeholder
-            ).classes('w-full')
-
-        # Submit button
-        ui.button('Submit', on_click=lambda: submit_inputs(input_widgets))
-
-def submit_inputs(input_widgets: dict):
-    """Collect and submit input data to engine."""
-    data = {name: widget.value or '' for name, widget in input_widgets.items()}
-    engine.submit_inputs(data)
-    engine.goto(engine.current_passage_id)  # Re-render with new state
-    update_ui()
-```
-
-#### Backend API
-
-**Engine Method:**
-
-```python
-def submit_inputs(self, input_data: dict) -> None:
-    """Submit user input data and store in state.
-
-    Inputs are stored in the special '_inputs' dictionary in state,
-    which persists across passage transitions. New inputs with the
-    same name overwrite previous values.
-
-    Args:
-        input_data: Dictionary mapping input names to values
-    """
-    if '_inputs' not in self.state:
-        self.state['_inputs'] = {}
-
-    self.state['_inputs'].update(input_data)
-```
-
-**FastAPI Example:**
-
-```python
-@app.post("/story/submit-inputs")
-async def submit_inputs(
-    session_id: str,
-    inputs: dict[str, str]
-):
-    engine = get_session_engine(session_id)
-
-    # Submit inputs to engine
-    engine.submit_inputs(inputs)
-
-    # Re-render current passage with new state
-    output = engine.goto(engine.current_passage_id)
-
-    return {
-        'content': output.content,
-        'choices': output.choices,
-        'input_directives': output.input_directives
-    }
-```
-
-#### Use Cases
-
-- **Character Names** - Let players name their character, companions, pets
-- **Divination Questions** - Collect the player's question for tarot readings
-- **Journal Entries** - Free-form text for player reflection
-- **Spell Words** - Enter words of power for magic systems
-- **Puzzle Answers** - Text-based puzzle solutions
-- **Custom Choices** - When predefined choices aren't enough
-- **Story Branching** - Use input content to influence narrative direction
-
-#### Design Philosophy
-
-**Why not use choices for everything?**
-
-Choices are great for predefined options, but sometimes you need open-ended input:
-
-- Player creativity (naming, custom answers)
-- Personalization (real questions, reflections)
-- Replayability (different text = different experience)
-
-**Why `_inputs` instead of regular variables?**
-
-- ✅ **Namespaced** - Won't conflict with story variables
-- ✅ **Persistent** - Automatically available everywhere
-- ✅ **Frontend-controlled** - Clear separation of concerns
-- ✅ **Optional** - Empty by default, no required setup
-- ✅ **Discoverable** - Always in the same place
-
-**Why declarative directives instead of imperative code?**
-
-```bard
-# ✅ Do this (declarative):
-@input name="question" label="Your Question"
-
-# ❌ Not this (imperative):
-<<py
-show_input_form("question", "Your Question")
-wait_for_input()
->>
-```
-
-Directives are:
-
-- Visible in story text (easy to find)
-- Validated at compile time
-- Frontend-agnostic (works with any UI)
-- Separates concerns (story logic vs UI)
-
-#### Limitations
-
-**Current limitations:**
-
-- Text input only (no checkboxes, radio buttons, dropdowns)
-  - Use choices for predefined options
-- No client-side validation (handle in frontend)
-- No required/optional marking (handle with conditionals)
-- No multi-line text areas (single-line text only)
-
-**These are intentional** - input directives are for simple text collection. Complex forms should be built in your frontend with regular HTML/React components.
-
-#### Troubleshooting
-
-##### Input not showing?
-
-**Check:**
-
-1. Is it inside a false conditional branch?
-2. Did you navigate to the passage correctly?
-3. Is frontend checking for `input_directives`?
-
-##### Input value not persisting?
-
-**Check:**
-
-1. Is `submit_inputs()` being called correctly?
-2. Is frontend re-navigating after submit? (`engine.goto(current_id)`)
-3. Is the input `name` correct?
-
-##### Conditional showing wrong branch?
-
-**Check:**
-
-1. Is frontend re-rendering after submit? (need to call `goto()`, not `current()`)
-2. Is the condition checking the right variable? (`_inputs.get("name")`)
-3. Is the condition logic correct? (`not _inputs.get()` for "show when empty")
-
-##### Getting "undefined variable '_inputs'"?
-
-This shouldn't happen - `_inputs` is auto-initialized. But if it does:
-
-1. Check your engine version (should auto-initialize)
-2. Verify no code is deleting `_inputs` from state
-3. Check if using old compiled JSON (recompile your story)
-
-#### Complete Example
-
-**Story (`character_creator.bard`):**
-
-```bard
-from models.character import Character
-
-:: Start
-Welcome to character creation!
-
-+ [Begin] -> GetName
-
-:: GetName
-<<if not _inputs.get("name")>>
-What is your character's name?
-
-@input name="name" placeholder="Enter name..." label="Character Name"
-<<else>>
-Your character: **{_inputs.get("name")}**
-<<endif>>
-
-+ [Continue] -> GetClass
-
-:: GetClass
-<<if not _inputs.get("backstory")>>
-Tell us about {_inputs.get("name", "your character")}'s backstory:
-
-@input name="backstory" placeholder="A brief history..." label="Backstory"
-<<else>>
-Backstory: "{_inputs.get("backstory")}"
-<<endif>>
-
-+ [Continue] -> CreateCharacter
-
-:: CreateCharacter
-<<py
-# Create character from inputs
-char = Character(
-    name=_inputs.get("name", "Unknown"),
-    backstory=_inputs.get("backstory", "")
-)
->>
-
-**{char.name}** has been created!
-
-"{char.backstory}"
-
-+ [Start adventure] -> Adventure
-```
-
-This example shows:
-
-- Multiple input passages
-- Conditional display (input vs confirmation)
-- Accessing inputs in later passages
-- Using inputs in Python blocks
-- Fallback values for safety
-
-**Status:** ✅ Implemented (Week 4)
 
 ---
 
@@ -3227,10 +1719,10 @@ Navigate to another passage without a choice. Like Ink's `->` divert.
 
 ```bard
 :: CheckHealth
-<<if health <= 0>>
+@if health <= 0:
 You collapse to the ground...
 -> Death
-<<endif>>
+@endif
 
 You're still alive!
 
@@ -3253,7 +1745,7 @@ Game Over.
 - Content BEFORE the jump renders
 - Content AFTER the jump is skipped
 - Can be used anywhere: passages, conditionals, loops
-- Can be conditional (inside `<<if>>` blocks)
+- Can be conditional (inside `@if` blocks)
 - In loops: exits the loop and jumps immediately
 - Multiple conditional jumps: only the first true condition jumps
 - Jump loop detection prevents infinite recursion
@@ -3269,40 +1761,40 @@ The game begins...
 
 # Conditional jump - automatic progression
 :: CheckStatus
-<<if health <= 0>>
+@if health <= 0:
 You collapse...
 -> Death
-<<elif health < 50>>
+@elif health < 50:
 You're wounded.
 -> Injured
-<<else>>
+@else:
 You're healthy.
 -> Healthy
-<<endif>>
+@endif
 
 # Jump after Python code
 :: ProcessTurn
-<<py
+@py:
 turn_count += 1
 if turn_count >= 10:
     game_over = True
->>
+@endpy
 
-<<if game_over>>
+@if game_over:
 -> GameOver
-<<endif>>
+@endif
 
 Turn {turn_count} continues...
 
 # Jump in a loop - exits when condition met
 :: SearchInventory
-<<for item in inventory>>
+@for item in inventory:
 Checking {item.name}...
-<<if item.name == "key">>
+@if item.name == "key":
 Found the key!
 -> FoundKey
-<<endif>>
-<<endfor>>
+@endif
+@endfor
 
 Key not found.
 
@@ -3316,15 +1808,15 @@ Only the first true condition's jump executes:
 
 ```bard
 :: RoutePlayer
-<<if score >= 90>>
+@if score >= 90:
 -> GradeA
-<<elif score >= 80>>
+@elif score >= 80:
 -> GradeB
-<<elif score >= 70>>
+@elif score >= 70:
 -> GradeC
-<<else>>
+@else:
 -> GradeF
-<<endif>>
+@endif
 ```
 
 With `score = 85`, only `-> GradeB` executes. The other branches are never evaluated.
@@ -3337,10 +1829,10 @@ With `score = 85`, only `-> GradeB` executes. The other branches are never evalu
 
 Checking your status...
 
-<<if health <= 0>>
+@if health <= 0:
 You feel weak...
 -> Death
-<<endif>>
+@endif
 
 You're fine!  # This never renders if health <= 0
 
@@ -3376,12 +1868,12 @@ When a jump is found inside a loop, the loop exits immediately:
 
 Searching for 3...
 
-<<for n in numbers>>
+@for n in numbers:
 Checking {n}
-<<if n == 3>>
+@if n == 3:
 -> Found
-<<endif>>
-<<endfor>>
+@endif
+@endfor
 
 Not found.
 
@@ -3446,8 +1938,6 @@ Raises: `ValueError: Jump target 'NonExistentPassage' not found (in passage 'Sta
 
 **Similar to:** Ink's divert (`->`) system
 
-**Status:** ✅ Implemented (Week 3)
-
 ---
 
 ### Join Blocks (@join)
@@ -3455,6 +1945,7 @@ Raises: `ValueError: Jump target 'NonExistentPassage' not found (in passage 'Sta
 Create choices with inline content that merge back together. Similar to Ink's "gather" pattern but with explicit syntax.
 
 **Syntax:**
+
 ```bard
 + [Choice text] -> @join
     Indented block content.
@@ -3465,6 +1956,7 @@ Content after all choices merge here.
 ```
 
 **Basic Example:**
+
 ```bard
 :: Start
 What fruit do you want?
@@ -3557,6 +2049,7 @@ If player chooses "Leave immediately", they go to OtherPlace. If they choose "In
 **Block Termination:**
 
 Block content ends when the parser encounters:
+
 - Another choice line (`+ [` or `* [`)
 - The `@join` marker
 - A new passage header (`::`)
@@ -3569,8 +2062,6 @@ Block content ends when the parser encounters:
 - Block content must be indented more than the choice line
 - Multiple @join markers create sequential sections
 - Section index resets when re-entering a passage
-
-**Status:** ✅ Implemented (Dec 2025)
 
 ---
 
@@ -3662,8 +2153,6 @@ This typically happens at the start of a story.
 | **Use case** | "Go back" in UI | "Try a different choice" |
 | **Tracks** | Every passage visited | Only when `choose()` is called |
 
-**Status:** ✅ Implemented (Jan 2026)
-
 ---
 
 ### Tags (Custom Markup)
@@ -3687,8 +2176,6 @@ The spirits speak to you...
 - Attributes are optional
 - Can be nested
 - Compiled to structured data for React
-
-**Status:** 📅 Week 5
 
 ### Includes
 
@@ -3745,8 +2232,6 @@ stories/
 
 **Critical for:** Stories with multiple client paths, hub-and-spoke structures, or >1000 lines of content.
 
-**Status:** ✅ Implemented (Week 2, Session 6)
-
 ---
 
 ## Advanced Features (Post v1.0)
@@ -3763,10 +2248,10 @@ Group passages with shared state.
 @section ClientAria.Session1
 
 # Section-level setup (runs once when entering section)
-<<py
+@py:
 client = load_client('aria')
 session_state = {'trust': 50}
->>
+@endpy
 
 :: Start
 # Has access to client and session_state
@@ -3806,19 +2291,7 @@ Back at the main menu.
 - Mini-games with temporary mechanics
 - Tutorial sections with special rules
 
-**Status:** 🤔 Consider after v1.0 if pain point emerges
-
----
-
-### Visit Tracking
-
-Track how many times passages have been visited.
-
-```bard
-:: Library <<if visit_count('Library') == 0>> First time here. <<else>> You've been here {visit_count('Library')} times. <<endif>>
-```
-
-**Status:** 🤔 Consider after v1.0 if needed
+**Status:** Consider after v1.0 if pain point emerges
 
 ---
 
@@ -3830,7 +2303,7 @@ Ink-style cycling text.
 {sequence(visit_count('Tavern'), [ "The tavern is bustling.", "The tavern is quieter now.", "The tavern is nearly empty." ])}
 ````
 
-**Status:** 🤔 Consider after v1.0 if needed
+**Status:** Unplanned — can be achieved with `_visits` and `@if`/`@elif` blocks.
 
 ---
 
@@ -3927,7 +2400,7 @@ Bardic compiles `.bard` files to JSON for runtime execution.
 ### Execution Order (Per Passage)
 
 1. Load passage
-2. Execute all `<<py>>` blocks and `~` assignments in order
+2. Execute all `@py:` blocks and `~` assignments in order
 3. Render content (evaluate expressions, conditionals, loops)
 4. Filter available choices (check conditions)
 5. Return output to frontend
@@ -3944,6 +2417,7 @@ Bardic compiles `.bard` files to JSON for runtime execution.
 Players can rewind and replay their choices. The engine maintains undo and redo stacks.
 
 **Engine API:**
+
 ```python
 # Check if undo/redo is available
 if engine.can_undo():
@@ -3962,6 +2436,7 @@ if engine.can_redo():
 5. Making a new choice after undo clears the redo stack (timeline branching)
 
 **GameSnapshot Contents:**
+
 ```python
 @dataclass
 class GameSnapshot:
@@ -3973,6 +2448,7 @@ class GameSnapshot:
 ```
 
 **Stack Configuration:**
+
 ```python
 # Default: 50 undo levels
 engine = BardEngine(story)
@@ -3981,9 +2457,10 @@ engine.undo_stack.maxlen  # 50
 
 **Browser Template:**
 
-The browser bundle (`bardic bundle`) includes ← → buttons in the header for undo/redo. Button states update automatically based on `can_undo()` / `can_redo()`.
+The browser bundle (`bardic bundle`) includes buttons in the header for undo/redo. Button states update automatically based on `can_undo()` / `can_redo()`.
 
 **Integration Example:**
+
 ```python
 @app.post("/story/undo")
 async def undo_choice(session_id: str):
@@ -4001,8 +2478,6 @@ async def undo_choice(session_id: str):
 - New choice after undo clears redo stack
 - Stack is bounded (default 50) to prevent memory issues
 - Hook state and @join section index included in snapshots
-
-**Status:** ✅ Implemented (Dec 2025)
 
 ---
 
@@ -4048,62 +2523,6 @@ function StoryView({ passageData }) {
   );
 }
 ```
-
----
-
-## Development Roadmap
-
-### ✅ Week 1: Foundation (Complete)
-
-- [x] Basic parser
-- [x] Passage navigation
-- [x] Simple choices
-- [x] Compiler to JSON
-- [x] Runtime engine
-- [x] CLI compilation
-- [x] CLI player
-
-### ✅ Week 2: State & Organization (Complete)
-
-- [x] Variable assignment (`~`)
-- [x] Variable display (`{}`)
-- [x] Variable display with format specifiers (`{var:.2f}`)
-- [x] Expressions in assignments
-- [x] Conditional choices (`+ {condition} [Text] -> Target`)
-- [x] **File includes (`@include`)**
-
-### 📅 Week 3: Python Integration
-
-- [x] `<<py>>` blocks
-- [x] Function calls in expressions
-- [x] Object attributes (via Python blocks and expressions)
-- [ ] Conditionals (`<<if>>`)
-- [ ] Loops (`<<for>>`)
-
-### 📅 Week 4: Navigation & Web
-
-- [ ] Passage parameters
-- [ ] Immediate diverts (`->`)
-- [ ] One-time choices (`*`)
-- [ ] Render directives (`@`)
-- [ ] FastAPI integration
-- [ ] React example
-
-### 📅 Week 5: Polish
-
-- [ ] Markdown support
-- [ ] Custom tags `[!tag]`
-- [ ] Comments (`#`)
-- [ ] Imports (plain Python)
-- [ ] Better error messages
-
-### 📅 Week 6: Refinement
-
-- [ ] Whitespace perfection
-- [ ] HTML export
-- [ ] Documentation
-- [ ] Example stories
-- [ ] Testing framework
 
 ---
 
@@ -4160,7 +2579,7 @@ from models.card import Card
 @include shared/card_mechanics.bard
 
 :: DrawCards
-<<py
+@py:
 # Draw random cards
 cards = tarot_service.draw_from_pool(
     pool='major_arcana',
@@ -4177,11 +2596,11 @@ cards[2].in_position('future')
 for card in cards:
     if chance(0.3):
         card.is_reversed = True
->>
+@endpy
 
 You draw three cards from the deck...
 
-@ render_spread(cards, layout='three_card')
+@render render_spread(cards, layout='three_card')
 
 **Past:** {cards[0].get_display_name()}
 {cards[0].position_meaning}
@@ -4203,12 +2622,10 @@ You draw three cards from the deck...
 
 Things Bardic intentionally does NOT do:
 
-- ❌ Desktop app packaging (web-native only)
-- ❌ Built-in graphics/audio system (use React/HTML5)
-- ❌ Visual editor (code-first approach)
-- ❌ Built-in game mechanics (inventory, combat, etc.)
-- ❌ Save/load system (handle in your backend)
-- ❌ Multiplayer/networking (handle in your backend)
+- Desktop app packaging (web-native only)
+- Built-in graphics/audio system (use React/HTML5)
+- Visual editor (code-first approach, but has VSCode IDE graph node navigator)
+- Multiplayer/networking (handle in your backend)
 
 These can be built using Bardic + your Python code, but are not built-in features.
 
@@ -4216,33 +2633,10 @@ These can be built using Bardic + your Python code, but are not built-in feature
 
 ## Contributing
 
-Until v1.0, this is a personal project. After v1.0 is released and battle-tested on the tarot game, contributions may be accepted.
+Bardic is open to contributions. Features should solve real problems actually encountered in production, not hypothetical ones.
 
-**Philosophy:** Features should solve real problems we've actually encountered, not hypothetical ones.
-
----
-
-## Version History
-
-- **v0.1.0** - Initial implementation (Week 1)
-  - Basic passages
-  - Simple choices
-  - Compiler and runtime
+**Philosophy:** Build for real needs, not "just in case."
 
 ---
 
-## Questions to Answer Later
-
-- Should we support includes? (`::include other.bard`)
-- Do we need story-level metadata? (author, version, etc.)
-- Should there be a plugin system?
-- How should we handle localization/i18n?
-- Should visit tracking be built-in or external?
-
-**Decision:** Add these only when we hit a real need in production.
-
----
-
-*This specification is a living document. It evolves based on actual usage in building the tarot game.*
-
-Last updated: September 30, 2025
+Last updated: March 2026
