@@ -37,7 +37,7 @@ class Relationship:
         openness: int,
         topics_discussed: Optional[Set[str]] = None,
     ):
-        self.name: str
+        self.name = name
         self.topics_discussed = topics_discussed if topics_discussed else set()
         self._trust = 50
         self._comfort = 50

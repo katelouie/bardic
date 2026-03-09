@@ -13,6 +13,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Relationship.name never assigned** — `__init__` had a type annotation (`self.name: str`) instead of an assignment (`self.name = name`), causing `AttributeError` when accessing any relationship's name
+- **One-time choice IDs unstable** — filtering used raw content arrays while tracking used rendered strings, so one-time choices (`*`) would reappear on revisit
+- **Circular include detection broken** — `resolve_includes` passed `seen.copy()` to recursive calls, giving each branch its own independent set and failing to detect A→B→A cycles
+- **Loop exception handler returned 2-tuple** — `_render_loop` error path returned `(error_msg, None)` instead of the expected `(error_msg, None, [])`, causing unpacking errors
+- **Coffee shop example wrong property** — used `alex.is_ready_for_deep_work` instead of `alex.is_ready_for_deep_conversation`
+
 ## [0.7.0] - 2026-01-12
 
 ### Added

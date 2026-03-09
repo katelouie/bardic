@@ -556,7 +556,7 @@ class BardEngine:
         sticky = choice.get("sticky", True)
         if not sticky:
             # This is a one-time choice - check if used
-            # Need to render choice text to match ID format used in choose()
+            # Render choice text to get a plain string that matches the ID format in choose()
             rendered = self._render_choice_text(choice)
             choice_id = f"{self.current_passage_id}:{rendered['text']}:{choice['target']}"
             if choice_id in self.used_choices:
@@ -1595,7 +1595,7 @@ class BardEngine:
             import traceback
 
             traceback.print_exc()
-            return error_msg, None
+            return error_msg, None, []
 
     def _render_conditional(
         self, conditional: dict

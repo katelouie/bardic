@@ -193,7 +193,7 @@ You reach across and squeeze their hand. Alex freezes for a second, then squeeze
 
 "Thank you," they whisper.
 
-@if alex.is_ready_for_deep_work:
+@if alex.is_ready_for_deep_conversation:
 -> DeepConnection
 @else:
 -> SlowBuild

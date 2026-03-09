@@ -251,7 +251,7 @@ def resolve_includes(
                 resolved_content, included_map = resolve_includes(
                     included_content,
                     str(full_path),
-                    seen.copy(),  # Pass a copy so each branch tracks separately
+                    seen,  # Share the set so circular includes are detected across branches
                 )
 
                 # Add the resolved content and its line mappings
