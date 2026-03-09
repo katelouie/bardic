@@ -8,7 +8,7 @@ You don't need to be a programmer to start, but Bardic's real magic comes from i
 
 You'll start as a **Writer**, learning to create simple branching passages. Along the way, you'll become a **Technical Writer**, learning to add logic and memory to your story. By the end, you'll be a **Python Magician**, able to import your own custom classes and build complex narrative systems.
 
-No matter your skill level, start at Part 1. Each lesson builds on the last.
+No matter your skill level, start at Part 0 (Setup). Each lesson builds on the last.
 
 ## The Tutorial Series
 
@@ -75,7 +75,7 @@ No matter your skill level, start at Part 1. Each lesson builds on the last.
 
 ## Two Paths Through the Tutorial
 
-### 🎨 The Writer's Path (Minimum Code)
+### The Writer's Path (Minimum Code)
 
 If you want to make interactive fiction without diving too deep into programming:
 
@@ -87,7 +87,7 @@ If you want to make interactive fiction without diving too deep into programming
 
 **Result:** You can build complete IF games with variables, conditionals, loops, and complex data structures. This is enough for most stories!
 
-### 👨‍💻 The Developer's Path (Full Power)
+### The Developer's Path (Full Power)
 
 If you want to leverage Python's full capabilities:
 
@@ -100,7 +100,7 @@ If you want to leverage Python's full capabilities:
 
 ---
 
-## 🎯 Start Here
+## Start Here
 
 **Ready? Let's get started!**
 
