@@ -11,8 +11,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Python version requirement updated to 3.10+** — codebase uses `X | Y` union syntax (3.10+) and lowercase generic types (3.9+); updated `pyproject.toml`, CLAUDE.md, and all tutorials to reflect the real minimum
+
 ### Fixed
 
+- **Tutorial 03_5 wrong import paths** — 6 occurrences of `bardic.modules.*` replaced with `bardic.stdlib.*`
+- **Tutorial 04 fake engine API** — `GameUI` class rewritten to use actual `BardCompiler`/`BardEngine` API (`compile_string`, `goto`, `submit_inputs`, `choose`) instead of nonexistent methods (`load_story`, `start`, `set_input`, `continue_story`)
+- **Tutorial 00b fake engine API** — test example rewritten to use `BardCompiler.compile_string()` + `BardEngine(story_data)` instead of nonexistent `BardEngine()` no-arg constructor and `load_story_file()`
+- **Cookbook legacy syntax** — replaced `<<if>>`/`<<for>>` with `@if:`/`@for:` in `custom-classes.md` for consistency with tutorials
+- **Stdlib docstring import paths** — `inventory.py` and `economy.py` docstrings referenced `bardic.modules.*` instead of `bardic.stdlib.*`
+- **Tutorial 04 non-functional `@start`** — removed standalone `@start` directive that was parsed as content text, not a directive
 - **Relationship.name never assigned** — `__init__` had a type annotation (`self.name: str`) instead of an assignment (`self.name = name`), causing `AttributeError` when accessing any relationship's name
 - **One-time choice IDs unstable** — filtering used raw content arrays while tracking used rendered strings, so one-time choices (`*`) would reappear on revisit
 - **Circular include detection broken** — `resolve_includes` passed `seen.copy()` to recursive calls, giving each branch its own independent set and failing to detect A→B→A cycles

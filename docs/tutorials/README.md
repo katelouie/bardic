@@ -112,7 +112,7 @@ If you want to leverage Python's full capabilities:
 
 - **No programming experience needed** for Parts 1-2
 - **Basic comfort with text files** (you should know how to create/save a text file)
-- **Python 3.8+** installed on your computer
+- **Python 3.10+** installed on your computer
 - **A text editor** (VS Code recommended, but Notepad works too!)
 - **Bardic installed:** `pip install bardic`
 

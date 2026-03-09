@@ -8,7 +8,7 @@ If you're new to Python, we recommend [Step 0A: Installation for Beginners](00A_
 
 ## Prerequisites
 
-- Python 3.8 or higher
+- Python 3.10 or higher
 - pip
 - Basic command line knowledge
 
@@ -446,13 +446,14 @@ See [Part 4: Custom UI](04_custom_ui.md) for deploying with NiceGUI or FastAPI.
 
 ```python
 # tests/test_game.py
-from bardic import BardEngine
+from bardic import BardCompiler, BardEngine
 
 def test_inventory():
-    engine = BardEngine()
-    engine.load_story_file("story.bard")
+    compiler = BardCompiler()
+    story_data = compiler.compile_string(open("story.bard").read())
+    engine = BardEngine(story_data)
 
-    output = engine.start()
+    output = engine.goto("Start")
     assert "Welcome" in output.content
 
     # Make choice

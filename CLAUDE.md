@@ -16,7 +16,7 @@ Bardic is a Python-first interactive fiction engine for modern web applications.
 pyenv activate bardic
 ```
 
-Required Python version: 3.12+
+Required Python version: 3.10+
 
 ## Common Commands
 

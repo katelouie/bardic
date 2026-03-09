@@ -155,7 +155,7 @@ Both paths require internet for initial installation, but work offline after set
 
 ### "I have an older computer"
 
-Bardic is very lightweight. If you can run Python 3.8+, you can run Bardic.
+Bardic is very lightweight. If you can run Python 3.10+, you can run Bardic.
 
 ---
 

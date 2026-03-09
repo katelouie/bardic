@@ -1,7 +1,7 @@
 """Inventory management for items with weight limits and categories.
 
 Usage:
-    from bardic.modules.inventory import Inventory
+    from bardic.stdlib.inventory import Inventory
 
     # Create inventory
     inv = Inventory(max_weight=50)

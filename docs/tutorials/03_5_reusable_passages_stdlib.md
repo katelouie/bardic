@@ -214,10 +214,10 @@ These are pre-built Python modules that handle common game mechanics so you don'
 
 ### Available Modules
 
-**`bardic.modules.inventory`** - Item management with weight limits
-**`bardic.modules.economy`** - Currency, shops, buying/selling
-**`bardic.modules.dice`** - Dice rolls and skill checks
-**`bardic.modules.relationship`** - NPC relationship tracking
+**`bardic.stdlib.inventory`** - Item management with weight limits
+**`bardic.stdlib.economy`** - Currency, shops, buying/selling
+**`bardic.stdlib.dice`** - Dice rolls and skill checks
+**`bardic.stdlib.relationship`** - NPC relationship tracking
 
 Here's also the [`stdlib` directory](../../bardic/stdlib/) so you can see the code for all of the modules.
 
@@ -230,7 +230,7 @@ Let's learn how to use them!
 The inventory module gives you a weight-limited container for items:
 
 ```bard
-from bardic.modules.inventory import Inventory
+from bardic.stdlib.inventory import Inventory
 
 :: Start
 ~ player_inventory = Inventory(max_weight=50)
@@ -292,8 +292,8 @@ potion_added = player_inventory.add(potion)
 The economy module gives you currency and shops:
 
 ```bard
-from bardic.modules.economy import Wallet, Shop
-from bardic.modules.inventory import Inventory
+from bardic.stdlib.economy import Wallet, Shop
+from bardic.stdlib.inventory import Inventory
 
 :: Start
 ~ player_wallet = Wallet(gold=100)
@@ -375,7 +375,7 @@ price = shop.get_buy_price(item_name)
 The dice module gives you randomness and skill checks:
 
 ```bard
-from bardic.modules.dice import roll, skill_check
+from bardic.stdlib.dice import roll, skill_check
 
 :: Start
 You encounter a locked door.
@@ -441,9 +441,9 @@ Let's put everything together. Here's a complete merchant trading game that uses
 Create **`merchant_game.bard`**:
 
 ```bard
-from bardic.modules.inventory import Inventory
-from bardic.modules.economy import Wallet, Shop
-from bardic.modules.dice import roll
+from bardic.stdlib.inventory import Inventory
+from bardic.stdlib.economy import Wallet, Shop
+from bardic.stdlib.dice import roll
 
 :: Start
 ~ player_inventory = Inventory(max_weight=50)
@@ -694,14 +694,14 @@ We wrote ONE reusable passage that works for everything.
 
 **Standard Library Modules:**
 
-- `bardic.modules.inventory` - Item management
-- `bardic.modules.economy` - Shops and currency
-- `bardic.modules.dice` - Randomness and checks
-- `bardic.modules.relationship` - NPC relationships
+- `bardic.stdlib.inventory` - Item management
+- `bardic.stdlib.economy` - Shops and currency
+- `bardic.stdlib.dice` - Randomness and checks
+- `bardic.stdlib.relationship` - NPC relationships
 
 **The Pattern:**
 
-1. Import the module: `from bardic.modules.economy import Shop`
+1. Import the module: `from bardic.stdlib.economy import Shop`
 2. Create objects: `~ shop = Shop(items)`
 3. Use in reusable passages: `-> BuyFromShop(shop=shop)`
 

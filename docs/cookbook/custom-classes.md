@@ -129,9 +129,9 @@ from game_logic.tarot import Card, Spread
 Your {spread.name}:
 Cards drawn: {spread.card_count()}
 
-<<for card in spread.cards>>
+@for card in spread.cards:
   - {card.name} (#{card.number})
-<<endfor>>
+@endfor
 ```
 
 **This works automatically!** Bardic's serialization recursively handles:
@@ -329,19 +329,19 @@ Inventory: {len(hero.inventory)} items
 The dragon breathes fire! You take 30 damage.
 Health: {hero.health}/{Character.MAX_HEALTH}
 
-<<if hero.is_alive>>
+@if hero.is_alive:
   You survived!
   + [Continue] -> Victory
-<<else>>
+@else:
   You died!
   + [Restart] -> Start
-<<endif>>
+@endif
 
 :: Inventory
 Your inventory:
-<<for item in hero.inventory>>
+@for item in hero.inventory:
   - {item.name} (worth {item.value} gold, weighs {item.weight} kg)
-<<endfor>>
+@endfor
 
 + [Back] -> Start
 ```

@@ -8,7 +8,7 @@ dynamic = ["version"]
 authors = [{ name = "Kate Louie", email = "katehlouie@gmail.com" }]
 description = "Python-first interactive fiction engine"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 license = { text = "MIT" }
 keywords = [
     "interactive fiction",

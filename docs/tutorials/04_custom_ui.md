@@ -37,7 +37,6 @@ Create a new file called **`story_with_ui.bard`**:
 from item import Item
 
 :: Start
-@start
 Welcome, traveler! Before we begin, what's your name?
 
 @input name="player_name" label="Enter your name" placeholder="Hero"
@@ -207,19 +206,20 @@ Now let's create the actual web server and UI components. Create a file called *
 
 ```python
 from nicegui import ui
-from bardic import BardEngine
-import json
+from bardic import BardCompiler, BardEngine
 
 class GameUI:
     """Web-based UI for the Bardic story."""
 
     def __init__(self, story_file):
-        # Load and compile the story
+        # Compile and load the story
         with open(story_file, 'r') as f:
             story_code = f.read()
 
-        self.engine = BardEngine()
-        self.engine.load_story(story_code)
+        compiler = BardCompiler()
+        story_data = compiler.compile_string(story_code)
+        self.engine = BardEngine(story_data)
+        self.initial_passage = story_data["initial_passage"]
 
         # UI containers
         self.content_area = None
@@ -250,8 +250,8 @@ class GameUI:
 
     def handle_render_directive(self, directive):
         """Process @render directives from Bardic."""
-        component_name = directive['component']
-        args = directive.get('args', {})
+        component_name = directive['name']
+        args = directive.get('data', {})
 
         if component_name == 'render_inventory':
             self.render_inventory(
@@ -268,24 +268,23 @@ class GameUI:
 
         # Display text content
         with self.content_area:
-            # Parse and display markdown content
-            content_html = output.get('content', '')
-            ui.markdown(content_html).classes('text-lg prose max-w-none')
+            # PassageOutput.content is a string
+            ui.markdown(output.content).classes('text-lg prose max-w-none')
 
             # Handle any @render directives
-            for directive in output.get('render_directives', []):
+            for directive in output.render_directives:
                 self.handle_render_directive(directive)
 
         # Display choices
         with self.choices_area:
-            for i, choice in enumerate(output.get('choices', [])):
+            for i, choice in enumerate(output.choices):
                 ui.button(
                     choice['text'],
                     on_click=lambda idx=i: self.make_choice(idx)
                 ).classes('w-full text-left bg-blue-600 hover:bg-blue-700 text-white')
 
             # Show input fields if present
-            for input_field in output.get('inputs', []):
+            for input_field in output.input_directives:
                 self.show_input_field(input_field)
 
     def show_input_field(self, input_data):
@@ -299,9 +298,9 @@ class GameUI:
 
             def submit_input():
                 # Store the input value in the engine state
-                self.engine.set_input(name, input_element.value)
-                # Continue to next passage
-                output = self.engine.continue_story()
+                self.engine.submit_inputs({name: input_element.value})
+                # Navigate to the next passage via the choice
+                output = self.engine.choose(0)
                 self.display_passage(output)
 
             ui.button('Submit', on_click=submit_input).classes('w-full bg-green-600 text-white')
@@ -327,8 +326,8 @@ class GameUI:
                     ui.label('Inventory').classes('text-xl font-bold mb-2')
                     self.inventory_display = ui.column().classes('gap-2')
 
-        # Start the story
-        output = self.engine.start()
+        # Navigate to the first passage
+        output = self.engine.goto(self.initial_passage)
         self.display_passage(output)
 
 

@@ -1,8 +1,8 @@
 """Economy system for currency, shops, and trading.
 
 Usage:
-    from bardic.modules.economy import Wallet, Shop
-    from bardic.modules.inventory import Inventory
+    from bardic.stdlib.economy import Wallet, Shop
+    from bardic.stdlib.inventory import Inventory
 
     # Create wallet and inventory
     wallet = Wallet(gold=100)
