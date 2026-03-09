@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **Unknown directive detection** — lines starting with `@` that don't match any known directive now raise a `SyntaxError` instead of being silently treated as content text. Common typos like `@elseif`, `@iff`, `@python` get "Did you mean?" suggestions; completely unknown directives list all valid options. 5 new error handling tests.
+- **Passage visit counting (`_visits`)** — built-in `_visits` dict tracks how many times each passage has been entered. Use `{_visits.get("Tavern", 0)}` in expressions or `{_visits["Start"] >= 2}` in conditions for "you've been here before" content. Automatically included in undo/redo snapshots and save/load.
+- **Turn counter (`_turns`)** — built-in `_turns` integer counts player choices (incremented by `choose()`, not `goto()`). Use for pacing (`{_turns}` turns elapsed), urgency mechanics, scoring, or conditional content that unlocks after N choices. 17 new tests for both features.
 
 ### Changed
 

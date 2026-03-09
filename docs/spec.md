@@ -892,7 +892,64 @@ In global: {'damage' in _state}       # False
 In local: {'damage' in _local}        # True
 ```
 
-**Status:** ✅ Implemented (Nov 2025)
+#### `_visits` - Passage Visit Counter
+
+Dictionary tracking how many times each passage has been entered. Automatically incremented on every `goto()` call (including the initial passage at engine startup).
+
+```bard
+:: Tavern
+@if _visits.get("Tavern", 0) == 1:
+    You push open the tavern door for the first time.
+@elif _visits.get("Tavern", 0) <= 3:
+    You return to the familiar tavern.
+@else:
+    The bartender nods. "The usual?"
+@endif
+
++ [Leave] -> Town
+```
+
+**Common use cases:**
+- First-visit content: `@if _visits.get("Room", 0) == 1: ...`
+- Returning content: `@if _visits.get("Room", 0) >= 2: ...`
+- Conditional choices: `+ {_visits.get("Library", 0) >= 3} [Secret passage] -> Hidden`
+- Visit display: `You've been here {_visits.get("Tavern", 0)} times.`
+
+**Notes:**
+- Passages not yet visited are absent from the dict — always use `.get()` with a default
+- The initial passage starts at visit count 1 (the engine navigates to it on startup)
+- Jump targets (via `->`) are also counted
+- Survives undo/redo and save/load
+
+#### `_turns` - Turn Counter
+
+Integer counting total player choices made. Incremented by `choose()` only — programmatic navigation via `goto()` does not count as a turn.
+
+```bard
+:: Dungeon
+@if _turns >= 30:
+    The dungeon begins to collapse! Time is running out!
+@endif
+
+You see a dark corridor ahead.
+Turns elapsed: {_turns}
+
++ [Go deeper] -> DungeonDeep
++ {_turns >= 20} [I've explored enough...] -> Exit
+```
+
+**Common use cases:**
+- Pacing: Show different text after N turns
+- Urgency: `The bomb detonates in {50 - _turns} turns!`
+- Scoring: `You escaped in {_turns} turns!`
+- Unlocking content: `+ {_turns >= 10} [New option] -> Secret`
+
+**Notes:**
+- Starts at 0
+- Only incremented by player choices (`choose()`), not `goto()`
+- Survives undo/redo and save/load
+
+**Status:** ✅ `_state`, `_local` implemented (Nov 2025). `_visits`, `_turns` implemented (Mar 2026).
 
 ---
 

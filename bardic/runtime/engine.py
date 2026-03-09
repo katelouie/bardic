@@ -112,6 +112,8 @@ class BardEngine:
         self.state = {}  # Game state (variables)
         self.hooks: dict[str, list[str]] = {}  # Event -> list of passage IDs
         self.state["_inputs"] = {}  # Initialize empty inputs dict (always available)
+        self.state["_visits"] = {}  # Track how many times each passage has been visited
+        self.state["_turns"] = 0  # Track total number of player choices made
         self._local_scope_stack = []  # Stack of local parameter scopes (NEW for passage params)
         self.used_choices = set()  # Track which one-time choices have been used
         self.context = context or {}
@@ -686,6 +688,11 @@ class BardEngine:
             # Reset join section index when visiting a new passage
             self._join_section_index[passage_id] = 0
 
+            # Track passage visit count
+            visits = self.state.get("_visits", {})
+            visits[passage_id] = visits.get(passage_id, 0) + 1
+            self.state["_visits"] = visits
+
             # Start with the requested passage
             current_id = passage_id
 
@@ -813,6 +820,9 @@ class BardEngine:
 
         # Clear the redo stack -- making a new choice creates a new timeline
         self.redo_stack.clear()
+
+        # Increment turn counter
+        self.state["_turns"] = self.state.get("_turns", 0) + 1
 
         # Get filtered choices from cached output
         current_output = self.current()
