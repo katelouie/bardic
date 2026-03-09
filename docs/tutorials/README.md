@@ -104,7 +104,7 @@ If you want to leverage Python's full capabilities:
 
 **Ready? Let's get started!**
 
-**[→ Begin with Part 1: Your First Branching Story](01_first_story.md)**
+**[→ Begin with Part 0: Technical Setup](00_installation_choice.md)**
 
 ---
 
@@ -150,6 +150,7 @@ If you want to leverage Python's full capabilities:
 
 ## Index of All Parts
 
+0. [Choosing Your Installation Path](00_installation_choice.md)
 1. [Your First Branching Story](01_first_story.md)
 2. [Adding State & Memory](02_state_memory.md)
 3. [Complex State (Lists & Dictionaries)](02_5_complex_state.md)
