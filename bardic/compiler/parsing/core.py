@@ -36,6 +36,94 @@ from .validation import (
 )
 
 
+# All recognized @-directives that the parser handles.
+# Lines starting with @ that don't match any of these are flagged as typos.
+_KNOWN_DIRECTIVES = {
+    "@if", "@elif", "@else", "@endif",
+    "@for", "@endfor",
+    "@py", "@endpy",
+    "@render", "@input",
+    "@hook", "@unhook",
+    "@join", "@start", "@metadata",
+    "@include",  # handled in preprocessing, but recognized here
+    "@prev",  # navigation target, not a directive, but starts with @
+}
+
+# Common typos mapped to their corrections
+_DIRECTIVE_TYPOS = {
+    "@elseif": "@elif",
+    "@else if": "@elif",
+    "@elsif": "@elif",
+    "@iff": "@if",
+    "@fi": "@endif",
+    "@end": "@endif or @endfor or @endpy",
+    "@endif:": "@endif",
+    "@endfor:": "@endfor",
+    "@endpy:": "@endpy",
+    "@else:": "@else",  # @else doesn't take a colon in Bardic
+    "@elseif:": "@elif",
+    "@elif:": "@elif (remove the colon — @elif uses a space, not a colon)",
+    "@endhook": "@unhook",
+    "@forin": "@for",
+    "@python": "@py",
+    "@endpython": "@endpy",
+    "@inputs": "@input",
+    "@renders": "@render",
+}
+
+
+def _check_unknown_directive(
+    stripped: str, line_idx: int, lines: list[str],
+    filename: str | None, line_map: list | None,
+) -> None:
+    """
+    Check if a line starting with @ matches a known directive.
+    If not, raise a helpful error with a "did you mean?" suggestion.
+    Does nothing if the directive is recognized.
+    """
+    # Extract the directive word (e.g. "@elseif" from "@elseif condition:")
+    directive_word = stripped.split()[0] if " " in stripped else stripped
+    # Also strip trailing colon for matching (e.g. "@endif:" → "@endif")
+    directive_base = directive_word.rstrip(":")
+
+    # Check if it's a known directive (with or without colon)
+    if directive_base in _KNOWN_DIRECTIVES:
+        return  # Known directive — let the normal handlers deal with it
+
+    # Check the full stripped line for multi-word typos like "@else if"
+    for typo, correction in _DIRECTIVE_TYPOS.items():
+        if stripped.startswith(typo):
+            raise SyntaxError(
+                format_error(
+                    error_type="Unknown Directive",
+                    line_num=line_idx + 1,
+                    lines=lines,
+                    message=f"Unknown directive: {directive_word}",
+                    pointer_length=len(directive_word),
+                    suggestion=f"Did you mean: {correction}",
+                    filename=filename,
+                    line_map=line_map,
+                )
+            )
+
+    # Not a known typo — generic error with the full list
+    raise SyntaxError(
+        format_error(
+            error_type="Unknown Directive",
+            line_num=line_idx + 1,
+            lines=lines,
+            message=f"Unknown directive: {directive_word}",
+            pointer_length=len(directive_word),
+            suggestion=(
+                "Valid directives: @if, @elif, @else, @endif, @for, @endfor, "
+                "@py, @endpy, @render, @input, @hook, @unhook, @join, @start, @include"
+            ),
+            filename=filename,
+            line_map=line_map,
+        )
+    )
+
+
 def parse(
     source: str,
     filename: Optional[str] = None,
@@ -404,6 +492,10 @@ def parse(
             i += 1
             continue
 
+        # Catch unrecognized @-directives before they fall through to content
+        if current_passage and stripped.startswith("@"):
+            _check_unknown_directive(stripped, i, lines, filename, line_map)
+
         # Regular content line
         if line.strip() and current_passage:
             # Check for glue operator <>
@@ -429,27 +521,6 @@ def parse(
             current_passage["content"].append({"type": "text", "value": "\n"})
             i += 1
             continue
-
-        # Unrecognized syntax - likely a typo in a directive
-        # Check for common directive-like patterns that don't match known syntax
-        if current_passage and line.strip():
-            stripped = line.strip()
-            # Check for @-directives that look wrong
-            if stripped.startswith("@") and not stripped.startswith("@include"):
-                # Might be a typo like @iff, @elseif, @endif:, @endfor:, etc.
-                raise SyntaxError(
-                    format_error(
-                        error_type="Syntax Error",
-                        line_num=i,
-                        lines=lines,
-                        message=f"Unrecognized directive: {stripped.split()[0] if ' ' in stripped else stripped}",
-                        pointer_length=len(
-                            stripped.split()[0] if " " in stripped else stripped
-                        ),
-                        suggestion="Check for typos in directives. Valid directives: @if, @elif, @else, @endif, @for, @endfor, @py, @endpy, @include, @render, @input",
-                        line_map=line_map,
-                    )
-                )
 
         i += 1
 

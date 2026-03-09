@@ -73,17 +73,31 @@ ERROR_CASES = {
         "error_pattern": r"(?i)colon|unexpected.*:|@endfor.*colon",
         "description": "@endfor should not have a colon",
     },
-    # TODO: Parser currently silently ignores unknown directives - should error instead
-    # "test_typo_directive.bard": {
-    #     "error_type": Exception,
-    #     "error_pattern": r"(?i)unknown.*directive|invalid.*directive|@iff",
-    #     "description": "Typo in directive name (@iff instead of @if) should raise error",
-    # },
-    # "test_typo_directive2.bard": {
-    #     "error_type": Exception,
-    #     "error_pattern": r"(?i)unknown.*directive|invalid.*directive|@endiff|unexpected",
-    #     "description": "Typo in directive name (@endiff instead of @endif) should raise error",
-    # },
+    "test_typo_directive.bard": {
+        "error_type": SyntaxError,
+        "error_pattern": r"(?i)unknown.*directive.*@iff|did you mean.*@if",
+        "description": "Typo in directive name (@iff instead of @if) should raise error with suggestion",
+    },
+    "test_typo_directive2.bard": {
+        "error_type": SyntaxError,
+        "error_pattern": r"(?i)unknown.*directive.*@endiff|valid directives",
+        "description": "Typo in directive name (@endiff instead of @endif) should raise error",
+    },
+    "test_typo_elseif.bard": {
+        "error_type": SyntaxError,
+        "error_pattern": r"(?i)colon|@else.*missing",
+        "description": "@elseif is caught by @else handler (prefix match) with helpful colon hint",
+    },
+    "test_typo_python.bard": {
+        "error_type": SyntaxError,
+        "error_pattern": r"(?i)colon|@py.*missing|format.*@py:",
+        "description": "@python is caught by @py handler (prefix match) with helpful colon hint",
+    },
+    "test_unknown_directive.bard": {
+        "error_type": SyntaxError,
+        "error_pattern": r"(?i)unknown.*directive.*@blarg|valid directives",
+        "description": "Completely unknown @directive should list valid directives",
+    },
     "test_space_in_name.bard": {
         "error_type": SyntaxError,
         "error_pattern": r"(?i)invalid.*passage.*name|space|whitespace",

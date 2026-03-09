@@ -1,0 +1,7 @@
+:: Start
+
+@if True:
+    Hello!
+@elseif False:
+    Goodbye!
+@endif

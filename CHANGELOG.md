@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Unknown directive detection** — lines starting with `@` that don't match any known directive now raise a `SyntaxError` instead of being silently treated as content text. Common typos like `@elseif`, `@iff`, `@python` get "Did you mean?" suggestions; completely unknown directives list all valid options. 5 new error handling tests.
+
 ### Changed
 
 - **Python version requirement updated to 3.10+** — codebase uses `X | Y` union syntax (3.10+) and lowercase generic types (3.9+); updated `pyproject.toml`, CLAUDE.md, and all tutorials to reflect the real minimum
