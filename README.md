@@ -14,7 +14,7 @@ Write your branching narrative in a clean, simple syntax (inspired by Ink), and 
 
 ## Bardic in Action (with VSCode Extension)
 
-![Split View Screenshot](images/split_graph_view.png)
+![Split View Screenshot](images/split_graph_view_2.png)
 
 ![Live Preview Screenshot](images/livepreview.png)
 
