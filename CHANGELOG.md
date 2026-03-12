@@ -5,7 +5,7 @@ All notable changes to Bardic will be documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.7.1] - 2026-03-11
 
 ### Added
 
@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Callables corrupted on save/load** — functions and other callables (e.g., `create_session`, `get_artifact`, `random`) in engine state were falling through to `__dict__`-based serialization, getting saved as dicts. On load, they couldn't be restored as callables, causing `TypeError: 'dict' object is not callable` when the story tried to call them. Now skipped during serialization alongside classes/types.
 - **Tutorial 03_5 wrong import paths** — 6 occurrences of `bardic.modules.*` replaced with `bardic.stdlib.*`
 - **Tutorial 04 fake engine API** — `GameUI` class rewritten to use actual `BardCompiler`/`BardEngine` API (`compile_string`, `goto`, `submit_inputs`, `choose`) instead of nonexistent methods (`load_story`, `start`, `set_input`, `continue_story`)
 - **Tutorial 00b fake engine API** — test example rewritten to use `BardCompiler.compile_string()` + `BardEngine(story_data)` instead of nonexistent `BardEngine()` no-arg constructor and `load_story_file()`
