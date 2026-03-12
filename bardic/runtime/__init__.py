@@ -1,3 +1,4 @@
-from .engine import BardEngine, PassageOutput
+from .engine import BardEngine
+from .types import PassageOutput, GameSnapshot
 
-__all__ = ['BardEngine', 'PassageOutput']
+__all__ = ['BardEngine', 'PassageOutput', 'GameSnapshot']
