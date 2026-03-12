@@ -140,105 +140,74 @@ for pkg in local_packages:
         pass
 `);
 
-                updateLoading('Loading game engine...', '', 70);
+                updateLoading('Loading Bardic engine...', '', 70);
 
-                // Load the engine code
-                const engineCode = await (await fetch('./engine_browser.py')).text();
-
-                // Load the stdlib modules
-                const stdlibModules = [
-                    'dice.py',
-                    'inventory.py',
-                    'economy.py',
-                    'relationship.py',
-                    '__init__.py'
+                // Load runtime engine modules into Pyodide's virtual filesystem
+                const runtimeModules = [
+                    '__init__.py', 'types.py', 'hooks.py', 'directives.py',
+                    'renderer.py', 'executor.py', 'state.py', 'browser.py', 'engine.py'
                 ];
 
-                updateLoading('Loading Bardic stdlib...', '', 75);
+                // Load stdlib modules
+                const stdlibModules = [
+                    '__init__.py', 'dice.py', 'inventory.py',
+                    'economy.py', 'relationship.py', 'quest.py'
+                ];
 
-                // Create the bardic.stdlib package structure and load modules
-                await pyodide.runPythonAsync(`
-import sys
-import types
+                // Create package structure in Pyodide's virtual FS
+                pyodide.FS.mkdirTree('/bardic/runtime');
+                pyodide.FS.mkdirTree('/bardic/stdlib');
 
-# Create bardic package
-bardic_pkg = types.ModuleType('bardic')
-bardic_pkg.__path__ = ['/bardic']
-sys.modules['bardic'] = bardic_pkg
+                // Write bardic package __init__.py
+                pyodide.FS.writeFile('/bardic/__init__.py', '');
 
-# Create bardic.stdlib package
-stdlib_pkg = types.ModuleType('bardic.stdlib')
-stdlib_pkg.__path__ = ['/bardic/stdlib']
-sys.modules['bardic.stdlib'] = stdlib_pkg
-bardic_pkg.stdlib = stdlib_pkg
-`);
+                // Write runtime modules
+                for (const filename of runtimeModules) {
+                    try {
+                        const response = await fetch('./bardic/runtime/' + filename);
+                        if (response.ok) {
+                            const code = await response.text();
+                            pyodide.FS.writeFile('/bardic/runtime/' + filename, code);
+                        }
+                    } catch (e) {
+                        console.log('Note: Could not load runtime/' + filename);
+                    }
+                }
 
-                // Write stdlib files to virtual filesystem and import them
+                updateLoading('Loading Bardic stdlib...', '', 80);
+
+                // Write stdlib modules
                 for (const filename of stdlibModules) {
                     try {
                         const response = await fetch('./bardic/stdlib/' + filename);
                         if (response.ok) {
                             const code = await response.text();
-                            pyodide.FS.mkdirTree('/bardic/stdlib');
                             pyodide.FS.writeFile('/bardic/stdlib/' + filename, code);
                         }
                     } catch (e) {
-                        console.log('Note: Could not load ' + filename);
+                        console.log('Note: Could not load stdlib/' + filename);
                     }
                 }
 
-                // Now import the stdlib modules properly
-                await pyodide.runPythonAsync(`
-import sys
-import importlib.util
-
-# Load each stdlib module
-stdlib_files = {
-    'dice': '/bardic/stdlib/dice.py',
-    'inventory': '/bardic/stdlib/inventory.py',
-    'economy': '/bardic/stdlib/economy.py',
-    'relationship': '/bardic/stdlib/relationship.py',
-}
-
-for name, path in stdlib_files.items():
-    try:
-        spec = importlib.util.spec_from_file_location(f'bardic.stdlib.{name}', path)
-        if spec and spec.loader:
-            module = importlib.util.module_from_spec(spec)
-            sys.modules[f'bardic.stdlib.{name}'] = module
-            spec.loader.exec_module(module)
-            # Also add to stdlib package
-            setattr(sys.modules['bardic.stdlib'], name, module)
-            # Export key items to stdlib namespace
-            for item in dir(module):
-                if not item.startswith('_'):
-                    setattr(sys.modules['bardic.stdlib'], item, getattr(module, item))
-    except Exception as e:
-        print(f"Note: Could not load {name}: {e}")
-`);
-
-                updateLoading('Loading game engine...', '', 85);
-
-                // Now load the engine
-                await pyodide.runPythonAsync(engineCode);
+                updateLoading('Starting game...', '', 90);
 
                 // Load the game data
                 const gameResponse = await fetch('./game.json');
                 const gameText = await gameResponse.text();
-
-                updateLoading('Starting game...', '', 95);
-
-                // Store game data in Python via a file-like approach
                 pyodide.FS.writeFile('/game.json', gameText);
 
-                // Initialize the engine
+                // Initialize the engine with environment="browser"
                 await pyodide.runPythonAsync(`
+import sys
+sys.path.insert(0, '/')
+
 import json
+from bardic.runtime.engine import BardEngine
 
 with open('/game.json', 'r') as f:
     game_data = json.load(f)
 
-engine = BardEngine(game_data)
+engine = BardEngine(game_data, environment="browser")
 `);
 
                 // Hide loading, show game
@@ -367,7 +336,7 @@ json.dumps(engine.list_browser_saves())
 with open('/game.json', 'r') as f:
     game_data = json.load(f)
 
-engine = BardEngine(game_data)
+engine = BardEngine(game_data, environment="browser")
 `);
             renderPassage();
             showNotification('Game restarted');

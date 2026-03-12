@@ -36,11 +36,13 @@ class CommandExecutor:
         context: dict,
         local_scope_stack: list,
         hook_manager: HookManager,
+        environment: str = "desktop",
     ):
         self.state = state
         self.context = context
         self._local_scope_stack = local_scope_stack
         self.hook_manager = hook_manager
+        self.environment = environment
 
     # ── Builtins & Eval Context ──
 
@@ -82,8 +84,13 @@ class CommandExecutor:
             "isinstance": isinstance,
             # Debugging
             "print": print,
-            # Allow imports
-            "__import__": __import__,
+            # Object attribute access
+            "hasattr": hasattr,
+            "getattr": getattr,
+            # Functional
+            "map": map,
+            "filter": filter,
+            **({"__import__": __import__} if self.environment == "desktop" else {}),
         }
 
     def get_eval_context(self) -> dict[str, Any]:
@@ -343,18 +350,24 @@ class CommandExecutor:
             return
 
         try:
-            # Add current directory to path for imports
-            if "." not in sys.path:
-                sys.path.insert(0, ".")
-            # Execute imports with safe builtins
-            safe_builtins = self.get_safe_builtins()
-            import_namespace = {}
-
-            exec(import_code, {"__builtins__": safe_builtins}, import_namespace)
+            if self.environment == "desktop":
+                # Desktop: add current directory to path for imports
+                if "." not in sys.path:
+                    sys.path.insert(0, ".")
+                # Execute imports with safe builtins
+                safe_builtins = self.get_safe_builtins()
+                import_namespace = {}
+                exec(import_code, {"__builtins__": safe_builtins}, import_namespace)
+            else:
+                # Browser: modules should already be in sys.modules (pre-bundled)
+                # Use real builtins since modules are pre-loaded
+                import builtins
+                import_namespace = {"__builtins__": builtins}
+                exec(import_code, import_namespace)
 
             # Add imported modules/objects to state AND auto-register classes
             for key, value in import_namespace.items():
-                if not key.startswith("_"):
+                if not key.startswith("_") and key != "__builtins__":
                     # Always add to state (for use in stories)
                     self.state[key] = value
 
@@ -365,11 +378,16 @@ class CommandExecutor:
                         print(f"Auto-registered class for serialization: {key}")
 
         except ImportError as e:
+            error_hint = (
+                "Make sure the module is installed and accessible."
+                if self.environment == "desktop"
+                else "Make sure the modules are bundled with the game."
+            )
             raise RuntimeError(
-                "Failed to import modules:\n"
+                f"Failed to import modules:\n"
                 f"  {e}\n\n"
                 f"Import code:\n{import_code}\n\n"
-                "Make sure the module is installed and accessible."
+                f"{error_hint}"
             )
 
         except Exception as e:

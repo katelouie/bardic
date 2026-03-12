@@ -78,10 +78,18 @@ class GameSnapshot:
         )
 
     def restore_to(self, engine: "BardEngine") -> None:
-        """Restore this snapshot to the engine."""
+        """Restore this snapshot to the engine.
+
+        Mutates containers in place (clear + update) to preserve references
+        held by subsystems (executor, renderer, etc.).
+        """
         engine.current_passage_id = self.current_passage
         engine._previous_passage_id = self.previous_passage
-        engine.state = self.state
-        engine.used_choices = self.used_choices
+        # Mutate in place to preserve references held by executor/renderer
+        engine.state.clear()
+        engine.state.update(self.state)
+        engine.used_choices.clear()
+        engine.used_choices.update(self.used_choices)
         engine.hook_manager.restore(self.hooks)
-        engine._join_section_index = self.join_section_index
+        engine._join_section_index.clear()
+        engine._join_section_index.update(self.join_section_index)

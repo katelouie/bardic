@@ -13,7 +13,7 @@ import re
 from pyscript import document, window
 from pyscript.ffi import create_proxy
 
-from engine_browser import BardEngine
+from bardic.runtime.engine import BardEngine
 
 # Global engine instance
 engine = None
@@ -40,7 +40,7 @@ def init_game():
             title_el.textContent = game_name
 
         # Initialize the engine
-        engine = BardEngine(story_data)
+        engine = BardEngine(story_data, environment="browser")
 
         # Hide loading, show game
         loading_el = document.getElementById("loading")
@@ -184,7 +184,7 @@ def restart_game():
         with open("./game.json", "r") as f:
             story_data = json.load(f)
 
-        engine = BardEngine(story_data)
+        engine = BardEngine(story_data, environment="browser")
         render_passage()
         show_notification("Game restarted")
 

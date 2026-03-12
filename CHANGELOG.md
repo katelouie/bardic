@@ -15,6 +15,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+## [0.9.0] - 2026-03-12
+
+### Added
+
+- **`environment` parameter for `BardEngine`** — `BardEngine(story_data, environment="browser")` configures the engine for browser deployment. Browser mode excludes `__import__` from safe builtins (modules must be pre-bundled) and attaches localStorage save/load methods automatically. Default is `"desktop"` (no behavior change for existing code).
+
+- **`BrowserStorageAdapter`** — new `bardic.runtime.browser` module providing localStorage-based save/load for browser-bundled games. Wraps the engine's `StateManager` with `save()`, `load()`, `list_saves()`, and `delete_save()` methods. Automatically attached to the engine when `environment="browser"`.
+
+- **Modular engine architecture** — the monolithic `engine.py` (2,153 lines) has been decomposed into 8 focused modules:
+  - `engine.py` (771 lines) — facade: navigation (`goto`, `choose`, `current`), composition, event triggering
+  - `renderer.py` (604 lines) — content token rendering, expression evaluation, loops, conditionals, choice filtering
+  - `executor.py` (427 lines) — command execution, variable assignment, Python blocks, imports, builtins
+  - `state.py` (401 lines) — undo/redo stacks, save/load serialization, `GameSnapshot`
+  - `directives.py` (241 lines) — `@render` directive processing, argument binding, React output
+  - `browser.py` (127 lines) — localStorage save/load adapter for browser deployment
+  - `types.py` (95 lines) — `PassageOutput`, `GameSnapshot` dataclasses
+  - `hooks.py` (75 lines) — `HookManager` for event hook registration
+
+  All modules are independently testable. The public API (`BardEngine`) is unchanged — this is a purely internal refactoring.
+
+- **149 new tests** across 6 test files (`test_hooks_manager.py`, `test_state_manager.py`, `test_directives.py`, `test_executor.py`, `test_renderer.py`, `test_browser.py`). Total test count: 529.
+
+- **`hasattr`, `getattr`, `map`, `filter`** added to safe builtins for story code, unifying desktop and browser builtin sets.
+
+### Changed
+
+- **`bardic bundle` now ships real engine modules** — bundles include `bardic/runtime/*.py` (8 modules) instead of the old monolithic `engine_browser.py`. The Pyodide init loads modules into the virtual filesystem and uses standard Python imports. All engine features (hooks, `@join`, `@prev`, undo/redo) now work automatically in browser builds.
+
+- **Undo/redo/load restore uses in-place mutation** — `GameSnapshot.restore_to()` and `StateManager.load_state()` now use `clear()` + `update()` on shared containers (`state`, `used_choices`, `_join_section_index`) instead of replacing them. This preserves references held by subsystems (executor, renderer) and fixes a latent bug where subsystem state could go stale after undo/redo.
+
+### Removed
+
+- **`engine_browser.py` — the browser engine fork is eliminated.** The 1,953-line forked copy of the engine (which was missing hooks, `@join`, and `@prev` support) has been deleted. One engine now serves both desktop and browser via the `environment` parameter. Every bug fix and feature addition applies to both environments automatically.
+
 ## [0.8.0] - 2026-03-11
 
 ### Added

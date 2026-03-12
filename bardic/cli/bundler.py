@@ -66,8 +66,26 @@ def create_browser_bundle(
         metadata = story_data.get("metadata", {})
         game_name = metadata.get("title", story_file.stem)
 
-    # Step 3: Copy engine_browser.py
-    shutil.copy(templates_dir / "engine_browser.py", output_dir / "engine_browser.py")
+    # Step 3: Copy runtime engine modules (replaces the old engine_browser.py fork)
+    runtime_source = Path(__file__).parent.parent / "runtime"
+    runtime_dest = output_dir / "bardic" / "runtime"
+    runtime_dest.mkdir(parents=True, exist_ok=True)
+
+    runtime_modules = [
+        "__init__.py",
+        "engine.py",
+        "renderer.py",
+        "executor.py",
+        "state.py",
+        "hooks.py",
+        "directives.py",
+        "types.py",
+        "browser.py",
+    ]
+    for module in runtime_modules:
+        src = runtime_source / module
+        if src.exists():
+            shutil.copy(src, runtime_dest / module)
 
     # Step 4: Copy and customize index.html
     html_content = (templates_dir / "index.html").read_text()

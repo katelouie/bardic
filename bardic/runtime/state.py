@@ -197,9 +197,11 @@ class StateManager:
                 f"Available passages: {', '.join(sorted(engine.passages.keys())[:5])}..."
             )
 
-        # Restore state
-        engine.state = self._deserialize_state(save_data.get("state", {}))
-        engine.used_choices = set(save_data.get("used_choices", []))
+        # Restore state — mutate in place to preserve references held by subsystems
+        engine.state.clear()
+        engine.state.update(self._deserialize_state(save_data.get("state", {})))
+        engine.used_choices.clear()
+        engine.used_choices.update(save_data.get("used_choices", []))
 
         # Clear undo/redo stacks on load (fresh start, new session)
         self.undo_stack.clear()
