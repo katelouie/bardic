@@ -6,10 +6,8 @@ Last updated: 2025-12-27
 
 High priority fixes discovered through comprehensive test suite:
 
-- [ ] **Validate directive names** - Parser currently silently ignores typos like `@iff` or `@endiff` instead of raising errors
-  - See: `tests/error_handling/test_typo_directive.bard`
-  - See: `tests/error_handling/test_typo_directive2.bard`
-  - Tests commented out in `tests/test_error_handling.py` with TODO markers
+- [x] **Validate directive names** - ✅ COMPLETED (0.7.1)
+  - Parser raises `SyntaxError` for unknown directives with "Did you mean?" suggestions
 
 - [ ] **Error on @include with no filename** - `@include` directive with no file path should raise SyntaxError
   - See: `tests/error_handling/test_include_no_file.bard`
@@ -104,6 +102,20 @@ High priority fixes discovered through comprehensive test suite:
 
 - [ ] Improve implementation of "engine copy" for bundle distribution
   - Current process requires double-updating for all main engine changes
+
+### Linter (`bardic lint`)
+
+- [ ] **Passage-level context in diagnostics** - W005 and other checks should report *where* the issue occurs, not just *what's* wrong
+  - e.g., "attribute `session.reward_card` read in passage `Nyx.Session3a.Phase3` but never written"
+  - Would require threading passage names through attribute extraction
+
+- [ ] **`--fix` mode** - Auto-fix simple, unambiguous issues
+  - Known typos (e.g., `fire_path_spark` → `fire_path_new_beginning` when a close match exists)
+  - Could start with dry-run output showing proposed fixes
+
+- [ ] **Write-but-never-read detection** - Complement to W005 (read-but-never-written)
+  - Find attributes that are set but never referenced — likely dead state
+  - Would help with cleanup after refactors
 
 ## 📚 Documentation
 
