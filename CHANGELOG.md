@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Word count and play time estimate in `bardic lint`** — the summary line now shows approximate word count (`~252,434 words`) and estimated play time (`~26.2 hr play time`). Play time is calculated from reading speed (~200 wpm) plus decision time (~10s per choice). Both values are also included in `--json-output` as `words` and `play_time_minutes`.
+
 ### Changed
 
 ### Fixed

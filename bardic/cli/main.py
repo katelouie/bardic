@@ -519,6 +519,8 @@ def lint(input_file, verbose, errors_only, json_output, no_plugins):
                 "files": report.file_count,
                 "passages": report.passage_count,
                 "choices": report.choice_count,
+                "words": report.word_count,
+                "play_time_minutes": round(report.word_count / 200 + report.choice_count * 10 / 60),
                 "errors": report.error_count,
                 "warnings": report.warning_count,
                 "info": report.info_count,
@@ -546,6 +548,14 @@ def lint(input_file, verbose, errors_only, json_output, no_plugins):
     if report.include_count:
         parts.append(f"{report.file_count} files")
     parts.append(f"{report.choice_count} choices")
+    parts.append(f"~{report.word_count:,} words")
+    # Rough play time: ~200 wpm reading + ~10s per choice for thinking
+    play_minutes = report.word_count / 200 + report.choice_count * 10 / 60
+    if play_minutes < 60:
+        parts.append(f"~{int(play_minutes)} min play time")
+    else:
+        hours = play_minutes / 60
+        parts.append(f"~{hours:.1f} hr play time")
     if report.plugin_count:
         parts.append(f"{report.plugin_count} plugin{'s' if report.plugin_count != 1 else ''}")
     click.echo(click.style(f"  {' · '.join(parts)}", fg="white", dim=True))

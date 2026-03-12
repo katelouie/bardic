@@ -72,6 +72,7 @@ class LintReport:
     file_count: int = 0
     passage_count: int = 0
     choice_count: int = 0
+    word_count: int = 0
     include_count: int = 0
     plugin_count: int = 0
 
@@ -797,6 +798,42 @@ _STRUCTURAL_CHECKS = [
 ]
 
 
+def _count_content_words(content: list) -> int:
+    """Count words in a passage's content array, recursing into conditionals and loops."""
+    count = 0
+    for token in content:
+        if isinstance(token, str):
+            count += len(token.split())
+        elif isinstance(token, list):
+            count += _count_content_words(token)
+        elif isinstance(token, dict):
+            token_type = token.get("type", "")
+            if token_type == "text":
+                value = token.get("value", "")
+                if value:
+                    count += len(value.split())
+            elif token_type == "conditional":
+                for branch in token.get("branches", []):
+                    count += _count_content_words(branch.get("content", []))
+            elif token_type == "for_loop":
+                count += _count_content_words(token.get("content", []))
+    return count
+
+
+def _count_story_words(passages: dict) -> int:
+    """Count total narrative words across all passages (content text + choice text)."""
+    count = 0
+    for pdata in passages.values():
+        count += _count_content_words(pdata.get("content", []))
+        for choice in pdata.get("choices", []):
+            text = choice.get("text", "")
+            if isinstance(text, str) and text:
+                count += len(text.split())
+            elif isinstance(text, list):
+                count += _count_content_words(text)
+    return count
+
+
 def lint_story(
     story_data: dict,
     python_search_paths: list[Path] | None = None,
@@ -822,6 +859,7 @@ def lint_story(
         len(p.get("choices", []))
         for p in passages.values()
     )
+    report.word_count = _count_story_words(passages)
 
     # Run structural checks
     for check_fn in _STRUCTURAL_CHECKS:
