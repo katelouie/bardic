@@ -62,8 +62,8 @@ class TestHookRegistration:
         engine.register_hook("test_event", "SomePassage")
 
         # Then: It should be in the hooks dict
-        assert "test_event" in engine.hooks
-        assert "SomePassage" in engine.hooks["test_event"]
+        assert "test_event" in engine.hook_manager.hooks
+        assert "SomePassage" in engine.hook_manager.hooks["test_event"]
 
     def test_register_hook_is_idempotent(self, hook_story):
         """Registering the same hook twice should not create duplicates."""
@@ -74,7 +74,7 @@ class TestHookRegistration:
         engine.register_hook("test_event", "SomePassage")
 
         # Then: It should only appear once
-        assert engine.hooks["test_event"].count("SomePassage") == 1
+        assert engine.hook_manager.hooks["test_event"].count("SomePassage") == 1
 
     def test_unregister_hook_removes_from_hooks_dict(self, hook_story):
         """unregister_hook() should remove passage from hooks dictionary."""
@@ -85,7 +85,7 @@ class TestHookRegistration:
         engine.unregister_hook("test_event", "SomePassage")
 
         # Then: It should be removed
-        assert "SomePassage" not in engine.hooks.get("test_event", [])
+        assert "SomePassage" not in engine.hook_manager.hooks.get("test_event", [])
 
     def test_unregister_nonexistent_hook_does_not_crash(self, hook_story):
         """Unregistering a hook that doesn't exist should not raise."""

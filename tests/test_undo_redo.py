@@ -208,15 +208,15 @@ class TestUndoRedoWithHooks:
         engine = BardEngine(hook_undo_story)
 
         # Initially no hooks
-        assert "turn_end" not in engine.hooks or len(engine.hooks.get("turn_end", [])) == 0
+        assert "turn_end" not in engine.hook_manager.hooks or len(engine.hook_manager.hooks.get("turn_end", [])) == 0
 
         # Register hook
         engine.choose(0)  # Go to Register
-        assert "Counter" in engine.hooks.get("turn_end", [])
+        assert "Counter" in engine.hook_manager.hooks.get("turn_end", [])
 
         # Undo - should remove the hook
         engine.undo()
-        assert "Counter" not in engine.hooks.get("turn_end", [])
+        assert "Counter" not in engine.hook_manager.hooks.get("turn_end", [])
 
 
 class TestUndoStackLimit:

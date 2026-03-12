@@ -2,17 +2,16 @@
 Runtime engine for executing compiled Bardic stories.
 """
 
-import ast
 import copy
 import json
-import sys
 import traceback
-import uuid
-from collections import deque
-from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from bardic.runtime.types import PassageOutput, GameSnapshot
+from bardic.runtime.hooks import HookManager
+from bardic.runtime.state import StateManager
+from bardic.runtime.directives import DirectiveProcessor
+from bardic.runtime.executor import CommandExecutor
 
 
 class BardEngine:
@@ -39,7 +38,7 @@ class BardEngine:
         self.current_passage_id = None  # Will be set by goto()
         self._previous_passage_id = None  # Tracks the passage we came from (for @prev)
         self.state = {}  # Game state (variables)
-        self.hooks: dict[str, list[str]] = {}  # Event -> list of passage IDs
+        self.hook_manager = HookManager()  # Event hooks (passage callbacks)
         self.state["_inputs"] = {}  # Initialize empty inputs dict (always available)
         self.state["_visits"] = {}  # Track how many times each passage has been visited
         self.state["_turns"] = 0  # Track total number of player choices made
@@ -53,15 +52,29 @@ class BardEngine:
             str, int
         ] = {}  # @join section tracking (which one we're in)
 
-        # Undo/redo system
-        self.undo_stack: deque[GameSnapshot] = deque(maxlen=50)
-        self.redo_stack: list[GameSnapshot] = []
+        # State management (undo/redo, save/load, serialization)
+        self.state_manager = StateManager(self, max_undo=50)
 
-        # Add more frameworks as needed (eg for unity)
-        self.framework_processors = {"react": self._process_for_react}
+        # Command execution (variable assignment, Python blocks, imports)
+        self.executor = CommandExecutor(
+            state=self.state,
+            context=self.context,
+            local_scope_stack=self._local_scope_stack,
+            hook_manager=self.hook_manager,
+        )
+
+        # Directive processing (render directives, arg binding, framework output)
+        self.directive_processor = DirectiveProcessor(
+            eval_context_provider=self.executor.get_eval_context,
+            builtins_provider=self.executor.get_safe_builtins,
+            state_provider=lambda: self.state,
+            framework_processors={"react": DirectiveProcessor.process_for_react},
+        )
+        # Backwards compat — some code references self.framework_processors
+        self.framework_processors = self.directive_processor.framework_processors
 
         # Execute Imports first
-        self._execute_imports()
+        self.executor.execute_imports(self.story)
 
         # Validate
         initial_passage = story_data["initial_passage"]
@@ -73,269 +86,6 @@ class BardEngine:
 
         # Navigate to initial passage (executes and caches)
         self.goto(initial_passage)
-
-    def _execute_imports(self) -> None:
-        """
-        Execute import statements from the story.
-
-        Imports are executed in a temporary namespace and then added to the state,
-        making them available to all passages.
-
-        Classes are automatically registered in context for serialization.
-        """
-        import_statements = self.story.get("imports", [])
-
-        if not import_statements:
-            return
-
-        # Join all import statemenets
-        import_code = "\n".join(import_statements)
-
-        if not import_code.strip():
-            return
-
-        try:
-            # Add current directory to path for imports
-            if "." not in sys.path:
-                sys.path.insert(0, ".")
-            # Execute imports with safe builtins
-            safe_builtins = self._get_safe_builtins()
-            import_namespace = {}
-
-            exec(import_code, {"__builtins__": safe_builtins}, import_namespace)
-
-            # Add imported modules/objects to state AND auto-register classes
-            for key, value in import_namespace.items():
-                if not key.startswith("_"):
-                    # Always add to state (for use in stories)
-                    self.state[key] = value
-
-                    # Auto-register classes for serialization
-                    if isinstance(value, type):
-                        # It's a class -- add to context for save/load
-                        self.context[key] = value
-                        print(f"Auto-registered class for serialization: {key}")
-
-        except ImportError as e:
-            raise RuntimeError(
-                "Failed to import modules:\n"
-                f"{import_code}\n\n"
-                f"Error: {e}\n\n"
-                "Make sure the modules are installed and accessible"
-            )
-        except Exception as e:
-            raise RuntimeError(f"Error executing imports:\n{import_code}\n\nError: {e}")
-
-    def _process_for_react(self, component_name: str, args: dict) -> dict:
-        """
-        Format directive data for React convenience.
-
-        Converts generic data into React-friendly format:
-        - Suggests component name (PascalCase)
-        - Generates unique key for list rendering
-        - Organizes props cleanly
-
-        Args:
-            component_name: The directive name (ex: 'card_detail')
-            args: Evaluated arguments dictionary
-
-        Returns:
-            React-optimized data structure
-        """
-        # Convert snake_case to PascalCase for component name
-        suggested_component = "".join(
-            word.capitalize() for word in component_name.split("_")
-        )
-
-        # Clean up props - convert arg_0, arg_1 to more meaningful names if possible
-        props = {}
-        for key, value in args.items():
-            # Keep named arguments as-is
-            if not key.startswith("arg_"):
-                props[key] = value
-            else:  # For positional args, keep them but that's less ideal
-                props[key] = value
-
-        return {
-            "componentName": suggested_component,
-            "key": f"{component_name}_{uuid.uuid4().hex[:8]}",
-            "props": props,
-        }
-
-    def _parse_directive_args(
-        self, args_str: str, eval_context: dict, safe_builtins: dict
-    ) -> dict:
-        """
-        Parse directive arguments into a dictionary.
-
-        Supports both positional and keyword arguments:
-        - f(a, b , c) becomes {"arg_0": a, "arg_1": b, "arg_2": c}
-        - f(x=1, y=2) becomes {"x": 1, "y": 2}
-        - f(a, x=1) becomes {"arg_0": a, "x": 1}
-
-        Args:
-            args_str: Argument string from directive
-            eval_context: Evaluation context (state + context)
-            safe_builtins: Safe builtin functions
-
-        Returns:
-            Dictionary of evaluated arguments
-        """
-        if not args_str.strip():
-            return {}
-
-        try:
-            # Create a fake function call to parse arguments properly
-            # This is part of why this parse function lives in engine, not parser
-            fake_call = f"__directive__({args_str})"
-            tree = ast.parse(fake_call, mode="eval")
-            call_node = tree.body
-
-            result = {}
-
-            # Process positional arguments
-            for i, arg in enumerate(call_node.args):
-                # Compile and evaluate each argument
-                arg_code = compile(ast.Expression(arg), "<directive>", "eval")
-                value = eval(arg_code, {"__builtins__": safe_builtins}, eval_context)
-                result[f"arg_{i}"] = value
-
-            # Process keyword arguments
-            for keyword in call_node.keywords:
-                arg_code = compile(ast.Expression(keyword.value), "<directive>", "eval")
-                value = eval(arg_code, {"__builtins__": safe_builtins}, eval_context)
-                result[keyword.arg] = value
-
-            return result
-
-        except Exception as e:
-            raise ValueError(f"Could not parse directive arguments: {args_str}") from e
-
-    def _bind_arguments(self, params: list[dict], arg_dict: dict) -> dict:
-        """
-        Bind provided arguments to parameter names.
-
-        Args:
-            params: List of {"name": str, "default": str|None} from passage definition
-            arg_dict: Parsed arguments from _parse_directive_args()
-                      Format: {"arg_0": val, "arg_1": val, "keyword": val, ...}
-
-        Returns:
-            Dict of parameter name → evaluated value
-
-        Raises:
-            ValueError: If required param missing, or argument provided twice
-        """
-        result = {}
-
-        # Process positional arguments
-        positional_index = 0
-        for i, param in enumerate(params):
-            arg_key = f"arg_{positional_index}"
-
-            if arg_key in arg_dict:
-                # Positional arg provided
-                result[param["name"]] = arg_dict[arg_key]
-                positional_index += 1
-            elif param["name"] in arg_dict:
-                # Keyword arg provided
-                if param["name"] in result:
-                    raise ValueError(
-                        f"Parameter '{param['name']}' provided multiple times "
-                        f"(both positional and keyword)"
-                    )
-                result[param["name"]] = arg_dict[param["name"]]
-            elif param["default"] is not None:
-                # Use default value (evaluate it)
-                eval_context = self._get_eval_context()
-                # IMPORTANT: Include already-bound params in eval context
-                # This allows defaults like (x, y=x*2)
-                eval_context.update(result)
-
-                safe_builtins = self._get_safe_builtins()
-                result[param["name"]] = eval(
-                    param["default"], {"__builtins__": safe_builtins}, eval_context
-                )
-            else:
-                # Required param not provided
-                raise ValueError(f"Required parameter '{param['name']}' not provided")
-
-        return result
-
-    def _process_render_directive(self, directive: dict[str, Any]) -> dict[str, Any]:
-        """
-        Process a render directive based on configuration.
-
-        Creates structured data that frontends can use.
-
-        Two modes:
-        1. evaluate_directives=True: Evaluate Python expressions, return data
-        2. evaluate_directives=False: Return raw expression, let frontend eval
-
-        Args:
-            directive: Parsed directive from content tokens
-
-        Returns:
-            Processed directive ready for frontend
-        """
-        name: str = directive.get("name", "")
-        args_str = directive.get("args", "")
-        framework_hint = directive.get("framework_hint")
-
-        if self.evaluate_directives:
-            # Evaluated mode: Execute python expressions, return data
-            try:
-                eval_context = self._get_eval_context()
-                safe_builtins = self._get_safe_builtins()
-
-                # Parse and evaluate arguments
-                if args_str:
-                    args_dict = self._parse_directive_args(
-                        args_str, eval_context, safe_builtins
-                    )
-                else:
-                    args_dict = {}
-
-                # Build base result
-                result: dict[str, Any] = {
-                    "type": "render_directive",
-                    "name": name,
-                    "mode": "evaluated",
-                    "data": args_dict,
-                }
-
-                # Add framework-specific preprocessing if requested
-                if framework_hint and framework_hint in self.framework_processors:
-                    processor = self.framework_processors[framework_hint]
-                    result["framework"] = framework_hint
-                    result[framework_hint] = processor(name, args_dict)
-
-                return result
-
-            except Exception as e:
-                # Error during evaluation
-                print(f"Warning: Failed to evaluate render directive '{name}': {e}")
-                return {
-                    "type": "render_directive",
-                    "name": name,
-                    "mode": "error",
-                    "error": str(e),
-                    "raw_args": args_str,
-                }
-        else:
-            # Raw mode: pass expressions to frontend for evaluation
-            result = {
-                "type": "render_directive",
-                "name": name,
-                "mode": "raw",
-                "raw_args": args_str,
-                "state_snapshot": dict(self.state),  # Provide for frontend eval
-            }
-
-            if framework_hint:
-                result["framework_hint"] = framework_hint
-
-            return result
 
     def _execute_passage(self, passage_id: str) -> Optional[str]:
         """
@@ -360,7 +110,7 @@ class BardEngine:
 
         # Execute commands (variable assignments, etc.)
         if "execute" in passage:
-            self._execute_commands(passage["execute"])
+            self.executor.execute_commands(passage["execute"])
 
         # Check for immediate jumps in content
         for item in passage.get("content", []):
@@ -594,7 +344,7 @@ class BardEngine:
             safe_builtins = self._get_safe_builtins()
 
             if args_str:
-                arg_dict = self._parse_directive_args(
+                arg_dict = self.directive_processor.parse_directive_args(
                     args_str, eval_context, safe_builtins
                 )
             else:
@@ -602,7 +352,7 @@ class BardEngine:
 
             # Bind arguments to parameters
             try:
-                param_values = self._bind_arguments(params, arg_dict)
+                param_values = self.directive_processor.bind_arguments(params, arg_dict)
             except ValueError as e:
                 raise ValueError(f"Error calling passage '{passage_id}': {e}")
 
@@ -748,7 +498,7 @@ class BardEngine:
         self.snapshot()
 
         # Clear the redo stack -- making a new choice creates a new timeline
-        self.redo_stack.clear()
+        self.state_manager.redo_stack.clear()
 
         # Increment turn counter
         self.state["_turns"] = self.state.get("_turns", 0) + 1
@@ -960,310 +710,15 @@ class BardEngine:
         # Merge new inputs (overwrites duplicates)
         self.state["_inputs"].update(input_data)
 
-    def _execute_commands(self, commands: list[dict]) -> None:
-        """Execute passage commands (python statements, python blocks, etc)"""
-        for cmd in commands:
-            if cmd["type"] == "python_statement":
-                self._execute_python_statement(cmd)
-            elif cmd["type"] == "python_block":
-                self._execute_python_block(cmd)
-            # Backward compatibility (deprecated)
-            elif cmd["type"] == "set_var":
-                self._execute_set_var(cmd)
-            elif cmd["type"] == "expression_statement":
-                self._execute_expression_statement(cmd)
-            elif cmd["type"] == "hook":
-                self._execute_hook_command(cmd)
-
-    def _execute_python_statement(self, cmd: dict) -> None:
-        """
-        Execute a Python statement (unified handler for all ~ statements).
-
-        Handles assignments, expressions, function calls - any valid Python statement.
-        Uses exec() for maximum flexibility.
-        """
-        code = cmd["code"]
-
-        try:
-            # Create evaluation context with context, state, and local scope
-            eval_context = self._get_eval_context()
-            if self._local_scope_stack:
-                eval_context.update(self._local_scope_stack[-1])
-            safe_builtins = self._get_safe_builtins()
-
-            # Execute the statement
-            exec(code, {"__builtins__": safe_builtins}, eval_context)
-
-            # Sync any new/modified variables back to state
-            # Skip private vars (starting with _), context vars (read-only), and local params
-            local_param_names = (
-                set(self._local_scope_stack[-1].keys())
-                if self._local_scope_stack
-                else set()
-            )
-            for key, value in eval_context.items():
-                if (
-                    not key.startswith("_")
-                    and key not in self.context
-                    and key not in local_param_names
-                ):
-                    self.state[key] = value
-
-        except Exception as e:
-            raise RuntimeError(
-                f"Python statement failed: {code}\n"
-                f"  Error: {e}\n"
-                f"  Current state: {list(self.state.keys())}"
-            )
-
-    def _execute_set_var(self, cmd: dict) -> None:
-        """Execute a variable assignment."""
-        var_name = cmd["var"]
-        expression = cmd["expression"]
-
-        # Try to evaluate the expression
-        try:
-            # Create evaluation context with context, state, and local scope
-            eval_context = self._get_eval_context()
-            if self._local_scope_stack:
-                eval_context.update(self._local_scope_stack[-1])
-            safe_builtins = self._get_safe_builtins()
-
-            # Evaluate the expression
-            value = eval(expression, {"__builtins__": safe_builtins}, eval_context)
-
-            # Check if var_name contains a dot (attribute assignment like reader.background)
-            if "." in var_name:
-                # Use exec for attribute assignments
-                assignment_code = f"{var_name} = __value__"
-                eval_context["__value__"] = value
-                exec(assignment_code, {"__builtins__": safe_builtins}, eval_context)
-            else:
-                # Simple variable - store in state
-                self.state[var_name] = value
-
-        except NameError as e:
-            # Variable doesn't exist
-            raise RuntimeError(
-                f"Variable assignment failed: {var_name} = {expression}\n"
-                f"  Undefined variable in expression: {e}\n"
-                f"  Current state: {list(self.state.keys())}"
-            )
-
-        except Exception as _e:
-            # If evaluation fails, store as literal
-            # This handles simple cases like name = "Hero"
-            try:
-                # Try to parse as literal
-                value = self._parse_literal(expression)
-
-                # Check if var_name contains a dot (attribute assignment)
-                if "." in var_name:
-                    # Use exec for attribute assignments
-                    eval_context = self._get_eval_context()
-                    safe_builtins = self._get_safe_builtins()
-                    assignment_code = f"{var_name} = __value__"
-                    eval_context["__value__"] = value
-                    exec(assignment_code, {"__builtins__": safe_builtins}, eval_context)
-                else:
-                    # Simple variable - store in state
-                    self.state[var_name] = value
-            except Exception as e:
-                raise RuntimeError(
-                    f"Variable assignment failed: {var_name} = {expression}\n"
-                    f"  Error: {e}\n"
-                    f"  Expression could not be evaluated or parsed as literal"
-                )
-
-    def _execute_expression_statement(self, cmd: dict) -> None:
-        """Execute an expression statement (like a function call) without assignment."""
-        code = cmd["code"]
-
-        # Try to evaluate the expression for its side effects
-        try:
-            # Create evaluation context with context and state
-            eval_context = self._get_eval_context()
-            if self._local_scope_stack:
-                eval_context.update(self._local_scope_stack[-1])
-            safe_builtins = self._get_safe_builtins()
-
-            # Evaluate the expression (result is discarded, we only care about side effects)
-            eval(code, {"__builtins__": safe_builtins}, eval_context)
-
-        except Exception as e:
-            raise RuntimeError(
-                f"Expression statement failed: {code}\n"
-                f"  Error: {e}\n"
-                f"  Current state: {list(self.state.keys())}"
-            )
-
-    def _execute_hook_command(self, cmd: dict) -> None:
-        """Execute a hook registration/unregistration command."""
-        action = cmd["action"]
-        event = cmd["event"]
-        target = cmd["target"]
-
-        if action == "add":
-            self.register_hook(event, target)
-        elif action == "remove":
-            self.unregister_hook(event, target)
+    # ── Execution (delegated to CommandExecutor) ──
 
     def _get_safe_builtins(self) -> dict[str, Any]:
-        """
-        Get safe builtins for code execution.
-
-        Returns a dictionary of safe built-in functions that can be
-        used in both Python blocks and expressions.
-        """
-        return {
-            # Type constructors
-            "len": len,
-            "str": str,
-            "int": int,
-            "float": float,
-            "bool": bool,
-            "list": list,
-            "dict": dict,
-            "tuple": tuple,
-            "set": set,
-            # Iteration
-            "range": range,
-            "enumerate": enumerate,
-            "zip": zip,
-            # Math operations
-            "sum": sum,
-            "min": min,
-            "max": max,
-            "abs": abs,
-            "round": round,
-            # Sequence operations
-            "sorted": sorted,
-            "reversed": reversed,
-            # Logic
-            "any": any,
-            "all": all,
-            # Type inspection (safe, read-only)
-            "type": type,
-            "isinstance": isinstance,
-            # Debugging
-            "print": print,
-            # Allow imports
-            "__import__": __import__,
-        }
+        """Get safe builtins for code execution."""
+        return self.executor.get_safe_builtins()
 
     def _get_eval_context(self) -> dict[str, Any]:
-        """
-        Build evaluation context with state, local scope, and special variables.
-
-        Returns a dictionary containing:
-        - All global state variables
-        - All context variables (from engine initialization)
-        - Local scope variables (passage parameters) if in local scope
-        - _state: Direct reference to global state dict
-        - _local: Direct reference to current local scope (or empty dict)
-
-        Returns:
-            Dictionary to use as eval() context
-        """
-        # Start with context and state
-        eval_context = {**self.context, **self.state}
-
-        # Add special _state variable
-        eval_context["_state"] = self.state
-
-        # Add local scope if present
-        if self._local_scope_stack:
-            local_scope = self._local_scope_stack[-1]
-            eval_context.update(local_scope)
-            eval_context["_local"] = local_scope
-        else:
-            # _local is always present (empty dict if no params)
-            eval_context["_local"] = {}
-
-        return eval_context
-
-    def _execute_python_block(self, cmd: dict) -> None:
-        """
-        Execute a python code block.
-
-        The code block has access to:
-        - self.state (current game state)
-        - Any context provided at engine initialization
-
-        Args:
-            cmd: Command dictionary with 'code' key
-        """
-        code = cmd["code"]
-
-        try:
-            # Create execution context with safe builtins
-            safe_builtins = self._get_safe_builtins()
-            # Merge state and context for execution
-            exec_context = {**self.context, **self.state}
-
-            # Execute the python code
-            exec(code, {"__builtins__": safe_builtins}, exec_context)
-
-            # Update state with any new/modified variables
-            # Only update variables that were changed or added
-            # Update state but not context -- context is read-only!!
-            for key, value in exec_context.items():
-                if (
-                    not key.startswith("_") and key not in self.context
-                ):  # Skip internal variables
-                    self.state[key] = value
-
-        except SyntaxError as e:
-            # Syntax error - show the problematic line
-            raise RuntimeError(
-                "Syntax error in Python block:\n"
-                f"Line {e.lineno}: {e.text}\n"
-                f"  {e.msg}\n\n"
-                f"Full code:\n{code}"
-            )
-
-        except NameError as e:
-            # Undefined variable
-            raise RuntimeError(
-                f"Undefined variable in Python block: {e}\n"
-                "Available variables: {list(exec_context.keys())}\n\n"
-                f"Code:\n{code}"
-            )
-
-        except Exception as e:
-            # Other runtime error
-            raise RuntimeError(
-                f"Error executing Python block:\n"
-                f"  {type(e).__name__}: {e}\n\n"
-                f"Traceback:\n{traceback.format_exc()}\n"
-                f"Code:\n{code}"
-            )
-
-    def _parse_literal(self, value_str: str) -> Any:
-        """Parse a literal value."""
-        value = value_str.strip()
-
-        # Boolean
-        if value.lower() == "true":
-            return True
-        if value.lower() == "false":
-            return False
-
-        # Number
-        try:
-            if "." in value:
-                return float(value)
-            return int(value)
-        except ValueError:
-            pass
-
-        # String (remove quotes)
-        if (value.startswith('"') and value.endswith('"')) or (
-            value.startswith("'") and value.endswith("'")
-        ):
-            return value[1:-1]
-
-        return value
+        """Build evaluation context with state, local scope, and special variables."""
+        return self.executor.get_eval_context()
 
     def _render_content(
         self, content_tokens: list[dict]
@@ -1385,7 +840,9 @@ class BardEngine:
                     result.append(f"{{ERROR: inline conditional - {e}}}")
             elif token["type"] == "render_directive":
                 # Process and collect directive (don't render as text)
-                processed = self._process_render_directive(token)
+                processed = self.directive_processor.process_render_directive(
+                    token, evaluate=self.evaluate_directives
+                )
                 directives.append(processed)
             elif token["type"] == "input":
                 # Collect input directive (don't render as text)
@@ -1393,18 +850,18 @@ class BardEngine:
             elif token["type"] == "python_statement":
                 # Execute Python statement (modifies state, produces no text output)
                 # This happens during rendering, so it only runs if its branch/loop is active
-                self._execute_python_statement(token)
+                self.executor.execute_python_statement(token)
                 # Don't append anything to result - Python statements don't generate text
             elif token["type"] == "set_var":
                 # Backward compatibility: Execute variable assignment
-                self._execute_set_var(token)
+                self.executor.execute_set_var(token)
             elif token["type"] == "expression_statement":
                 # Backward compatibility: Execute expression statement
-                self._execute_expression_statement(token)
+                self.executor.execute_expression_statement(token)
             elif token["type"] == "python_block":
                 # Execute Python block (modifies state, produces no text output)
                 # This happens during rendering, so it only runs if its branch/loop is active
-                self._execute_python_block(token)
+                self.executor.execute_python_block(token)
                 # Don't append anything to result - Python blocks don't generate text
             elif token["type"] == "conditional":
                 # Render conditional blocks
@@ -1430,7 +887,7 @@ class BardEngine:
             elif token["type"] == "hook":
                 # Execute hook registration/unregistration during render
                 # (for hooks inside conditionals/loops)
-                self._execute_hook_command(token)
+                self.executor.execute_hook_command(token)
                 # Hooks don't produce text output
             elif token["type"] == "join_marker":
                 # Stop rendering at @join marker - content after @join comes later
@@ -1591,73 +1048,37 @@ class BardEngine:
             return expr, spec
         return code, None
 
-    def snapshot(self) -> None:
-        """
-        Capture current state to the undo stack.
+    # ── Undo/Redo (delegated to StateManager) ──
 
-        Call this BEFORE making any state changes. The snapshot captures
-        the state at the moment before a choice is made, so undo returns
-        the player to that decision point.
-        """
-        snapshot = GameSnapshot.from_engine(self)
-        self.undo_stack.append(snapshot)
+    @property
+    def undo_stack(self):
+        """Access undo stack via state manager."""
+        return self.state_manager.undo_stack
+
+    @property
+    def redo_stack(self):
+        """Access redo stack via state manager."""
+        return self.state_manager.redo_stack
+
+    def snapshot(self) -> None:
+        """Capture current state to the undo stack."""
+        self.state_manager.snapshot()
 
     def undo(self) -> bool:
-        """
-        Restore previous state from undo stack.
-
-        Moves current state to redo stack before restoring, so the player
-        can redo if they change their mind.
-
-        Returns:
-            True if undo was successful, False if nothing to undo.
-        """
-        if not self.undo_stack:
-            return False
-
-        # Save current state to redo stack before restoring
-        current = GameSnapshot.from_engine(self)
-        self.redo_stack.append(current)
-
-        # Restore previous state
-        previous = self.undo_stack.pop()
-        previous.restore_to(self)
-
-        # Re-render the restored passage (updates _current_output cache)
-        self._current_output = self._render_passage(self.current_passage_id)
-
-        return True
+        """Restore previous state from undo stack."""
+        return self.state_manager.undo()
 
     def redo(self) -> bool:
-        """
-        Restore next state from redo stack.
-
-        Returns:
-            True if redo was successful, False if nothing to redo.
-        """
-        if not self.redo_stack:
-            return False
-
-        # Save current state to undo stack before restoring
-        current = GameSnapshot.from_engine(self)
-        self.undo_stack.append(current)
-
-        # Restore next state
-        next_state = self.redo_stack.pop()
-        next_state.restore_to(self)
-
-        # Re-render the restored passage
-        self._current_output = self._render_passage(self.current_passage_id)
-
-        return True
+        """Restore next state from redo stack."""
+        return self.state_manager.redo()
 
     def can_undo(self) -> bool:
         """Check if undo is available (for UI button state)."""
-        return len(self.undo_stack) > 0
+        return self.state_manager.can_undo()
 
     def can_redo(self) -> bool:
         """Check if redo is available (for UI button state)."""
-        return len(self.redo_stack) > 0
+        return self.state_manager.can_redo()
 
     def register_hook(self, event: str, passage_id: str) -> None:
         """Register a passage to be called when an event fires.
@@ -1669,12 +1090,7 @@ class BardEngine:
             event: Event name (eg "turn_end")
             passage_id: Passage to execute when event fires
         """
-        if event not in self.hooks:
-            self.hooks[event] = []
-
-        # Prevent dupes
-        if passage_id not in self.hooks[event]:
-            self.hooks[event].append(passage_id)
+        self.hook_manager.register(event, passage_id)
 
     def unregister_hook(self, event: str, passage_id: str) -> None:
         """
@@ -1686,8 +1102,7 @@ class BardEngine:
             event: Event name
             passage_id: Passage to remove
         """
-        if event in self.hooks and passage_id in self.hooks[event]:
-            self.hooks[event].remove(passage_id)
+        self.hook_manager.unregister(event, passage_id)
 
     def trigger_event(self, event: str) -> str:
         """
@@ -1702,11 +1117,10 @@ class BardEngine:
         Returns:
             Combined text output from all hook passages (for appending to current output)
         """
-        if event not in self.hooks:
+        # get_handlers returns a copy — safe if hooks unregister during execution
+        active_hooks = self.hook_manager.get_handlers(event)
+        if not active_hooks:
             return ""
-
-        # Copy the list! Hooks might unregister themselves during execution
-        active_hooks = list(self.hooks[event])
 
         combined_output = []
 
@@ -1804,291 +1218,16 @@ class BardEngine:
         """
         self.used_choices.clear()
 
+    # ── Save/Load (delegated to StateManager) ──
+
     def save_state(self) -> dict[str, Any]:
-        """
-        Serialize engine state to a dictionary that can be saved to JSON.
-
-        Returns a complete snapshot of the current game state including:
-        - Current passage ID
-        - All variables in state
-        - Used one-time choices
-        - Story metadata for validation
-
-        Returns:
-            Dictionary containing all state needed to restore the game
-
-        Example:
-            state = engine.save_state()
-            with open('save.json', 'w') as f:
-                json.dump(state, f)
-        """
-        # Get metadata from story
-        story_metadata = self.story.get("metadata", {})
-
-        return {
-            "version": "0.1.0",  # Save format version
-            "story_version": story_metadata.get("version", "unknown"),
-            "story_name": story_metadata.get("title", "unknown"),
-            "story_id": story_metadata.get("story_id", "unknown"),
-            "timestamp": self._get_timestamp(),
-            "current_passage_id": self.current_passage_id,
-            "previous_passage_id": self._previous_passage_id,
-            "state": self._serialize_state(self.state),
-            "used_choices": list(self.used_choices),
-            "metadata": {
-                "passage_count": len(self.passages),
-                "initial_passage": self.story["initial_passage"],
-            },
-            "hooks": self.hooks,
-        }
+        """Serialize engine state to a JSON-compatible dictionary."""
+        return self.state_manager.save_state()
 
     def load_state(self, save_data: dict[str, Any]) -> None:
-        """
-        Restore engine state from a saved dictionary.
-
-        Validates the save data before loading to ensure compatibility.
-
-        Args:
-            save_data: Dictionary from save_state()
-
-        Raises:
-            ValueError: If save data is invalid or incompatible
-
-        Example:
-            with open('save.json') as f:
-                save_data = json.load(f)
-            engine.load_state(save_data)
-        """
-        # Validate save format
-        if not isinstance(save_data, dict):
-            raise ValueError("Save data must be a dictionary")
-
-        if "version" not in save_data:
-            raise ValueError("Save data missing version field")
-
-        # Validate story compatibility using metadata
-        story_metadata = self.story.get("metadata", {})
-
-        saved_story_name = save_data.get("story_name", "unknown")
-        current_story_name = story_metadata.get("title", "unknown")
-
-        saved_story_id = save_data.get("story_id", "unknown")
-        current_story_id = story_metadata.get("story_id", "unknown")
-
-        # Check both story_id (primary) and story_name (secondary) for compatibility
-        if saved_story_id != "unknown" and current_story_id != "unknown":
-            if saved_story_id != current_story_id:
-                print(
-                    f"Warning: Save is from a different story ID: '{saved_story_id}' vs '{current_story_id}'"
-                )
-        elif saved_story_name != current_story_name and saved_story_name != "unknown":
-            print(
-                f"Warning: Save is from a different story: '{saved_story_name}' vs '{current_story_name}'"
-            )
-
-        # Validate passage exists
-        target_passage = save_data.get("current_passage_id", "Start")
-        if target_passage not in self.passages:
-            raise ValueError(
-                f"Save data references unknown passage: '{target_passage}'\n"
-                f"Available passages: {', '.join(sorted(self.passages.keys())[:5])}..."
-            )
-
-        # Restore state
-        self.state = self._deserialize_state(save_data.get("state", {}))
-        self.used_choices = set(save_data.get("used_choices", []))
-
-        # Clear undo/redo stacks on load (fresh start, new session)
-        self.undo_stack.clear()
-        self.redo_stack.clear()
-
-        # Restore hooks
-        self.hooks = save_data.get("hooks", {})
-
-        # Navigate to saved passage (this re-renders with restored state)
-        self.goto(target_passage)
-
-        # Restore previous passage AFTER goto (goto would overwrite it)
-        self._previous_passage_id = save_data.get("previous_passage_id")
-
-    def _serialize_state(self, state: dict[str, Any]) -> dict[str, Any]:
-        """
-        Serialize state dictionary for JSON storage.
-
-        Delegates all value serialization to _serialize_value for consistency.
-        This ensures custom serialization methods and recursive handling work
-        for all values, regardless of nesting level.
-
-        Args:
-            state: Raw state dictionary
-
-        Returns:
-            JSON-serializable dictionary
-        """
-        serialized = {}
-        for key, value in state.items():
-            serialized[key] = self._serialize_value(value)
-        return serialized
-
-    def _serialize_value(self, value: Any) -> Any:
-        """Serialize a single value for JSON storage.
-
-        Priority order:
-        0. Skip classes/types and callables (they shouldn't be in save files)
-        1. Check for custom to_save_dict() method (explicit serialization)
-        2. Try direct JSON serialization (primitives)
-        3. Collections (lists, tuples, dicts) - recurse
-        4. Objects with __dict__
-        5. Fallback to string representation
-        """
-        # Priority 0: Skip classes/types and callables - they shouldn't be serialized
-        # Functions (like create_session, get_artifact) have __dict__ and would
-        # fall through to Priority 4, getting serialized as dicts. On load,
-        # they can't be restored as callables, breaking the game state.
-        if isinstance(value, type) or callable(value):
-            return None
-
-        # Priority 1: Custom serialization method
-        if hasattr(value, "to_save_dict") and callable(getattr(value, "to_save_dict")):
-            return {
-                "_type": type(value).__name__,
-                "_module": type(value).__module__,
-                "_data": value.to_save_dict(),
-                "_custom": True,  # Flag that this used custom serialization
-            }
-
-        # Priority 2: Direct JSON serialization (primitives)
-        try:
-            json.dumps(value)
-            return value
-        except (TypeError, ValueError):
-            pass
-
-        # Priority 3: Collections - recurse for nested structures
-        if isinstance(value, list):
-            return [self._serialize_value(v) for v in value]
-        elif isinstance(value, tuple):
-            # Store tuples as lists (JSON doesn't have tuples)
-            return [self._serialize_value(v) for v in value]
-        elif isinstance(value, dict):
-            # Recurse through dict values
-            return {k: self._serialize_value(v) for k, v in value.items()}
-
-        # Priority 4: Object with __dict__
-        if hasattr(value, "__dict__"):
-            return {
-                "_type": type(value).__name__,
-                "_module": type(value).__module__,
-                "_data": {
-                    # Recurse for nested objects in attributes
-                    k: self._serialize_value(v)
-                    for k, v in value.__dict__.items()
-                    if not k.startswith("_")
-                },
-            }
-
-        # Priority 5: Fallback to string
-        print(f"Warning: Serializing {type(value).__name__} as string representation")
-        return {"_type": "string_repr", "_value": str(value)}
-
-    def _deserialize_state(self, state: dict[str, Any]) -> dict[str, Any]:
-        """
-        Deserialize state dictionary from JSON storage.
-
-        Delegates all value deserialization to _deserialize_value for consistency.
-        This ensures custom deserialization methods and recursive handling work
-        for all values, regardless of nesting level.
-
-        Args:
-            state: Serialized state dictionary
-
-        Returns:
-            Restored state dictionary
-        """
-        deserialized = {}
-        for key, value in state.items():
-            deserialized[key] = self._deserialize_value(value)
-        return deserialized
-
-    def _deserialize_value(self, value: Any) -> Any:
-        """Deserialize a single value from JSON storage.
-
-        Priority Order:
-        1. Handle primitives (return as-is)
-        2. Handle collections (recurse)
-        3. Handle objects with custom from_save_dict() (explicit deserialization)
-        4. Handle objects with __new__ + __dict__ (automatic deserialization)
-        5. Return as dict if class not available
-        """
-        # Priority 1: Primitives - return as-is
-        if not isinstance(value, (dict, list)):
-            return value
-
-        # Priority 2: Collections - recurse
-        if isinstance(value, list):
-            return [self._deserialize_value(v) for v in value]
-
-        # Priority 3-5: Objects with _type metadata
-        if not isinstance(value, dict) or "_type" not in value:
-            # Plain dict without _type - recurse through values
-            if isinstance(value, dict):
-                return {k: self._deserialize_value(v) for k, v in value.items()}
-            return value
-
-        obj_type = value["_type"]
-        obj_data = value.get("_data", {})
-
-        # Special case: string representation
-        if obj_type == "string_repr":
-            return value.get("_value", "")
-
-        # Try to get class from context
-        if obj_type not in self.context:
-            # Class not available - recurse through data dict
-            print(f"Warning: Class '{obj_type}' not in context, keeping as dict")
-            return {k: self._deserialize_value(v) for k, v in obj_data.items()}
-
-        cls = self.context[obj_type]
-
-        # Priority 3: Custom deserialization method
-        if hasattr(cls, "from_save_dict") and callable(getattr(cls, "from_save_dict")):
-            try:
-                return cls.from_save_dict(obj_data)
-            except Exception as e:
-                print(f"Warning: Custom deserialization failed for {obj_type}: {e}")
-                # Fall through to automatic method
-
-        # Priority 4: Automatic deserialization using __new__
-        try:
-            obj = cls.__new__(cls)
-            if hasattr(obj, "__dict__"):
-                # Recursively deserialize nested values in obj_data
-                deserialized_data = {
-                    k: self._deserialize_value(v) for k, v in obj_data.items()
-                }
-                obj.__dict__.update(deserialized_data)
-            return obj
-        except Exception as e:
-            print(f"Warning: Failed to deserialize {obj_type}: {e}")
-            # Recurse through data dict as fallback
-            return {k: self._deserialize_value(v) for k, v in obj_data.items()}
-
-    def _get_timestamp(self) -> str:
-        """Get current timestamp in ISO format."""
-        return datetime.now().isoformat()
+        """Restore engine state from a saved dictionary."""
+        self.state_manager.load_state(save_data)
 
     def get_save_metadata(self) -> dict[str, Any]:
-        """
-        Get metadata about the current save state without full serialization.
-
-        Useful for displaying save slot information without loading the full save.
-
-        Returns:
-            Dictionary with save metadata (passage, timestamp, etc.)
-        """
-        return {
-            "current_passage": self.current_passage_id,
-            "timestamp": self._get_timestamp(),
-            "story_name": self.story.get("name", "unknown"),
-            "has_choices": self.has_choices(),
-        }
+        """Get metadata about the current save state without full serialization."""
+        return self.state_manager.get_save_metadata()

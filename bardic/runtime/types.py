@@ -73,7 +73,7 @@ class GameSnapshot:
             previous_passage=engine._previous_passage_id,
             state=copy.deepcopy(engine.state),
             used_choices=engine.used_choices.copy(),
-            hooks=copy.deepcopy(engine.hooks),
+            hooks=engine.hook_manager.snapshot(),
             join_section_index=copy.deepcopy(engine._join_section_index),
         )
 
@@ -83,5 +83,5 @@ class GameSnapshot:
         engine._previous_passage_id = self.previous_passage
         engine.state = self.state
         engine.used_choices = self.used_choices
-        engine.hooks = self.hooks
+        engine.hook_manager.restore(self.hooks)
         engine._join_section_index = self.join_section_index
