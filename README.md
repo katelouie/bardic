@@ -133,6 +133,7 @@ pip install -r requirements.txt
   - Use the **Web** template (FastAPI + React) for a production-ready, highly custom web game.
 - **Clean, Writer-First Syntax:** Focus on your story with a minimal, line-based syntax for passages (`::`), choices (`+`), and text.
 - **Visualize Your Story:** Automatically generate a flowchart of your entire story to find highlighted dead ends or orphaned passages with the `bardic graph` command.
+- **Catch Bugs Before Players Do:** `bardic lint` analyzes your compiled story for broken jump targets, orphaned passages, dead ends, and attribute consistency issues. Extend it with [project-specific plugins](docs/lint-plugins.md) for your own game mechanics.
 - **Instant Start-Up:** Get a working game in 60 seconds with `bardic init`. It comes with a browser-based frontend pre-configured and ready to run with a single command. (NiceGUI, Reflex, or React -- take your pick.)
 - **Browser distribution.** `bardic bundle` packages your game for itch.io with a full Python runtime (Pyodide). No server required.
 - **VS Code Integration:** Syntax highlighting, snippets, code folding, live preview, and graph-based navigation. Install "Bardic" from the marketplace or run `code --install-extension katelouie.bardic`.
@@ -178,6 +179,7 @@ Plus built-in special variables — `_visits` tracks how many times each passage
 | `bardic compile story.bard` | Compile `.bard` source to `.json` |
 | `bardic play story.bard` | Play a story in the terminal (accepts `.bard` or `.json`) |
 | `bardic graph story.json` | Generate a visual flowchart (`.png`, `.svg`, or `.pdf`) |
+| `bardic lint story.bard` | Analyze story for structural issues (broken jumps, dead ends, attribute bugs) |
 | `bardic bundle story.bard` | Package for browser distribution (itch.io, static hosting) |
 | `bardic serve` | Start the web runtime (FastAPI backend + React frontend) |
 
@@ -276,6 +278,7 @@ code --install-extension katelouie.bardic
 
 - **New to Bardic?** I've put together a short [tutorial course](docs/tutorials/README.md) that walks you through all of the syntax and features of Bardic, from beginner to advanced.
 - **Want to see all the syntax?** Check out the [Language Specification](https://github.com/katelouie/bardic/blob/main/docs/spec.md) for the full list of features, from loops to render directives.
+- **Want to lint your story?** Use `bardic lint` for structural analysis, and write your own [lint plugins](docs/lint-plugins.md) for game-specific checks.
 - **Want to build the engine?** See our [`CONTRIBUTING.md`](CONTRIBUTING.md) for details on the architecture and development setup.
 - **Want VS Code integration?** Download the [Bardic VS Code extension](https://github.com/katelouie/bardic-vscode) with full syntax highlighting, snippets and code folding. Also has live passage preview and graph-based navigation of your source file.
 - See the [DeepWiki detailed documentation](https://deepwiki.com/katelouie/bardic) generated from AI code indexing. It includes a *lot* of technical implementation details.

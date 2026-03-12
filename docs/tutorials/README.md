@@ -143,6 +143,7 @@ If you want to leverage Python's full capabilities:
 ## Optional Materials
 
 - **[Custom Classes Deep Dive](../cookbook/custom-classes.md)** - Advanced guide to serialization and best practices
+- **[Lint Plugins](../lint-plugins.md)** - Write custom lint checks for your game's mechanics
 - **[Language Specification](../spec.md)** - Complete syntax reference
 - **[Example Games](https://github.com/katelouie/arcanum-game)** - See Bardic in action
 
