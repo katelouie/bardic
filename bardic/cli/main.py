@@ -399,6 +399,11 @@ def init(project_name: str, template: str, path: str):
                 click.style("Tip:", fg="cyan")
                 + " Check out player.py for customization points marked with TODO"
             )
+            click.echo(
+                click.style("Tip:", fg="cyan")
+                + " Run 'bardic lint example.bard' to check for issues."
+                + " Add custom checks in linter/"
+            )
 
         elif template == "web":
             click.echo(f"  1. cd {project_name}")
@@ -445,6 +450,133 @@ def init(project_name: str, template: str, path: str):
             shutil.rmtree(project_dir)
         click.echo(click.style("✗ Error: ", fg="red", bold=True) + str(e), err=True)
         sys.exit(1)
+
+
+@cli.command()
+@click.argument("input_file", type=click.Path(exists=True))
+@click.option("--verbose", "-v", is_flag=True, help="Show info-level diagnostics and hints")
+@click.option("--errors-only", "-e", is_flag=True, help="Only show errors, not warnings")
+@click.option("--json-output", is_flag=True, help="Output diagnostics as JSON")
+@click.option("--no-plugins", is_flag=True, help="Skip project-specific lint plugins from linter/ directory")
+def lint(input_file, verbose, errors_only, json_output, no_plugins):
+    """
+    Lint a .bard story for structural issues.
+
+    Compiles the story (following all @include directives), then checks
+    the passage graph for missing targets, orphaned passages, dead ends,
+    and other structural problems.
+
+    Also runs project-specific lint plugins from a linter/ directory
+    (if present). See docs/lint-plugins.md for details.
+
+    \b
+    Example:
+        bardic lint story.bard
+        bardic lint main.bard --verbose
+        bardic lint main.bard --errors-only
+        bardic lint main.bard --no-plugins
+    \b
+    Built-in diagnostic codes:
+        E001  Missing passage (broken jump target)
+        E002  Duplicate passage name
+        W001  Orphaned passage (unreachable)
+        W002  Dead-end passage (no exits)
+        W003  Empty passage (no content)
+        W004  Sticky self-loop (potential infinite loop)
+        W005  Attribute read but never written (possible typo)
+        I001  Dead-end that looks like intentional ending
+        I002  Passage with many choices
+        P000  Plugin execution error
+    """
+    from bardic.cli.lint import lint_file, Severity
+
+    try:
+        report = lint_file(input_file, no_plugins=no_plugins)
+    except Exception as e:
+        click.echo(
+            click.style("✗ Compilation failed: ", fg="red", bold=True) + str(e),
+            err=True,
+        )
+        click.echo(
+            click.style("  Fix compilation errors before linting.", fg="white", dim=True),
+            err=True,
+        )
+        sys.exit(1)
+
+    # Filter diagnostics
+    diagnostics = report.diagnostics
+    if errors_only:
+        diagnostics = [d for d in diagnostics if d.severity == Severity.ERROR]
+    elif not verbose:
+        # Default: show errors and warnings, hide info
+        diagnostics = [d for d in diagnostics if d.severity != Severity.INFO]
+
+    # JSON output mode
+    if json_output:
+        import json as json_mod
+        output = {
+            "summary": {
+                "files": report.file_count,
+                "passages": report.passage_count,
+                "choices": report.choice_count,
+                "errors": report.error_count,
+                "warnings": report.warning_count,
+                "info": report.info_count,
+            },
+            "diagnostics": [
+                {
+                    "severity": d.severity.value,
+                    "code": d.code,
+                    "message": d.message,
+                    "hint": d.hint,
+                }
+                for d in diagnostics
+            ],
+        }
+        click.echo(json_mod.dumps(output, indent=2))
+        sys.exit(1 if report.has_errors else 0)
+
+    # Human-readable output
+    click.echo()
+    click.echo(click.style("  BARDIC LINT", fg="cyan", bold=True) + f"  {input_file}")
+    click.echo(click.style("  ─" * 30, fg="white", dim=True))
+
+    # Summary line
+    parts = [f"{report.passage_count} passages"]
+    if report.include_count:
+        parts.append(f"{report.file_count} files")
+    parts.append(f"{report.choice_count} choices")
+    if report.plugin_count:
+        parts.append(f"{report.plugin_count} plugin{'s' if report.plugin_count != 1 else ''}")
+    click.echo(click.style(f"  {' · '.join(parts)}", fg="white", dim=True))
+    click.echo()
+
+    if not diagnostics:
+        click.echo(click.style("  ✓ No issues found!", fg="green", bold=True))
+        click.echo()
+        sys.exit(0)
+
+    # Group by severity for display
+    for d in diagnostics:
+        icon = click.style(d.icon, fg=d.color, bold=True)
+        code = click.style(d.code, fg=d.color)
+        click.echo(f"  {icon} {code}  {d.message}")
+        if verbose and d.hint:
+            click.echo(click.style(f"         → {d.hint}", fg="white", dim=True))
+
+    # Footer
+    click.echo()
+    parts = []
+    if report.error_count:
+        parts.append(click.style(f"{report.error_count} error(s)", fg="red", bold=True))
+    if report.warning_count:
+        parts.append(click.style(f"{report.warning_count} warning(s)", fg="yellow"))
+    if verbose and report.info_count:
+        parts.append(click.style(f"{report.info_count} info", fg="cyan"))
+    click.echo(f"  {' · '.join(parts)}")
+    click.echo()
+
+    sys.exit(1 if report.has_errors else 0)
 
 
 @cli.command()

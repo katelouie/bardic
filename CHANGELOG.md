@@ -5,6 +5,51 @@ All notable changes to Bardic will be documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **`bardic lint` command** — structural and quality analysis for `.bard` story files. Compiles the story first (following all `@include` directives), then analyzes the passage graph to catch issues that regex-based checkers can't.
+  - **E001**: Missing passages — broken jump targets that would crash at runtime
+  - **E002**: Duplicate passage names
+  - **W001**: Orphaned passages — defined but never jumped to (unreachable)
+  - **W002**: Dead-end passages — no choices, jumps, or hooks (unintentional dead ends)
+  - **W003**: Empty passages — no content, choices, or code
+  - **W004**: Sticky self-loops — `+` choices that jump to their own passage (infinite loop)
+  - **W005**: Attribute consistency — reads without writes, with typo detection via `difflib`. Suggests close matches (e.g., `"Did you mean 'session.artifacts_received'?"`)
+  - **I001**: Dead-ends with ending-like names (informational, shown with `--verbose`)
+  - **I002**: Passages with many visible choices — uses MAX across `@if` branches (not SUM), since players only see one branch
+  - Smart choice counting accounts for mutually exclusive conditional branches
+  - CLI options: `--verbose` (show info-level diagnostics), `--errors-only`, `--json-output` (for CI)
+  - Human-readable output with colored severity icons, or structured JSON for tooling
+
+- **Level 2 class-aware attribute checking** — `bardic lint` follows your story's `from game_logic.X import Y` statements, locates the Python source files on disk, and parses class definitions with AST. Class fields, `@property` decorators, private-to-public field mappings (`_trust` → `trust`), and inheritance chains are all resolved. Story variable names are mapped to classes via instantiation patterns (`blackthorn = BlackthornManor(...)`) and fuzzy matching (`session` → `Session`). Eliminates false positives for class-defined attributes that aren't explicitly assigned in `.bard` code.
+
+- **Lint plugin system** — extensible, project-specific lint checks via a `linter/` directory.
+  - Drop `.py` files in `linter/` at your project root — any `check_*` function is auto-discovered and run after built-in checks
+  - Plugin signature: `def check_something(story_data, report, project_root)`
+  - Files starting with `_` are ignored (use for shared helpers)
+  - Plugin failures are caught gracefully and reported as P000 warnings
+  - `--no-plugins` flag to skip project plugins
+  - Plugin count shown in output header
+  - Public helper API for plugin authors:
+    - `extract_python_code(story_data)` — extracts all Python from compiled story (imports, `@py:` blocks, expressions, conditions, etc.)
+    - `parse_attribute_access(code)` — AST-based extraction of attribute writes, reads, and method calls
+    - `LintReport`, `Severity`, `Diagnostic` — all importable for building custom diagnostics
+  - Documentation: `docs/lint-plugins.md`
+
+- **`linter/` directory in project templates** — `bardic init` now creates a `linter/` directory with an example plugin (`check_example.py`) in all templates (nicegui, web, reflex). The example demonstrates the plugin API and suggests real use cases.
+
+### Changed
+
+- `bardic init` output now includes a tip about `bardic lint` and the `linter/` directory
+- `bardic lint --help` documents the plugin system and all diagnostic codes including P000
+
+### Fixed
+
+- **Indented `@py:` blocks not analyzed** — Python code inside `@py:` blocks within `@if` branches retains its indentation in compiled output. `ast.parse` rejects leading whitespace, so these code blocks were silently skipped during attribute analysis. Now uses `textwrap.dedent()` before parsing, catching all writes regardless of nesting depth.
+- **Top-level imports not extracted** — compiled story JSON stores `from X import Y` statements in a separate `imports` array, not inside passage execute blocks. The Python code extractor now includes these, enabling class-aware checking and more complete attribute tracking.
+
 ## [0.7.1] - 2026-03-11
 
 ### Added
