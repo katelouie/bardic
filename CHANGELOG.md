@@ -9,9 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Pre-commit hooks** — ruff lint/format, trailing whitespace, end-of-file fixer, YAML/JSON validation, large file check. Install with `pre-commit install`.
+- **Ruff configuration** in `pyproject.toml` — target Python 3.10, line length 100, per-file ignores for re-exports and templates.
+- **Python 3.13 support** — added to CI test matrix and PyPI classifiers.
+- **Inline image syntax** in browser templates — `![alt text](path)` now renders as `<img>` in browser bundle. Terminal player shows `[Image: alt text]`.
+
 ### Changed
 
+- **CI test matrix expanded** from Python 3.12 only to 3.10, 3.11, 3.12, 3.13 with `fail-fast: false`.
+- **CI lint job added** — ruff check + format verification runs before tests.
+- **GitHub Actions updated** to checkout@v4 and setup-python@v5.
+- **Codebase formatted** with ruff — consistent style across all source files.
+
 ### Fixed
+
+- **`@py:` block functions invisible to comprehensions on Python <3.12** — functions defined inside `@py:` blocks (via `exec()`) couldn't be seen by dict/list/set comprehensions on Python 3.10-3.11 due to comprehension scoping rules. Fixed by using a single namespace for `exec()` instead of separate globals/locals. This was a silent compatibility issue that would cause `NameError` at runtime.
 
 ## [0.9.1] - 2026-03-12
 
