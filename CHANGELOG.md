@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Browser template upgrade** — 7-layer upgrade to the `bardic bundle` browser template:
+  - **Asset pipeline** — bundler auto-detects and copies `assets/`, `custom.css`, `custom.js` from the story directory. New `--assets-dir` flag for custom asset locations.
+  - **Image support** — `![alt](path)` in passage content renders as `<img>`. CSS variable `--image-rendering` (set to `pixelated` in custom.css for pixel art games). `.pixel` class for per-image override.
+  - **Passage transitions** — fade out/in animations between passages (200ms). Initial load renders without transition.
+  - **Sidebar panel** — collapsible sidebar (280px) with hamburger toggle. Two activation paths: `@render sidebar(content)` directive or `Bardic.sidebar()` hook in custom.js. Mobile: fixed overlay on screens under 600px.
+  - **Render directive system** — `renderPassage()` now extracts `render_directives` and `input_directives` from engine output. Built-in renderers for `image`, `html`, `text_block`, `sidebar`, and `modal`. Custom `_serialize` function handles stdlib objects crossing the Pyodide bridge. Fallback renderer shows directive name + JSON data for unregistered directives (dev aid).
+  - **Modal system** — reusable overlay for book views, inventory, card details. `Bardic.openModal(html)` / `Bardic.closeModal()`. Escape key and backdrop click to dismiss. ARIA attributes for accessibility.
+  - **`Bardic` JavaScript API** — clean namespace object replacing scattered `window.*` globals. Registration methods: `Bardic.directive()`, `Bardic.sidebar()`, `Bardic.backgrounds()`, `Bardic.on()`. Lifecycle hooks: `start`, `passageRender`, `beforeChoice`. Typo detection warns on unknown event names with suggestions.
+
+- **`bardic init --template browser`** — new project template for browser bundle games. Includes starter `example.bard`, `custom.css`, `custom.js` (with working Bardic API examples), `assets/`, `game_logic/`, and `linter/` directories.
+
+- **Browser customization docs** — `docs/browser-customization.md` with full `Bardic` JS API reference, CSS variable table, and complete pixel-art RPG example. Linked from main README.
+
 ### Changed
 
 ### Fixed

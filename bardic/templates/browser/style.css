@@ -42,6 +42,9 @@
     /* Effects */
     --shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
     --transition: 0.2s ease;
+
+    /* Image rendering — set to 'pixelated' in custom.css for pixel art games */
+    --image-rendering: auto;
 }
 
 
@@ -218,6 +221,56 @@ header h1 {
 
 
 /* =========================================================================
+   Game Layout (sidebar + main)
+   ========================================================================= */
+
+.game-layout {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+
+/* =========================================================================
+   Sidebar
+   ========================================================================= */
+
+.sidebar {
+    width: 280px;
+    background: var(--bg-secondary);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    padding: var(--spacing-lg) var(--spacing-md);
+    overflow-y: auto;
+    transition: margin-left 0.3s ease, opacity 0.3s ease;
+    flex-shrink: 0;
+}
+
+.sidebar.collapsed {
+    margin-left: -280px;
+    opacity: 0;
+    pointer-events: none;
+}
+
+#sidebar-content h3 {
+    font-family: var(--font-ui);
+    font-size: 0.95rem;
+    color: var(--accent-color);
+    margin: 0 0 var(--spacing-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+#sidebar-content p {
+    margin: var(--spacing-sm) 0;
+    font-size: 0.9rem;
+}
+
+.sidebar-toggle-btn {
+    font-size: 1.1rem !important;
+}
+
+
+/* =========================================================================
    Main Content
    ========================================================================= */
 
@@ -227,6 +280,7 @@ main {
     margin: 0 auto;
     padding: var(--spacing-xl) var(--spacing-lg);
     width: 100%;
+    overflow-y: auto;
 }
 
 #story-content {
@@ -256,6 +310,13 @@ main {
     display: block;
     margin: var(--spacing-md) auto;
     border-radius: var(--border-radius);
+    image-rendering: var(--image-rendering);
+}
+
+/* Pixel art mode — add class="pixel" to individual images,
+   or set --image-rendering: pixelated in custom.css for all images */
+#story-content .story-image.pixel {
+    image-rendering: pixelated;
 }
 
 
@@ -289,6 +350,122 @@ main {
 
 .choice-btn:active {
     transform: translateX(5px) scale(0.98);
+}
+
+
+/* =========================================================================
+   Render Directives
+   ========================================================================= */
+
+.render-directives {
+    margin: var(--spacing-lg) 0;
+}
+
+.directive-image {
+    margin: var(--spacing-md) auto;
+}
+
+.directive-html {
+    margin: var(--spacing-md) 0;
+}
+
+.directive-text-block {
+    margin: var(--spacing-md) 0;
+    padding: var(--spacing-md);
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius);
+}
+
+/* Fallback display for unregistered directives (dev aid) */
+.directive-fallback {
+    margin: var(--spacing-md) 0;
+    padding: var(--spacing-md);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px dashed var(--text-muted);
+    border-radius: var(--border-radius);
+    font-size: 0.85rem;
+}
+
+.directive-fallback-label {
+    color: var(--accent-color);
+    font-family: var(--font-ui);
+}
+
+.directive-fallback pre {
+    margin: var(--spacing-sm) 0 0;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    overflow-x: auto;
+}
+
+
+/* =========================================================================
+   Modal System
+   ========================================================================= */
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 500;
+    opacity: 1;
+    transition: opacity 0.2s ease;
+}
+
+.modal-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.modal-content {
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-lg);
+    max-width: 90vw;
+    max-height: 90vh;
+    overflow: auto;
+    position: relative;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    color: var(--text-color);
+}
+
+.modal-content h2 {
+    color: var(--accent-color);
+    margin: 0 0 var(--spacing-md);
+    font-family: var(--font-ui);
+}
+
+.modal-content p {
+    margin: var(--spacing-sm) 0;
+}
+
+
+/* =========================================================================
+   Passage Transitions
+   ========================================================================= */
+
+.passage-exit {
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.passage-enter {
+    animation: passageFadeIn 0.2s ease;
+}
+
+@keyframes passageFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 
@@ -409,6 +586,22 @@ footer a:hover {
     .game-controls button {
         padding: var(--spacing-sm);
         font-size: 0.85rem;
+    }
+
+    /* Sidebar becomes full-width overlay on mobile */
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: 280px;
+        z-index: 100;
+        box-shadow: var(--shadow);
+    }
+
+    .sidebar.collapsed {
+        margin-left: 0;
+        transform: translateX(-100%);
     }
 }
 

@@ -1,0 +1,98 @@
+@metadata
+  title: The Wandering Merchant
+  author: Bardic Template
+  version: 1.0.0
+  story_id: example
+  description: A browser bundle example showing sidebar, directives, and modals
+
+// This example story demonstrates features available in the browser bundle:
+// - Sidebar (stats display via custom.js)
+// - Render directives (custom components)
+// - Modal popups (item details)
+// - Images (markdown syntax)
+// - State tracking
+
+:: Start
+~ gold = 25
+~ hp = 100
+~ has_map = False
+~ items_bought = 0
+
+You arrive at a crossroads market on a dusty afternoon.
+
+A merchant with a wide-brimmed hat waves you over to her cart. Colorful bottles and curious trinkets catch the light.
+
+"Welcome, traveler! Take a look around."
+
++ [Browse the wares] -> BrowseWares
++ [Ask about the road ahead] -> AskRoad
+
+:: BrowseWares
+The merchant spreads her wares across the cart's folding table.
+
+@render item_display(items_bought)
+
+"Everything's fairly priced," she says with a wink. "Mostly."
+
++ {gold >= 10} [Buy a healing potion (10 gold)] -> BuyPotion
++ {gold >= 15} [Buy a traveler's map (15 gold)] -> BuyMap
++ [Ask about the road ahead] -> AskRoad
++ [Leave the market] -> Leave
+
+:: BuyPotion
+~ gold = gold - 10
+~ hp = hp + 25
+~ items_bought = items_bought + 1
+
+The red liquid is warm in your hands. You drink it immediately and feel strength return.
+
+*HP restored to {hp}.*
+
+"Smart purchase," the merchant nods approvingly.
+
++ [Keep browsing] -> BrowseWares
++ [Leave the market] -> Leave
+
+:: BuyMap
+~ gold = gold - 15
+~ has_map = True
+~ items_bought = items_bought + 1
+
+The merchant unrolls a hand-drawn map on parchment. Towns, rivers, and danger zones are marked in faded ink.
+
+"This'll keep you off the bad roads," she says.
+
++ [Keep browsing] -> BrowseWares
++ [Leave the market] -> Leave
+
+:: AskRoad
+The merchant leans on her cart and looks toward the horizon.
+
+@if has_map:
+She notices the map in your hand. "Ah, you've got the lay of the land already. Smart. Stick to the river road and you'll be fine."
+@else:
+"The north road is faster but there's been trouble with bandits. The river road is longer but safer." She pauses. "I sell maps, you know."
+@endif
+
++ [Browse the wares] -> BrowseWares
++ [Leave the market] -> Leave
+
+:: Leave
+You wave goodbye to the merchant and continue down the road.
+
+@if has_map:
+With the map in hand, you feel confident about the journey ahead.
+@endif
+
+@if items_bought > 1:
+The merchant calls after you: "Come back anytime! I'll have new stock next week!"
+@elif items_bought == 1:
+"Safe travels, friend!"
+@else:
+"Sure you don't need anything?" she calls after you. You keep walking.
+@endif
+
+**Gold remaining: {gold}**
+
+*Thanks for playing! This is a starter template for Bardic browser bundles.*
+*Edit this file and run `bardic bundle example.bard` to see your changes.*

@@ -19,6 +19,7 @@ def create_browser_bundle(
     game_name: Optional[str] = None,
     theme: str = "dark",
     minimal: bool = False,
+    assets_dir: Optional[Path] = None,
 ) -> Path:
     """
     Bundle a .bard story for browser distribution.
@@ -151,6 +152,38 @@ def create_browser_bundle(
                 except ValueError:
                     # Module is outside story_dir, copy to root
                     shutil.copy(module_path, output_dir / module_path.name)
+
+    # Step 9: Copy game assets
+    # Auto-detect assets/ in story directory, or use explicit --assets-dir
+    effective_assets_dir = assets_dir or (story_dir / "assets")
+    if effective_assets_dir.exists() and effective_assets_dir.is_dir():
+        shutil.copytree(effective_assets_dir, output_dir / "assets", dirs_exist_ok=True)
+
+    # Step 10: Copy custom CSS if present
+    custom_css = story_dir / "custom.css"
+    if custom_css.exists():
+        shutil.copy(custom_css, output_dir / "custom.css")
+        # Inject <link> into index.html
+        html_path = output_dir / "index.html"
+        html_content = html_path.read_text()
+        html_content = html_content.replace(
+            "</head>",
+            '    <link rel="stylesheet" href="custom.css">\n</head>',
+        )
+        html_path.write_text(html_content)
+
+    # Step 11: Copy custom JS if present
+    custom_js = story_dir / "custom.js"
+    if custom_js.exists():
+        shutil.copy(custom_js, output_dir / "custom.js")
+        # Inject <script> into index.html (before </body> so DOM is ready)
+        html_path = output_dir / "index.html"
+        html_content = html_path.read_text()
+        html_content = html_content.replace(
+            "</body>",
+            '    <script src="custom.js"></script>\n</body>',
+        )
+        html_path.write_text(html_content)
 
     return output_dir
 

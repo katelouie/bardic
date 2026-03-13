@@ -278,7 +278,7 @@ def play(story_file: str, no_color: bool):
     "--template",
     "-t",
     default="nicegui",
-    type=click.Choice(["nicegui", "web", "reflex"]),
+    type=click.Choice(["nicegui", "web", "reflex", "browser"]),
     help="Template to use (default: nicegui)",
 )
 @click.option(
@@ -299,6 +299,7 @@ def init(project_name: str, template: str, path: str):
       nicegui - Python-based UI with save/load (default)
       web     - FastAPI backend + React frontend
       reflex  - Reflex reactive framework
+      browser - Static browser bundle (itch.io, static hosting)
 
     \b
     Example:
@@ -328,7 +329,11 @@ def init(project_name: str, template: str, path: str):
 
     # Find template directory
     bardic_root = Path(__file__).parent.parent
-    template_dir = bardic_root / "templates" / template
+    # Browser init files live in browser/init/ (browser/ itself is the bundle template)
+    if template == "browser":
+        template_dir = bardic_root / "templates" / "browser" / "init"
+    else:
+        template_dir = bardic_root / "templates" / template
 
     if not template_dir.exists():
         click.echo(
@@ -342,8 +347,8 @@ def init(project_name: str, template: str, path: str):
         project_dir.mkdir(parents=True)
         click.echo(click.style("✓", fg="green", bold=True) + f" Created directory: {project_dir}")
 
-        # Create compiled_stories directory if not web template (web uses frontend/public/stories/)
-        if template != "web":
+        # Create compiled_stories directory (not needed for web or browser templates)
+        if template not in ("web", "browser"):
             (project_dir / "compiled_stories").mkdir()
             click.echo(click.style("✓", fg="green", bold=True) + " Created compiled_stories/")
 
@@ -400,6 +405,29 @@ def init(project_name: str, template: str, path: str):
             click.echo(
                 click.style("Tip:", fg="cyan")
                 + " See README.md for @render directives and extensions"
+            )
+
+        elif template == "browser":
+            click.echo(f"  1. cd {project_name}")
+            click.echo("  2. bardic bundle example.bard")
+            click.echo("  3. Open dist/index.html in your browser")
+            click.echo()
+            click.echo(
+                click.style("To upload to itch.io:", fg="yellow")
+                + " bardic bundle example.bard --zip"
+            )
+            click.echo()
+            click.echo(
+                click.style("Tip:", fg="cyan")
+                + " Edit custom.js for sidebar, directives, and hooks"
+            )
+            click.echo(
+                click.style("Tip:", fg="cyan")
+                + " Edit custom.css to change colors, fonts, and layout"
+            )
+            click.echo(
+                click.style("Tip:", fg="cyan")
+                + " See docs/browser-customization.md for the full Bardic JS API"
             )
 
         elif template == "reflex":
@@ -768,7 +796,16 @@ def serve(port, frontend_port, no_browser):
     is_flag=True,
     help="Minimal bundle with only Python core (~6 MB instead of ~17 MB)",
 )
-def bundle(story_file: str, output: str, name: str, theme: str, zip: bool, minimal: bool):
+@click.option(
+    "--assets-dir",
+    "-a",
+    type=click.Path(exists=True, file_okay=False),
+    default=None,
+    help="Custom assets directory (default: auto-detect assets/ next to story file)",
+)
+def bundle(
+    story_file: str, output: str, name: str, theme: str, zip: bool, minimal: bool, assets_dir: str
+):
     """
     Bundle a Bardic game for browser distribution.
 
@@ -805,10 +842,23 @@ def bundle(story_file: str, output: str, name: str, theme: str, zip: bool, minim
             game_name=name,
             theme=theme,
             minimal=minimal,
+            assets_dir=Path(assets_dir) if assets_dir else None,
         )
 
         click.echo(click.style("✓", fg="green", bold=True) + " Bundle created!")
         click.echo(f"  → {output_path}")
+
+        # Report what extras were included
+        effective_assets = (
+            Path(assets_dir) if assets_dir else Path(story_file).resolve().parent / "assets"
+        )
+        if (output_path / "assets").exists():
+            asset_count = sum(1 for _ in (output_path / "assets").rglob("*") if _.is_file())
+            click.echo(f"  → {asset_count} asset file(s) from {effective_assets}")
+        if (output_path / "custom.css").exists():
+            click.echo("  → custom.css included")
+        if (output_path / "custom.js").exists():
+            click.echo("  → custom.js included")
 
         # Create ZIP if requested
         if zip:

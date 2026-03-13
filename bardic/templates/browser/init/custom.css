@@ -1,0 +1,44 @@
+/*
+ * Custom styles for your Bardic browser game.
+ *
+ * This file loads after the base theme, so your styles override the defaults.
+ * The easiest way to customize is by overriding CSS variables below.
+ *
+ * For a full list of variables, see:
+ * https://github.com/katelouie/bardic/blob/main/docs/browser-customization.md
+ */
+
+/* Uncomment and modify to customize your theme: */
+
+/*
+:root {
+    --bg-color: #1a1a2e;
+    --bg-secondary: #16213e;
+    --text-color: #eaeaea;
+    --accent-color: #e94560;
+    --accent-hover: #ff6b6b;
+    --font-main: Georgia, 'Times New Roman', serif;
+    --max-width: 720px;
+    --border-radius: 8px;
+}
+*/
+
+/* For pixel art games, uncomment this: */
+/*
+:root {
+    --image-rendering: pixelated;
+    --border-radius: 0px;
+}
+*/
+
+/* Custom font example: */
+/*
+@font-face {
+    font-family: 'My Custom Font';
+    src: url('/assets/fonts/my-font.woff2') format('woff2');
+}
+
+:root {
+    --font-main: 'My Custom Font', serif;
+}
+*/

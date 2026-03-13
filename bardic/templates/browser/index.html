@@ -8,6 +8,81 @@
 
     <!-- Game styles -->
     <link rel="stylesheet" href="style.css">
+
+    <!-- Bardic API — available to custom.js for registering hooks and directives -->
+    <script>
+        (function () {
+            const VALID_EVENTS = ['start', 'passageRender', 'beforeChoice'];
+
+            window.Bardic = {
+                // Internal registries (read by the game engine module)
+                _directives: {},
+                _sidebar: null,
+                _backgrounds: {},
+                _hooks: {},
+
+                // Register a custom directive renderer
+                // Usage: Bardic.directive('card_spread', (data) => { ... return domElement; })
+                directive(name, renderFn) {
+                    if (typeof renderFn !== 'function') {
+                        console.error(`Bardic.directive('${name}'): second argument must be a function`);
+                        return;
+                    }
+                    this._directives[name] = renderFn;
+                },
+
+                // Register a sidebar renderer
+                // Usage: Bardic.sidebar((state) => `<h3>HP: ${state.hp}</h3>`)
+                sidebar(renderFn) {
+                    if (typeof renderFn !== 'function') {
+                        console.error('Bardic.sidebar(): argument must be a function');
+                        return;
+                    }
+                    this._sidebar = renderFn;
+                },
+
+                // Set per-passage background mapping
+                // Usage: Bardic.backgrounds({ 'ReadingRoom': '/assets/bg.png' })
+                backgrounds(mapping) {
+                    Object.assign(this._backgrounds, mapping);
+                },
+
+                // Register a lifecycle hook
+                // Valid events: 'start', 'passageRender', 'beforeChoice'
+                on(event, handler) {
+                    if (!VALID_EVENTS.includes(event)) {
+                        const suggestion = VALID_EVENTS.find(e =>
+                            e.toLowerCase().includes(event.toLowerCase()) ||
+                            event.toLowerCase().includes(e.toLowerCase())
+                        );
+                        console.warn(
+                            `Bardic.on('${event}'): unknown event.` +
+                            (suggestion ? ` Did you mean '${suggestion}'?` : '') +
+                            ` Valid events: ${VALID_EVENTS.join(', ')}`
+                        );
+                    }
+                    if (!this._hooks[event]) this._hooks[event] = [];
+                    this._hooks[event].push(handler);
+                },
+
+                // Open a modal overlay (callable from directive renderers)
+                openModal(contentHtml) {
+                    const overlay = document.getElementById('modal-overlay');
+                    const content = document.getElementById('modal-content');
+                    if (overlay && content) {
+                        content.innerHTML = contentHtml;
+                        overlay.classList.remove('hidden');
+                    }
+                },
+
+                // Close the modal overlay
+                closeModal() {
+                    const overlay = document.getElementById('modal-overlay');
+                    if (overlay) overlay.classList.add('hidden');
+                },
+            };
+        })();
+    </script>
 </head>
 
 <body>
@@ -29,6 +104,7 @@
         <header>
             <h1 id="game-title">{{GAME_NAME}}</h1>
             <nav class="game-controls">
+                <button id="sidebar-toggle" title="Toggle sidebar" class="sidebar-toggle-btn">☰</button>
                 <button id="undo-btn" title="Undo (go back)" disabled>←</button>
                 <button id="redo-btn" title="Redo (go forward)" disabled>→</button>
                 <span class="controls-separator"></span>
@@ -38,19 +114,36 @@
             </nav>
         </header>
 
-        <main>
-            <article id="story-content">
-                <!-- Passage content renders here -->
-            </article>
+        <div class="game-layout">
+            <!-- Sidebar (collapsed by default, toggled by ☰) -->
+            <aside id="sidebar" class="sidebar collapsed">
+                <div id="sidebar-content">
+                    <!-- Populated by render directives, renderSidebar hook, or game state -->
+                </div>
+            </aside>
 
-            <section id="choices">
-                <!-- Choice buttons render here -->
-            </section>
-        </main>
+            <!-- Main story area -->
+            <main>
+                <article id="story-content">
+                    <!-- Passage content renders here -->
+                </article>
+
+                <section id="choices">
+                    <!-- Choice buttons render here -->
+                </section>
+            </main>
+        </div>
 
         <footer>
             <p>Powered by <a href="https://github.com/katelouie/bardic" target="_blank">Bardic</a></p>
         </footer>
+
+        <!-- Modal overlay (reusable for book views, inventory, card details, etc.) -->
+        <div id="modal-overlay" class="modal-overlay hidden" role="dialog" aria-modal="true">
+            <div id="modal-content" class="modal-content">
+                <!-- Populated dynamically by openModal() -->
+            </div>
+        </div>
     </div>
 
     <!-- Load Pyodide from local files -->
@@ -214,11 +307,20 @@ engine = BardEngine(game_data, environment="browser")
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('game').style.display = 'block';
 
+                // Set up event listeners (before first render so modal dismiss works)
+                setupEventListeners();
+
                 // Render initial passage
                 renderPassage();
 
-                // Set up event listeners
-                setupEventListeners();
+                // Fire start hooks
+                for (const handler of (Bardic._hooks.start || [])) {
+                    try {
+                        handler();
+                    } catch (e) {
+                        console.warn('Bardic.on(\'start\') handler error:', e);
+                    }
+                }
 
             } catch (error) {
                 updateLoading('Error loading game', error.message, 0);
@@ -227,25 +329,58 @@ engine = BardEngine(game_data, environment="browser")
         }
 
         // Render the current passage
-        async function renderPassage() {
+        // transition: whether to animate the passage change (false for initial load)
+        async function renderPassage(transition = false) {
+            const contentDiv = document.getElementById('story-content');
+            const choicesDiv = document.getElementById('choices');
+
+            // Fade out old content if transitioning
+            if (transition) {
+                contentDiv.classList.add('passage-exit');
+                choicesDiv.classList.add('passage-exit');
+                await new Promise(r => setTimeout(r, 200));
+            }
+
             const result = await pyodide.runPythonAsync(`
 import json
 output = engine.current()
+
+def _serialize(obj):
+    """JSON serializer that handles stdlib objects with to_dict()."""
+    if hasattr(obj, 'to_dict'):
+        return obj.to_dict()
+    if hasattr(obj, '__dict__'):
+        return {k: v for k, v in obj.__dict__.items() if not k.startswith('_')}
+    raise TypeError(f"Object of type {type(obj).__name__} is not JSON serializable")
+
 json.dumps({
     'content': output.content,
     'choices': output.choices,
-    'passage_id': output.passage_id
-})
+    'passage_id': output.passage_id,
+    'render_directives': output.render_directives or [],
+    'input_directives': output.input_directives or [],
+}, default=_serialize)
 `);
 
             const output = JSON.parse(result);
 
             // Update content
-            const contentDiv = document.getElementById('story-content');
             contentDiv.innerHTML = renderMarkdown(output.content);
 
+            // Process render directives
+            if (output.render_directives.length > 0) {
+                const directivesContainer = document.createElement('div');
+                directivesContainer.className = 'render-directives';
+
+                for (const directive of output.render_directives) {
+                    const el = renderDirective(directive);
+                    if (el) directivesContainer.appendChild(el);
+                }
+
+                contentDiv.appendChild(directivesContainer);
+            }
+
             // Update choices
-            const choicesDiv = document.getElementById('choices');
             choicesDiv.innerHTML = '';
 
             if (output.choices && output.choices.length > 0) {
@@ -271,18 +406,80 @@ json.dumps({
                 choicesDiv.appendChild(endDiv);
             }
 
+            // Fade in new content if transitioning
+            if (transition) {
+                contentDiv.classList.remove('passage-exit');
+                choicesDiv.classList.remove('passage-exit');
+                contentDiv.classList.add('passage-enter');
+                choicesDiv.classList.add('passage-enter');
+
+                // Clean up animation classes after they finish
+                setTimeout(() => {
+                    contentDiv.classList.remove('passage-enter');
+                    choicesDiv.classList.remove('passage-enter');
+                }, 200);
+            }
+
+            // Apply per-passage background if game author registered backgrounds
+            if (Object.keys(Bardic._backgrounds).length > 0) {
+                const bg = Bardic._backgrounds[output.passage_id];
+                if (bg) {
+                    document.body.style.backgroundImage = `url(${bg})`;
+                    document.body.style.backgroundSize = 'cover';
+                    document.body.style.backgroundPosition = 'center';
+                } else {
+                    document.body.style.backgroundImage = 'none';
+                }
+            }
+
             // Scroll to top
             contentDiv.scrollTop = 0;
             window.scrollTo(0, 0);
 
             // Update undo/redo button states
             updateUndoRedoButtons();
+
+            // Update sidebar if game author registered a sidebar renderer
+            if (Bardic._sidebar) {
+                try {
+                    const stateJson = await pyodide.runPythonAsync(`
+import json
+json.dumps(dict(engine.state), default=_serialize)
+`);
+                    const state = JSON.parse(stateJson);
+                    const sidebarHtml = Bardic._sidebar(state);
+                    if (sidebarHtml) {
+                        document.getElementById('sidebar-content').innerHTML = sidebarHtml;
+                        document.getElementById('sidebar').classList.remove('collapsed');
+                    }
+                } catch (e) {
+                    console.warn('Bardic.sidebar() renderer error:', e);
+                }
+            }
+
+            // Fire passageRender hooks
+            for (const handler of (Bardic._hooks.passageRender || [])) {
+                try {
+                    handler(output.passage_id, output);
+                } catch (e) {
+                    console.warn('Bardic.on(\'passageRender\') handler error:', e);
+                }
+            }
         }
 
         // Handle player choice
         async function makeChoice(index) {
+            // Fire beforeChoice hooks
+            for (const handler of (Bardic._hooks.beforeChoice || [])) {
+                try {
+                    handler(index);
+                } catch (e) {
+                    console.warn('Bardic.on(\'beforeChoice\') handler error:', e);
+                }
+            }
+
             await pyodide.runPythonAsync(`engine.choose(${index})`);
-            renderPassage();
+            renderPassage(true);
         }
 
         // Save game
@@ -318,7 +515,7 @@ json.dumps(engine.list_browser_saves())
                 try {
                     const loaded = await pyodide.runPythonAsync(`engine.load_from_browser("${choice}")`);
                     if (loaded) {
-                        renderPassage();
+                        renderPassage(true);
                         showNotification(`Loaded '${choice}'`);
                     } else {
                         showNotification(`Save '${choice}' not found`, true);
@@ -338,7 +535,7 @@ with open('/game.json', 'r') as f:
 
 engine = BardEngine(game_data, environment="browser")
 `);
-            renderPassage();
+            renderPassage(true);
             showNotification('Game restarted');
         }
 
@@ -346,7 +543,7 @@ engine = BardEngine(game_data, environment="browser")
         async function undoChoice() {
             const result = await pyodide.runPythonAsync(`engine.undo()`);
             if (result) {
-                renderPassage();
+                renderPassage(true);
                 showNotification('Undid last choice');
             } else {
                 showNotification('Nothing to undo', true);
@@ -357,7 +554,7 @@ engine = BardEngine(game_data, environment="browser")
         async function redoChoice() {
             const result = await pyodide.runPythonAsync(`engine.redo()`);
             if (result) {
-                renderPassage();
+                renderPassage(true);
                 showNotification('Redid choice');
             } else {
                 showNotification('Nothing to redo', true);
@@ -371,6 +568,79 @@ engine = BardEngine(game_data, environment="browser")
 
             document.getElementById('undo-btn').disabled = !canUndo;
             document.getElementById('redo-btn').disabled = !canRedo;
+        }
+
+        // ── Render Directive System ──
+
+        // Built-in directive renderers
+        // Game authors register custom renderers via Bardic.directive() in custom.js
+        const builtinDirectiveRenderers = {
+            // Display an image
+            'image': (data) => {
+                const img = document.createElement('img');
+                img.src = data.src || data.arg_0 || '';
+                img.alt = data.alt || '';
+                img.className = 'story-image directive-image';
+                if (data.width) img.style.width = data.width;
+                if (data.pixel) img.classList.add('pixel');
+                return img;
+            },
+
+            // Generic HTML block
+            'html': (data) => {
+                const el = document.createElement('div');
+                el.className = 'directive-html';
+                el.innerHTML = data.content || data.arg_0 || '';
+                return el;
+            },
+
+            // Styled text block
+            'text_block': (data) => {
+                const el = document.createElement('div');
+                el.className = 'directive-text-block';
+                if (data.style) el.setAttribute('style', data.style);
+                el.innerHTML = renderMarkdown(data.content || data.arg_0 || '');
+                return el;
+            },
+
+            // Sidebar update — renders into sidebar instead of main content
+            'sidebar': (data) => {
+                const sidebar = document.getElementById('sidebar-content');
+                sidebar.innerHTML = data.content || data.arg_0 || '';
+                // Show sidebar if it was collapsed
+                document.getElementById('sidebar').classList.remove('collapsed');
+                return null;  // Don't add to main content area
+            },
+
+            // Modal popup — opens content in an overlay
+            'modal': (data) => {
+                Bardic.openModal(data.content || data.arg_0 || '');
+                return null;  // Don't add to main content area
+            },
+        };
+
+        // Render a single directive by dispatching to the appropriate renderer
+        function renderDirective(directive) {
+            const name = directive.name;
+            const data = directive.data || {};
+
+            // Check game author's custom renderers first (registered via Bardic.directive())
+            const renderer = Bardic._directives[name] || builtinDirectiveRenderers[name];
+
+            if (renderer) {
+                try {
+                    return renderer(data);
+                } catch (e) {
+                    console.warn(`Directive renderer error for '${name}':`, e);
+                }
+            }
+
+            // Fallback: show as styled data block (useful during development)
+            console.warn(`No renderer for directive: ${name}`, data);
+            const el = document.createElement('div');
+            el.className = 'directive-fallback';
+            el.innerHTML = `<small class="directive-fallback-label">[${name}]</small><pre>${JSON.stringify(data, null, 2)}</pre>`;
+            return el;
         }
 
         // Simple markdown to HTML
@@ -415,13 +685,29 @@ engine = BardEngine(game_data, environment="browser")
             }, 3000);
         }
 
+        // Toggle sidebar visibility
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+        }
+
         // Set up button event listeners
         function setupEventListeners() {
+            document.getElementById('sidebar-toggle').addEventListener('click', toggleSidebar);
             document.getElementById('save-btn').addEventListener('click', saveGame);
             document.getElementById('load-btn').addEventListener('click', loadGame);
             document.getElementById('restart-btn').addEventListener('click', restartGame);
             document.getElementById('undo-btn').addEventListener('click', undoChoice);
             document.getElementById('redo-btn').addEventListener('click', redoChoice);
+
+            // Modal dismiss: click on dark backdrop (not modal content)
+            document.getElementById('modal-overlay').addEventListener('click', (e) => {
+                if (e.target.id === 'modal-overlay') Bardic.closeModal();
+            });
+
+            // Modal dismiss: Escape key
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') Bardic.closeModal();
+            });
         }
 
         // Start the game

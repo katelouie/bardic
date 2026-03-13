@@ -41,7 +41,7 @@ bardic bundle story.bard
 bardic bundle story.bard --theme dark --output dist/
 
 # Initialize a new project from template
-bardic init nicegui    # or: web, reflex
+bardic init nicegui    # or: web, reflex, browser
 
 # Start dev server (FastAPI + React)
 bardic serve story.json

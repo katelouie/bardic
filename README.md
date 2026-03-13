@@ -279,6 +279,7 @@ code --install-extension katelouie.bardic
 - **New to Bardic?** I've put together a short [tutorial course](docs/tutorials/README.md) that walks you through all of the syntax and features of Bardic, from beginner to advanced.
 - **Want to use the standard library?** See the [Standard Library Reference](docs/stdlib.md) for full docs on dice, inventory, economy, relationships, and quests.
 - **Want to see all the syntax?** Check out the [Language Specification](https://github.com/katelouie/bardic/blob/main/docs/spec.md) for the full list of features, from loops to render directives.
+- **Want to customize your browser bundle?** See the [Browser Customization Guide](docs/browser-customization.md) for the `Bardic` JavaScript API, custom CSS, and directive renderers.
 - **Want to lint your story?** Use `bardic lint` for structural analysis, and write your own [lint plugins](docs/lint-plugins.md) for game-specific checks.
 - **Want to build the engine?** See our [`CONTRIBUTING.md`](CONTRIBUTING.md) for details on the architecture and development setup.
 - **Want VS Code integration?** Download the [Bardic VS Code extension](https://github.com/katelouie/bardic-vscode) with full syntax highlighting, snippets and code folding. Also has live passage preview and graph-based navigation of your source file.
