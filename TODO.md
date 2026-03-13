@@ -113,10 +113,14 @@ The big push: make all templates actually nice out of the box.
 - [ ] Improve layout and styling
 - [ ] Add save/load UI
 
-### Reflex Template (`bardic init reflex`)
+### Reflex Template (`bardic init reflex`) — needs major overhaul
+- [ ] Switch from raw JSON reading to `BardEngine` (currently bypasses the engine entirely)
+- [ ] Use `rx.markdown()` instead of `rx.text()` for content (enables images, bold, italic, links)
 - [ ] Add undo/redo buttons
-- [ ] Improve layout and styling
 - [ ] Add save/load UI
+- [ ] Add conditional choice support (currently no choice filtering)
+- [ ] Add variable assignment / `@py:` block support (currently no execution)
+- [ ] Improve layout and styling (currently minimal card layout)
 
 ### React/Web Template (`bardic init web`)
 - [ ] Add undo/redo buttons

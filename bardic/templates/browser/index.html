@@ -382,6 +382,9 @@ engine = BardEngine(game_data, environment="browser")
                 .replace(/</g, '&lt;')
                 .replace(/>/g, '&gt;');
 
+            // Images: ![alt](src)
+            text = text.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" class="story-image">');
+
             // Bold: **text**
             text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
 

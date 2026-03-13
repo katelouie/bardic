@@ -250,6 +250,14 @@ main {
     color: var(--text-muted);
 }
 
+#story-content .story-image {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: var(--spacing-md) auto;
+    border-radius: var(--border-radius);
+}
+
 
 /* =========================================================================
    Choices

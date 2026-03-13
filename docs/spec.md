@@ -158,10 +158,24 @@ Bardic supports standard Markdown formatting (except headers).
 - `~~strikethrough~~` → ~~strikethrough~~
 - `` `code` `` → `code`
 - `[link](url)` → [link](url)
+- `![alt text](path/to/image.png)` → inline image
 - Lists (bulleted and numbered)
 - Blockquotes (`>`)
 - Horizontal rules (`---`)
 - Code blocks (` ``` `)
+
+**Images:**
+
+```bard
+:: CardReveal
+The reader turns over the first card...
+
+![The Fool](/assets/cards/00-fool.png)
+
+"Ah," she murmurs. "The beginning of a journey."
+```
+
+Images use standard markdown syntax and are rendered by the frontend. In the terminal player, images display as `[Image: alt text]`. In web templates, they render as `<img>` tags. Place image files in an `assets/` directory next to your story — `bardic bundle` will copy them into the distribution.
 
 **Not Supported:**
 

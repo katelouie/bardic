@@ -210,6 +210,9 @@ def render_markdown(text: str) -> str:
     text = text.replace("<", "&lt;")
     text = text.replace(">", "&gt;")
 
+    # Images: ![alt](src)
+    text = re.sub(r'!\[([^\]]*)\]\(([^)]+)\)', r'<img src="\2" alt="\1" class="story-image">', text)
+
     # Bold: **text**
     text = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', text)
 

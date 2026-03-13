@@ -14,6 +14,7 @@ if sys.platform == "win32":
     if hasattr(sys.stderr, "reconfigure"):
         sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
+import re
 import click
 from pathlib import Path
 import json
@@ -198,6 +199,12 @@ def play(story_file: str, no_color: bool):
             # Format content (preserve blank lines)
             for line in output.content.split("\n"):
                 if line.strip():
+                    # Replace markdown images with terminal-friendly text
+                    line = re.sub(
+                        r'!\[([^\]]*)\]\([^)]+\)',
+                        lambda m: click.style(f"[Image: {m.group(1)}]", fg="cyan", dim=True) if m.group(1) else click.style("[Image]", fg="cyan", dim=True),
+                        line
+                    )
                     click.echo(click.style("  ", fg="white") + line)
                 else:
                     click.echo()
