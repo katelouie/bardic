@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+### Changed
+
+### Fixed
+
+## [0.10.0] - 2026-03-13
+
+### Added
+
 - **Browser template upgrade** — 7-layer upgrade to the `bardic bundle` browser template:
   - **Asset pipeline** — bundler auto-detects and copies `assets/`, `custom.css`, `custom.js` from the story directory. New `--assets-dir` flag for custom asset locations.
   - **Image support** — `![alt](path)` in passage content renders as `<img>`. CSS variable `--image-rendering` (set to `pixelated` in custom.css for pixel art games). `.pixel` class for per-image override.
