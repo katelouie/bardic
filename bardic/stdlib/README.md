@@ -6,8 +6,9 @@ Reusable game logic modules for common patterns in interactive fiction.
 
 - `relationship.py` - Trust, comfort, openness tracking for NPCs
 - `dice.py` - Dice rolls, skill checks, weighted choices
-- `inventory.py` - Item management with weight/categories (coming)
-- `economy.py` - Currency, shops, bartering (coming)
+- `inventory.py` - Item management with weight/categories
+- `economy.py` - Currency, shops, bartering
+- `quest.py` - Quest journal and objectives with stages and statuses
 
 ## Usage
 
