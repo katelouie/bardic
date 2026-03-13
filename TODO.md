@@ -1,190 +1,271 @@
 # Bardic TODO
 
-Last updated: 2025-12-27
+Last updated: 2026-03-12 (v0.9.0)
 
-## 🐛 Parser Bugs (Found by Tests)
+---
 
-High priority fixes discovered through comprehensive test suite:
+## Recently Completed (for reference)
 
-- [x] **Validate directive names** - ✅ COMPLETED (0.7.1)
-  - Parser raises `SyntaxError` for unknown directives with "Did you mean?" suggestions
+<details>
+<summary>Click to expand completed items</summary>
 
-- [ ] **Error on @include with no filename** - `@include` directive with no file path should raise SyntaxError
-  - See: `tests/error_handling/test_include_no_file.bard`
-  - Test commented out with TODO marker
+### Engine & Architecture
+- [x] **Modular engine architecture** (v0.9.0) — 2,153-line god class → 8 focused modules (engine, renderer, executor, state, directives, browser, types, hooks)
+- [x] **Browser engine fork eliminated** (v0.9.0) — deleted 3,906 lines of forked code, one engine with `environment` parameter
+- [x] **`environment` parameter** (v0.9.0) — `BardEngine(story_data, environment="browser")` for browser deployment
+- [x] **BrowserStorageAdapter** (v0.9.0) — localStorage save/load in `bardic.runtime.browser`
+- [x] **Undo/redo restore uses in-place mutation** (v0.9.0) — fixes stale references in subsystems
+- [x] **149 new subsystem tests** (v0.9.0) — 529 total tests
 
-- [ ] **Cross-file error reporting** - Errors in @included files should report correct source filename and line number
-  - Helper test files exist but need special test handling:
-    - `test_include_main.bard` + `test_include_included.bard`
-    - `test_choice_include_main.bard` + `test_choice_include_error.bard`
+### Linter
+- [x] **`bardic lint` command** (v0.8.0) — structural analysis, class-aware attribute checking, plugin system
+- [x] **Level 2 class-aware checking** (v0.8.0) — AST parsing of imported Python classes
+- [x] **Lint plugin system** (v0.8.0) — `linter/` directory with auto-discovery
+- [x] **Word count + play time estimate** (v0.9.0)
 
-## ✨ Features & Enhancements
+### Features
+- [x] **@join directive** (v0.6.0) — inline choice blocks with merge points
+- [x] **Hooks system** (v0.6.0) — @hook/@unhook, turn_end event, undo/redo aware
+- [x] **Undo/redo** (v0.6.0) — GameSnapshot, configurable depth (default 50)
+- [x] **@prev target** (v0.7.0) — navigate back to previous passage
+- [x] **Visit counting** (v0.7.1) — `_visits` dict, survives save/load
+- [x] **Turn counter** (v0.7.1) — `_turns` int, incremented by `choose()`
+- [x] **Unknown directive detection** (v0.7.1) — "Did you mean?" suggestions
+- [x] **Quest stdlib module** (v0.7.1) — QuestJournal, Quest dataclass, serialization
+- [x] **Stdlib test suite** (v0.7.1) — 114 tests across 5 modules
+- [x] **`_state` and `_local` special variables** (v0.5.0)
+- [x] **`hasattr`, `getattr`, `map`, `filter` in builtins** (v0.9.0)
 
-### Short-term (0.4.0)
+### Tooling & Docs
+- [x] **CI/CD** (v0.4.0) — GitHub Actions for tests + publish
+- [x] **pytest migration** — all tests use pytest
+- [x] **VSCode extension** — syntax highlighting, graph visualization, live preview, state injection
+- [x] **Spec.md cleanup** (Mar 2026) — 4,248→2,620 lines
+- [x] **Tutorial accuracy audit** (Mar 2026) — all 9 issues fixed
+- [x] **Validate directive names** (v0.7.1)
 
-- [x] **Version bump to 0.3.1** - Include nested loops fix + full test suite
+### Bug Fixes (v0.7.1)
+- [x] Relationship.name never assigned
+- [x] Coffee shop example wrong property
+- [x] Circular include detection broken
+- [x] Loop exception tuple mismatch
+- [x] One-time choice ID instability
+- [x] Callables corrupted on save/load
 
-### Medium-term (0.5.0)
+</details>
 
-- [x] **`_state` special variable** - ✅ COMPLETED (Nov 2025)
-  - Allows: `{_state.get('hp', 100)}` or `{'inventory' in _state}`
-  - Useful for optional variables and safe access patterns
-- [x] **`_local` special variable** - ✅ COMPLETED (Nov 2025)
-  - Allows: `{_local.get('param', 'default')}`
-  - Perfect for reusable passages with optional parameters
+---
 
-- [x] **VSCode Extension: Passage parameter syntax highlighting**
-  - Currently params are highlighted as regular text
-  - Should recognize `:: PassageName(param1, param2=default)` syntax
-  - Update grammar in `bardic-vscode`
+## 🐛 Bugs & Parser Issues
 
-- [x] **Graph visualization enhancements**
-  - Show passage parameter signatures in nodes
-  - Differentiate between passages with/without params
-  - Maybe: Show argument values on edges when known
+- [ ] **Error on @include with no filename** — should raise SyntaxError
+- [ ] **Cross-file error reporting** — errors in @included files should report correct source filename and line
+- [ ] **Line numbers lost in dedented blocks** — `@if`/`@for` block contents show line 0 in errors
+- [ ] **Format specifier parsing is naive** — breaks on dict literals `{{'a': 1}['a']}`, slice notation `{items[1:3]}`. Should use AST analysis instead of string searching
+- [ ] **Bracket matching in choice validation** — strings containing `[`/`]` can confuse the parser
+- [ ] **No recursion depth limit** — deeply nested `@if`/`@for` hits Python limit with unhelpful traceback
 
-- [x] **Live preview feature** (VSCode extension)
-  - Auto-compile on save
-  - Show rendered passage in side panel
-  - Allow navigation through story in preview
+## 🎨 Frontend Template Revamp
 
-### Long-term (0.6.0+)
+The big push: make all templates actually nice out of the box.
 
-- [ ] **Browser bundle v2** - Advanced customization for `bardic bundle`
-  - Custom frontend framework support (React, Vue, Svelte)
-  - Author provides their own `frontend/` directory
-  - Bundler generates API bridge between frontend and Pyodide engine
-  - Support for custom HTML/CSS/JS without modifying templates
+### Browser Bundle (`bardic bundle`)
 
-- [ ] **REPL mode** - Interactive testing of passages
-  - `bardic repl story.json` starts interactive session
-  - Can set variables, jump to passages, inspect state
-  - Useful for debugging complex game logic
+**Layer 1: Asset Pipeline**
+- [ ] Bundler copies `assets/` directory (images, fonts, audio)
+- [ ] Bundler copies `custom.css` if present (auto-injected into HTML)
+- [ ] Bundler copies `custom.js` if present (directive renderers, hooks)
+- [ ] `--assets-dir` CLI flag for non-standard layouts
 
-- [ ] **Story analytics/telemetry** - Track player choices and paths
-  - Optional feature for game developers
-  - Helps identify dead ends, unused content, popular paths
-  - Privacy-respecting (local storage or opt-in)
+**Layer 2: Image & Asset Support**
+- [ ] Markdown image syntax in content: `![alt](path)` → `<img>` tag
+- [ ] CSS support for pixel art (`image-rendering: pixelated` via variable)
+- [ ] Per-passage backgrounds (convention-based via `custom.js`)
 
-- [ ] **Performance optimizations**
-  - Benchmark compilation speed for large stories (>1000 passages)
-  - Consider caching for @include resolution
-  - Profile runtime rendering for bottlenecks
+**Layer 3: Passage Transitions**
+- [ ] Fade in/out between passages (subtle, fast, CSS-based)
+- [ ] Configurable duration via CSS variables
 
-- [x] **@join directive (inline choice blocks)** - ✅ COMPLETED (Dec 2025)
-  - [x] `+ [Text] -> @join` with indented block content
-  - [x] `@join` marker where choices merge back together
-  - [x] Block content/variables execute when choice selected
-  - [x] Multiple sequential @join markers (sections)
-  - [x] Works with conditional choices, one-time choices, hooks
-  - [x] Full undo/redo support (section index in snapshots)
-  - [x] pytest tests: `tests/test_join.py`
+**Layer 4: Sidebar & Panels**
+- [ ] Collapsible sidebar with toggle button
+- [ ] `window.renderSidebar(state)` hook for game authors
+- [ ] Sidebar updates after each passage render
 
-- [ ] **Repeatable menus**
-  - Implement repeatable choices in "menu" blocks to be used in other passages
+**Layer 5: Render Directive Support**
+- [ ] Extract `render_directives` from engine output in `renderPassage()`
+- [ ] `directiveRenderers` registry (built-in + custom via `custom.js`)
+- [ ] Built-in renderers: image, html, sidebar
+- [ ] Fallback display for unhandled directives (dev mode)
 
-- [x] **Hooks and listener system** - ✅ COMPLETED (Dec 2025)
-  - [x] @hook and @unhook directives in parser
-  - [x] register_hook/unregister_hook/trigger_event in engine
-  - [x] turn_end event fires after every choose()
-  - [x] Hooks work inside @if/@for blocks
-  - [x] Hook state included in undo/redo snapshots
-  - [x] pytest tests: `tests/test_hooks.py` (11 tests)
+**Layer 6: Modal System**
+- [ ] Reusable modal overlay (for book views, inventory, card detail, settings)
+- [ ] Close on overlay click or Escape
+- [ ] Settings menu (text size, fullscreen)
 
-- [x] **Undo stacks** - ✅ CORE COMPLETED (Dec 2025)
-  - [x] Engine-side: `GameSnapshot`, `undo()`, `redo()`, `can_undo()`, `can_redo()`
-  - [x] Browser template (`bardic bundle`): ← → buttons in header
-  - [x] pytest tests: `tests/test_undo_redo.py` (14 tests)
-  - [ ] CLI player (`bardic play`): Add undo/redo keyboard shortcuts
-  - [ ] NiceGUI template (`bardic init nicegui`): Add undo/redo buttons
-  - [ ] Reflex template (`bardic init reflex`): Add undo/redo buttons
-  - [ ] React/web template (`bardic init web`): Add undo/redo buttons
+**Layer 7: Author Customization Hooks**
+- [ ] `window.onPassageRender(passageId, state)` callback
+- [ ] `window.onBeforeChoice(choiceIndex, choiceData)` callback
+- [ ] `window.onGameStart()` callback
+- [ ] `window.GAME_BACKGROUNDS` mapping
 
-- [ ] Improve implementation of "engine copy" for bundle distribution
-  - Current process requires double-updating for all main engine changes
+### NiceGUI Template (`bardic init nicegui`)
+- [ ] Add undo/redo buttons
+- [ ] Improve layout and styling
+- [ ] Add save/load UI
 
-### Linter (`bardic lint`)
+### Reflex Template (`bardic init reflex`)
+- [ ] Add undo/redo buttons
+- [ ] Improve layout and styling
+- [ ] Add save/load UI
 
-- [ ] **Passage-level context in diagnostics** - W005 and other checks should report *where* the issue occurs, not just *what's* wrong
-  - e.g., "attribute `session.reward_card` read in passage `Nyx.Session3a.Phase3` but never written"
-  - Would require threading passage names through attribute extraction
+### React/Web Template (`bardic init web`)
+- [ ] Add undo/redo buttons
+- [ ] Improve layout and styling
+- [ ] Add save/load UI
 
-- [ ] **`--fix` mode** - Auto-fix simple, unambiguous issues
-  - Known typos (e.g., `fire_path_spark` → `fire_path_new_beginning` when a close match exists)
-  - Could start with dry-run output showing proposed fixes
+### CLI Player (`bardic play`)
+- [ ] Add undo/redo keyboard shortcuts
 
-- [ ] **Write-but-never-read detection** - Complement to W005 (read-but-never-written)
-  - Find attributes that are set but never referenced — likely dead state
-  - Would help with cleanup after refactors
+## ✨ Language Features
 
-## 📚 Documentation
+### High Priority — Closing Gaps with Ink/Twine
 
-- [ ] Tutorial on new distribution method (HTML)
+- [ ] **Text variation / sequences** — Ink's killer feature for revisitable passages
+  - `{stopping: "First visit" | "Second visit" | "Regular visit"}`
+  - Modes: stopping, cycle, shuffle, once
+  - Requires per-passage sequence position tracking in state
 
-- [ ] Docs on new features
-  - [ ] Undo/redo
-  - [ ] hook/unhook
-  - [ ] @join directive
-  - [ ] Repeatable choices (menus)
+- [ ] **Fallback choices** — auto-navigate when all visible choices exhausted
+  - `+ -> Target` syntax (choice with no text = fallback)
+  - Prevents dead ends from one-time choice exhaustion
 
-- [ ] **Tutorial Part 3C"" - Needs updating
-  - Update final story and intermediate code examples to use for-loop generation of choices (iterating over the list of items) with `{cond}` pre-conditionals
+- [ ] **Inline image syntax** — `![alt](path)` in passage content
+  - Parser emits `{"type": "image", "alt": "...", "src": "..."}`
+  - Terminal shows `[Image: alt]`, web shows `<img>`
 
-- [ ] **Tutorial Part 5: Finishing & Polishing** - Needs expansion
-  - Project organization best practices
-  - Debugging strategies
-  - Performance tips for large stories
+- [ ] **Passage tag styling** — expose tags in PassageOutput for frontend CSS
+  - `:: DarkForest ^dark ^scary` → `tags: ["dark", "scary"]` in output
+  - Frontend applies `.tag-dark .tag-scary` CSS classes
+  - Zero engine changes needed
 
-- [ ] **Cookbook: Advanced Serialization** - Document custom class patterns
-  - What makes a class "serialization-friendly"
-  - Examples of good vs problematic patterns
-  - Guide to `to_dict()` / `from_dict()` methods
+### Medium Priority
 
-- [ ] **Migration guides** - For breaking changes between versions
-  - 0.2.0 → 0.3.0 (passage parameters)
-  - Future major version bumps
+- [ ] **Tunnels (call/return)** — `-> passage ->` goes there and comes back
+  - Requires a call stack in the engine
+  - `->->` returns to caller
+  - Architecturally like function calls
 
-- [ ] **API reference** - Auto-generated from docstrings
-  - Compiler API
-  - Runtime Engine API
-  - Stdlib modules
+- [ ] **Audio directives** — `@audio play background music=path loop=true`
+  - Render directive that frontend handles
+  - Play, stop, volume control
+
+- [ ] **Macro/widget system** — reusable story patterns
+  - `@macro say(character, text)` ... `@endmacro`
+  - `@say("Barkeep", "What'll it be?")`
+  - Reduces repetition in dialogue-heavy games
+
+- [ ] **Repeatable menus** — reusable choice blocks across passages
+
+### Nice to Have
+
+- [ ] **Reactive state bindings** — `bindings:` in metadata, auto-included in PassageOutput
+  - Frontend auto-updates UI elements without custom code per variable
+
+- [ ] **`@fetch` directive** — server-side data injection
+  - Calls a Python function registered in context, stores result in state
+  - Transforms bardic from IF engine to narrative application framework
+
+- [ ] **`@generate` directive** — AI-augmented content
+  - Prompt template with story state variables → LLM → cached result
+  - `--no-ai` flag for offline play with placeholder text
+
+## 🔧 Linter Enhancements (`bardic lint`)
+
+- [ ] **Passage-level context in diagnostics** — report *where* issues occur, not just *what*
+- [ ] **`--fix` mode** — auto-fix unambiguous issues (typos with close matches)
+- [ ] **Write-but-never-read detection** — complement to W005, finds dead state
+
+## 🛠️ CLI & Tooling
+
+- [ ] **REPL mode** — `bardic repl story.json` for interactive testing
+  - Set variables, jump to passages, inspect state
+- [ ] **`bardic play --debug`** — state inspector, mutation log, goto command
+- [ ] **`bardic proofread`** — dump all passage text as continuous prose for editing
+- [ ] **Story testing framework** — `bardic.testing.StoryTest` base class
+  - `choose("text")`, `assert_passage()`, `assert_state()`, `find_path_to()`
+  - Fuzzy path testing (seeded random playthroughs)
+  - Integrates with pytest
+- [ ] **Story profiler/audit** — dead-end detection, unreachable passages, cycle detection, path counting
+- [ ] **`bardic diff old.json new.json`** — semantic story diffing
+  - Shows added/removed/modified passages, new branches, changed reachability
+- [ ] **Hot-reload for `bardic serve`** — file watcher that recompiles on change
+- [ ] **`--verbose` / `--debug` flags** — full stack traces for debugging
+- [ ] **Better error messages** — suggestions for common fixes (partially done for directives)
 
 ## 🧪 Testing & Quality
 
-- [ ] **Coverage goals** - Currently have pytest-cov configured
-  - Set target coverage percentage (80%? 90%?)
-  - Identify untested code paths
-  - Consider enabling Codecov when ready for external contributors
+- [ ] **Bundler tests** — `create_browser_bundle()`, module detection, theme application
+- [ ] **Integration tests** — compile `.bard` → run engine → make choices → verify output
+- [ ] **Coverage goals** — set target percentage, identify untested paths
+- [ ] **Performance benchmarks** — compilation speed for large stories, runtime rendering profiling
 
-- [ ] **Performance benchmarks** - Measure compilation and runtime speed
-  - Create benchmark suite with varying story sizes
-  - Track performance across versions
-  - Set performance regression thresholds
+## 📚 Documentation
 
-- [ ] **Integration tests** - VSCode extension end-to-end testing
-  - Test graph visualization with real stories
-  - Test snippet expansion
-  - Test compilation from within VSCode
+- [ ] **Docs on new features** — undo/redo, hooks, @join, @prev, visits/turns
+- [ ] **Tutorial on browser distribution** — `bardic bundle` workflow
+- [ ] **Cookbook: Advanced Serialization** — custom class patterns, `to_dict()`/`from_dict()`
+- [ ] **Cookbook: Common Patterns** — visited passages, day/night cycles, inventory management
+- [ ] **Stdlib documentation page** — standalone docs (currently only README table + docstrings)
+- [ ] **API reference** — auto-generated from docstrings (compiler, engine, stdlib)
+- [ ] **Migration guides** — breaking changes between versions
 
-## 🎯 Future Vision (1.0.0)
+## 🔭 Future Vision
 
-Wishlist for the 1.0 release:
+### Embeddable Story Component
+- [ ] `<bardic-story>` web component (Custom Element + Shadow DOM)
+  - Drop a story into any web page
+  - Custom events for state changes, endings, passage transitions
+  - Lazy Pyodide loading (show first passage with lightweight JS renderer while Python loads)
 
-- [ ] **Complete tutorial series** - All parts finished and polished
-- [ ] **Production templates** - Battle-tested templates for common use cases
-  - Visual novel template
-  - RPG/combat template
-  - Branching narrative template
-- [ ] **Arcanum fully launched** - Real-world game as showcase
-- [ ] **Community contributions** - External contributors welcome
-- [ ] **Stable API** - Semantic versioning with stability guarantees
+### Story Composition / Multi-File Architecture
+- [ ] `@export` directive for public passage API
+- [ ] Namespace passages: `chapter1.Tavern` vs `chapter2.Tavern`
+- [ ] Story packages as pip-installable Python packages
 
-## 📝 Notes
+### Multi-Player / Shared World
+- [ ] `@shared` / `@publish` directives for shared state channels
+- [ ] WebSocket connection for real-time updates via FastAPI backend
 
-**Pattern**: Find bugs through real usage (Kate building Arcanum) → Write tests → Fix bugs → Ship with confidence
+### Story Analytics
+- [ ] `bardic analytics` — heatmaps, funnels, decision trees, dead content detection
+- [ ] Engine emits events (passage_enter, choice_made, session_start)
+- [ ] SQLite storage (local) or backend endpoint
 
-**Philosophy**: Test-driven improvements. Every bug gets a test. Every feature gets examples.
+### Type-Safe Story Contracts
+- [ ] `@requires` / `@ensures` directives for passage contracts
+- [ ] Compile-time verification via `bardic check`
+- [ ] Story-level type declarations in metadata
+
+### VSCode Extension Enhancements
+- [ ] **Error diagnostics (LSP)** — real-time squiggles, hover info, go-to-definition
+- [ ] **Passage outline sidebar** — tree view with quick-jump
+- [ ] **Enhanced preview** — state diffing, choice condition inspector, navigation breadcrumb
+
+## 🎯 1.0.0 Checklist
+
+- [ ] Complete tutorial series
+- [ ] Production-quality templates (browser, NiceGUI, Reflex, React)
+- [ ] Arcanum fully launched as showcase
+- [ ] Stable API with semver guarantees
+- [ ] Community-ready (contributing guide, issue templates)
+- [ ] Text variation/sequences implemented
+- [ ] Fallback choices implemented
+- [ ] Story testing framework
 
 ---
+
+**Pattern**: Find bugs through real usage (Arcanum) → Write tests → Fix bugs → Ship with confidence
+
+**Philosophy**: Test-driven improvements. Every bug gets a test. Every feature gets examples.
 
 *This TODO is a living document. Update it as priorities shift, items complete, or new ideas emerge.*
