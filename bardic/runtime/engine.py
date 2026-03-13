@@ -17,7 +17,7 @@ class BardEngine:
     """
     Runtime engine for Bard stories.
 
-    Loads compiled story JSON and manages story state, nagivation and rendering.
+    Loads compiled story JSON and manages story state, navigation and rendering.
     """
 
     def __init__(

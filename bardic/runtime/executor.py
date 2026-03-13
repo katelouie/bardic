@@ -331,7 +331,7 @@ class CommandExecutor:
             # Undefined variable
             raise RuntimeError(
                 f"Undefined variable in Python block: {e}\n"
-                "Available variables: {list(exec_context.keys())}\n\n"
+                f"Available variables: {list(exec_context.keys())}\n\n"
                 f"Code:\n{code}"
             )
 

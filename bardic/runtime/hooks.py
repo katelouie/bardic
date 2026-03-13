@@ -71,5 +71,10 @@ class HookManager:
         return copy.deepcopy(self.hooks)
 
     def restore(self, hooks: dict[str, list[str]]) -> None:
-        """Restore hook registrations from a snapshot."""
-        self.hooks = hooks
+        """Restore hook registrations from a snapshot.
+
+        Uses clear() + update() to preserve shared references,
+        consistent with state/used_choices/join_section_index restoration.
+        """
+        self.hooks.clear()
+        self.hooks.update(hooks)

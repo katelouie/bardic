@@ -4,6 +4,7 @@ from .relationship import Relationship
 from .dice import roll, skill_check, weighted_choice, advantage, disadvantage
 from .inventory import Inventory
 from .economy import Wallet, Shop
+from .quest import Quest, QuestJournal
 
 __all__ = [
     "Relationship",
@@ -15,4 +16,6 @@ __all__ = [
     "Inventory",
     "Wallet",
     "Shop",
+    "Quest",
+    "QuestJournal",
 ]

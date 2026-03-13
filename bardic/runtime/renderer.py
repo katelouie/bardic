@@ -469,8 +469,6 @@ class ContentRenderer:
             all_directives = []  # Collect directives from all iterations
 
             for item in collection:
-                # Create a new context with the loop variable
-                _loop_context = {**self._state, **self._executor.context, variable: item}
                 original_values = {}
 
                 try:
