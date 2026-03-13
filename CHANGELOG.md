@@ -27,7 +27,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- **Passage parameters, `_state`, and `_local` now accessible in `@py:` blocks** (fixes [#5](https://github.com/katelouie/bardic/issues/5)) — `@py:` blocks were building their execution context separately from `~` statements, so passage parameters and the `_state`/`_local` special variables were only available in `~` lines. All three are now consistently available in both `~` statements and `@py:` blocks. Passage parameters are properly scoped and don't leak into global state.
 - **stdlib `__all__` missing Quest exports** — `Quest` and `QuestJournal` were not exported from `bardic.stdlib`, despite being added in v0.7.1 with full tests and documentation.
 - **f-string bug in executor.py error message** — `NameError` handler in `execute_python_block` displayed a literal `{list(exec_context.keys())}` instead of actual variable names.
 - **Dead `_loop_context` allocation in renderer** — removed unused dict creation that ran on every loop iteration.
