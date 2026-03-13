@@ -10,9 +10,17 @@ def _make_processor(state=None, context=None, evaluate_directives=True):
     state = state or {}
     context = context or {}
     builtins = {
-        "abs": abs, "len": len, "max": max, "min": min,
-        "int": int, "float": float, "str": str, "bool": bool,
-        "list": list, "dict": dict, "range": range,
+        "abs": abs,
+        "len": len,
+        "max": max,
+        "min": min,
+        "int": int,
+        "float": float,
+        "str": str,
+        "bool": bool,
+        "list": list,
+        "dict": dict,
+        "range": range,
     }
     eval_ctx = {"__builtins__": builtins, **state, **context}
 
@@ -169,8 +177,10 @@ class TestImportPaths:
 
     def test_import_from_directives_module(self):
         from bardic.runtime.directives import DirectiveProcessor as DP
+
         assert DP is DirectiveProcessor
 
     def test_import_from_runtime_package(self):
         from bardic.runtime import DirectiveProcessor as DP
+
         assert DP is DirectiveProcessor

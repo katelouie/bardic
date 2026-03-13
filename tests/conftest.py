@@ -1,12 +1,9 @@
 """Shared test fixtures for Bardic tests."""
 
 import pytest
-import json
 import sys
 from pathlib import Path
 from bardic.compiler.compiler import BardCompiler
-from bardic.compiler.parser import parse
-from bardic.runtime.engine import BardEngine
 
 # Add fixtures directory to Python path
 # This allows test .bard files to do: from game_logic.test_tarot_objects import Card
@@ -34,9 +31,7 @@ def simple_story():
             },
             "Second": {
                 "id": "Second",
-                "content": [
-                    {"type": "text", "value": "You reached the second passage!"}
-                ],
+                "content": [{"type": "text", "value": "You reached the second passage!"}],
                 "choices": [],
                 "execute": [],
             },

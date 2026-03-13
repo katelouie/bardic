@@ -1,8 +1,8 @@
 /**
  * TarotCard Component
- * 
+ *
  * Displays a single tarot card with styling
- * 
+ *
  * Usage in story:
  *   @render tarot_card(card, size='medium')
  *   @render:react tarot_card(card, position='past')
@@ -10,8 +10,8 @@
 function TarotCard({ card, position, size = 'medium' }) {
   if (!card) {
     return (
-      <div style={{ 
-        padding: '20px', 
+      <div style={{
+        padding: '20px',
         color: '#ff6b6b',
         background: 'rgba(255, 107, 107, 0.1)',
         borderRadius: '8px'
@@ -94,17 +94,17 @@ function TarotCard({ card, position, size = 'medium' }) {
   }
 
   return (
-    <div 
+    <div
       style={cardStyle}
       onMouseEnter={(e) => {
-        e.currentTarget.style.transform = card.is_reversed 
-          ? 'rotate(180deg) translateY(-5px)' 
+        e.currentTarget.style.transform = card.is_reversed
+          ? 'rotate(180deg) translateY(-5px)'
           : 'translateY(-5px)'
         e.currentTarget.style.boxShadow = '0 12px 24px rgba(168, 85, 247, 0.4)'
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.transform = card.is_reversed 
-          ? 'rotate(180deg)' 
+        e.currentTarget.style.transform = card.is_reversed
+          ? 'rotate(180deg)'
           : 'none'
         e.currentTarget.style.boxShadow = '0 8px 16px rgba(0, 0, 0, 0.4)'
       }}

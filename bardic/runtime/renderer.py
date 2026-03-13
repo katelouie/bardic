@@ -119,7 +119,10 @@ class ContentRenderer:
         current_section = self._join_section_index.get(passage_id, 0)
         for choice in all_choices:
             choice_section = choice.get("section", 0)
-            if self.is_choice_available(choice, current_passage_id) and choice_section == current_section:
+            if (
+                self.is_choice_available(choice, current_passage_id)
+                and choice_section == current_section
+            ):
                 # Render choice text (interpolates variables)
                 rendered_choice = self.render_choice_text(choice)
                 available_choices.append(rendered_choice)
@@ -203,9 +206,7 @@ class ContentRenderer:
             print(f"Warning: Choice condition failed: {condition} - {e}")
             return False
 
-    def render_from_join_marker(
-        self, section_idx: int, current_passage_id: str
-    ) -> PassageOutput:
+    def render_from_join_marker(self, section_idx: int, current_passage_id: str) -> PassageOutput:
         """
         Render the current passage starting from after a specific @join marker.
 
@@ -275,9 +276,7 @@ class ContentRenderer:
 
     # ── Content Token Rendering ──
 
-    def render_content(
-        self, content_tokens: list[dict]
-    ) -> tuple[str, Optional[str], list[dict]]:
+    def render_content(self, content_tokens: list[dict]) -> tuple[str, Optional[str], list[dict]]:
         """Render content with variable substitution and format specifiers."""
         result = []
         directives = []
@@ -296,9 +295,7 @@ class ContentRenderer:
                     code = token["code"]
 
                     # Check for format specifier (e.g., "average:.1f")
-                    if ":" in code and not any(
-                        op in code for op in ["==", "!=", "<=", ">=", "::"]
-                    ):
+                    if ":" in code and not any(op in code for op in ["==", "!=", "<=", ">=", "::"]):
                         # Split expression and format spec
                         # Find the first : that's not part of an operator
                         colon_idx = code.find(":")
@@ -306,17 +303,13 @@ class ContentRenderer:
                         format_spec = code[colon_idx + 1 :].strip()
 
                         # Evaluate the expression
-                        value = eval(
-                            expr, {"__builtins__": safe_builtins}, eval_context
-                        )
+                        value = eval(expr, {"__builtins__": safe_builtins}, eval_context)
 
                         # Apply format spec
                         result.append(format(value, format_spec))
                     else:
                         # No format spec, just evaluate and convert to string
-                        value = eval(
-                            code, {"__builtins__": safe_builtins}, eval_context
-                        )
+                        value = eval(code, {"__builtins__": safe_builtins}, eval_context)
                         result.append(str(value))
                 except NameError:
                     result.append(f"{{ERROR: undefined variable '{token['code']}'}}")
@@ -329,9 +322,7 @@ class ContentRenderer:
                 except Exception as e:
                     # Other errors
                     # Show error in output for debugging
-                    result.append(
-                        f"{{ERROR: {token['code']} - {type(e).__name__}: {e}}}"
-                    )
+                    result.append(f"{{ERROR: {token['code']} - {type(e).__name__}: {e}}}")
             elif token["type"] == "inline_conditional":
                 # Evaluate inline conditional: {condition ? truthy | falsy}
                 try:
@@ -366,17 +357,14 @@ class ContentRenderer:
 
                             # Check for format spec in the branch expression
                             if ":" in branch_expr and not any(
-                                op in branch_expr
-                                for op in ["==", "!=", "<=", ">=", "::"]
+                                op in branch_expr for op in ["==", "!=", "<=", ">=", "::"]
                             ):
                                 # Has format spec
                                 colon_idx = branch_expr.find(":")
                                 expr = branch_expr[:colon_idx].strip()
                                 format_spec = branch_expr[colon_idx + 1 :].strip()
 
-                                value = eval(
-                                    expr, {"__builtins__": safe_builtins}, eval_context
-                                )
+                                value = eval(expr, {"__builtins__": safe_builtins}, eval_context)
                                 result.append(format(value, format_spec))
                             else:
                                 # No format spec
@@ -420,9 +408,7 @@ class ContentRenderer:
                 # Don't append anything to result - Python blocks don't generate text
             elif token["type"] == "conditional":
                 # Render conditional blocks
-                branch_content, jump_target, branch_directives = (
-                    self.render_conditional(token)
-                )
+                branch_content, jump_target, branch_directives = self.render_conditional(token)
                 result.append(branch_content)
                 directives.extend(branch_directives)  # Collect directives from branch
                 # If jump was found in the conditional, stop and return
@@ -472,9 +458,7 @@ class ContentRenderer:
             if self._local_scope_stack:
                 eval_context.update(self._local_scope_stack[-1])
             safe_builtins = self._get_safe_builtins()
-            collection = eval(
-                collection_expr, {"__builtins__": safe_builtins}, eval_context
-            )
+            collection = eval(collection_expr, {"__builtins__": safe_builtins}, eval_context)
 
             # Check if variable is tuple unpacking
             variables = [v.strip() for v in variable.split(",")]
@@ -504,15 +488,11 @@ class ContentRenderer:
                         self._state[variable] = item
                 except Exception as e:
                     print(f"Warning: Loop variable assignment failed: {e}")
-                    print(
-                        f"  variable: {variable}, is_tuple: {is_tuple_unpack}, item: {item}"
-                    )
+                    print(f"  variable: {variable}, is_tuple: {is_tuple_unpack}, item: {item}")
                     raise
 
                 # Render the loop body
-                iteration_content, jump_target, iteration_directives = (
-                    self.render_content(content)
-                )
+                iteration_content, jump_target, iteration_directives = self.render_content(content)
                 result.append(iteration_content)
                 all_directives.extend(iteration_directives)  # Collect directives
 
@@ -546,9 +526,7 @@ class ContentRenderer:
             traceback.print_exc()
             return error_msg, None, []
 
-    def render_conditional(
-        self, conditional: dict
-    ) -> tuple[str, Optional[str], list[dict]]:
+    def render_conditional(self, conditional: dict) -> tuple[str, Optional[str], list[dict]]:
         """
         Render a conditional block by evaluating conditions and rendering the first true branch.
 
@@ -572,9 +550,7 @@ class ContentRenderer:
 
                 if result:
                     # This branch is true -- render its content
-                    content, jump_target, directives = self.render_content(
-                        branch["content"]
-                    )
+                    content, jump_target, directives = self.render_content(branch["content"])
 
                     # Add branch choices to directives (if any)
                     if "choices" in branch:

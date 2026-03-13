@@ -204,11 +204,11 @@ const componentRegistry = {
 function MyComponent({ data, myProp }) {
   // Handle both patterns
   const actualProp = myProp || data?.myProp || 'default'
-  
+
   if (!actualProp) {
     return <div>Error: Missing required prop</div>
   }
-  
+
   return <div>{actualProp}</div>
 }
 ```
@@ -255,7 +255,7 @@ console.log(Object.keys(componentRegistry))
 function MyComponent({ data, value, label }) {
   const actualValue = value ?? data?.value
   const actualLabel = label ?? data?.label
-  
+
   return <div>{actualLabel}: {actualValue}</div>
 }
 ```
@@ -345,7 +345,7 @@ function MyComponent(props) {
 ```jsx
 function CardDetail({ card, showDetails = true }) {
   if (!card) return null
-  
+
   return (
     <div className="card-detail">
       <h3>{card.name}</h3>

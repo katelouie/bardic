@@ -25,7 +25,7 @@ def parse_tags(line: str) -> tuple[str, list[str]]:
         Tuple of (line_without_tags, list_of_tags)
     """
     # Find all tags (^word or ^word:param) at the end of the line
-    tag_pattern = r'\^[\w]+(?::[\w-]+)?'
+    tag_pattern = r"\^[\w]+(?::[\w-]+)?"
     tags = re.findall(tag_pattern, line)
 
     if not tags:
@@ -34,7 +34,7 @@ def parse_tags(line: str) -> tuple[str, list[str]]:
     # Remove tags from line
     line_without_tags = line
     for tag in tags:
-        line_without_tags = line_without_tags.replace(tag, '', 1)
+        line_without_tags = line_without_tags.replace(tag, "", 1)
 
     # Clean up extra whitespace
     line_without_tags = line_without_tags.rstrip()
@@ -62,19 +62,19 @@ def extract_passage_params(passage_header: str) -> tuple[str, str]:
         Tuple of (passage_name_with_tags, params_str)
     """
     # Find opening paren if present
-    if '(' not in passage_header:
+    if "(" not in passage_header:
         return passage_header, ""
 
-    paren_start = passage_header.index('(')
+    paren_start = passage_header.index("(")
     before_paren = passage_header[:paren_start]
 
     # Find matching closing paren using depth tracking
     depth = 0
     paren_end = -1
     for i in range(paren_start, len(passage_header)):
-        if passage_header[i] == '(':
+        if passage_header[i] == "(":
             depth += 1
-        elif passage_header[i] == ')':
+        elif passage_header[i] == ")":
             depth -= 1
             if depth == 0:
                 paren_end = i
@@ -84,8 +84,8 @@ def extract_passage_params(passage_header: str) -> tuple[str, str]:
         # Unclosed paren - will be caught as syntax error later
         return passage_header, ""
 
-    params_str = passage_header[paren_start + 1:paren_end]
-    after_paren = passage_header[paren_end + 1:]
+    params_str = passage_header[paren_start + 1 : paren_end]
+    after_paren = passage_header[paren_end + 1 :]
 
     # Reconstruct name without params but with tags (if any)
     passage_name_with_tags = before_paren + after_paren
@@ -93,8 +93,9 @@ def extract_passage_params(passage_header: str) -> tuple[str, str]:
     return passage_name_with_tags.strip(), params_str.strip()
 
 
-def parse_passage_params(params_str: str, line_num: int, lines: list,
-                         filename: Optional[str], line_map: Optional[list]) -> list[dict]:
+def parse_passage_params(
+    params_str: str, line_num: int, lines: list, filename: Optional[str], line_map: Optional[list]
+) -> list[dict]:
     """
     Parse passage parameter declarations.
 
@@ -134,11 +135,11 @@ def parse_passage_params(params_str: str, line_num: int, lines: list,
             continue
 
         # Check if has default value (contains =)
-        if '=' in part:
+        if "=" in part:
             # Split on first = only
-            equals_pos = part.index('=')
+            equals_pos = part.index("=")
             param_name = part[:equals_pos].strip()
-            default_value = part[equals_pos + 1:].strip()
+            default_value = part[equals_pos + 1 :].strip()
             seen_optional = True
         else:
             param_name = part
@@ -146,56 +147,65 @@ def parse_passage_params(params_str: str, line_num: int, lines: list,
 
             # Check: required param can't come after optional
             if seen_optional:
-                raise SyntaxError(format_error(
-                    error_type="Invalid Parameter Order",
-                    line_num=line_num + 1,
-                    lines=lines,
-                    message=f"Required parameter '{param_name}' cannot follow optional parameter",
-                    pointer_length=len(params_str),
-                    suggestion="Put all required parameters before optional ones",
-                    filename=filename,
-                    line_map=line_map
-                ))
+                raise SyntaxError(
+                    format_error(
+                        error_type="Invalid Parameter Order",
+                        line_num=line_num + 1,
+                        lines=lines,
+                        message=f"Required parameter '{param_name}' cannot follow optional parameter",
+                        pointer_length=len(params_str),
+                        suggestion="Put all required parameters before optional ones",
+                        filename=filename,
+                        line_map=line_map,
+                    )
+                )
 
         # Validate parameter name
         if not param_name.isidentifier():
-            raise SyntaxError(format_error(
-                error_type="Invalid Parameter Name",
-                line_num=line_num + 1,
-                lines=lines,
-                message=f"'{param_name}' is not a valid parameter name",
-                pointer_length=len(params_str),
-                suggestion="Parameter names must be valid Python identifiers (letters, numbers, underscore)",
-                filename=filename,
-                line_map=line_map
-            ))
+            raise SyntaxError(
+                format_error(
+                    error_type="Invalid Parameter Name",
+                    line_num=line_num + 1,
+                    lines=lines,
+                    message=f"'{param_name}' is not a valid parameter name",
+                    pointer_length=len(params_str),
+                    suggestion="Parameter names must be valid Python identifiers (letters, numbers, underscore)",
+                    filename=filename,
+                    line_map=line_map,
+                )
+            )
 
         # Check for Python keywords
         import keyword
+
         if keyword.iskeyword(param_name):
-            raise SyntaxError(format_error(
-                error_type="Invalid Parameter Name",
-                line_num=line_num + 1,
-                lines=lines,
-                message=f"'{param_name}' is a Python keyword and cannot be used as a parameter name",
-                pointer_length=len(params_str),
-                suggestion="Choose a different parameter name",
-                filename=filename,
-                line_map=line_map
-            ))
+            raise SyntaxError(
+                format_error(
+                    error_type="Invalid Parameter Name",
+                    line_num=line_num + 1,
+                    lines=lines,
+                    message=f"'{param_name}' is a Python keyword and cannot be used as a parameter name",
+                    pointer_length=len(params_str),
+                    suggestion="Choose a different parameter name",
+                    filename=filename,
+                    line_map=line_map,
+                )
+            )
 
         # Check for duplicates
         if param_name in param_names:
-            raise SyntaxError(format_error(
-                error_type="Duplicate Parameter",
-                line_num=line_num + 1,
-                lines=lines,
-                message=f"Parameter '{param_name}' is defined multiple times",
-                pointer_length=len(params_str),
-                suggestion="Each parameter must have a unique name",
-                filename=filename,
-                line_map=line_map
-            ))
+            raise SyntaxError(
+                format_error(
+                    error_type="Duplicate Parameter",
+                    line_num=line_num + 1,
+                    lines=lines,
+                    message=f"Parameter '{param_name}' is defined multiple times",
+                    pointer_length=len(params_str),
+                    suggestion="Each parameter must have a unique name",
+                    filename=filename,
+                    line_map=line_map,
+                )
+            )
 
         param_names.add(param_name)
         params.append({"name": param_name, "default": default_value})
@@ -215,22 +225,22 @@ def _split_on_commas(text: str) -> list[str]:
     depth = 0
 
     for char in text:
-        if char in '([{':
+        if char in "([{":
             depth += 1
             current.append(char)
-        elif char in ')]}':
+        elif char in ")]}":
             depth -= 1
             current.append(char)
-        elif char == ',' and depth == 0:
+        elif char == "," and depth == 0:
             # Top-level comma - split here
-            parts.append(''.join(current))
+            parts.append("".join(current))
             current = []
         else:
             current.append(char)
 
     # Don't forget the last part
     if current:
-        parts.append(''.join(current))
+        parts.append("".join(current))
 
     return parts
 
@@ -250,19 +260,19 @@ def extract_target_and_args(target_with_args: str) -> tuple[str, str]:
     Returns:
         Tuple of (passage_name, args_str)
     """
-    if '(' not in target_with_args:
+    if "(" not in target_with_args:
         return target_with_args, ""
 
-    paren_start = target_with_args.index('(')
+    paren_start = target_with_args.index("(")
     passage_name = target_with_args[:paren_start]
 
     # Find matching closing paren using depth tracking
     depth = 0
     paren_end = -1
     for i in range(paren_start, len(target_with_args)):
-        if target_with_args[i] == '(':
+        if target_with_args[i] == "(":
             depth += 1
-        elif target_with_args[i] == ')':
+        elif target_with_args[i] == ")":
             depth -= 1
             if depth == 0:
                 paren_end = i
@@ -272,7 +282,7 @@ def extract_target_and_args(target_with_args: str) -> tuple[str, str]:
         # Unclosed paren - return as-is, will error later
         return target_with_args, ""
 
-    args_str = target_with_args[paren_start + 1:paren_end]
+    args_str = target_with_args[paren_start + 1 : paren_end]
 
     return passage_name, args_str
 
@@ -354,11 +364,11 @@ def find_pipe_separator(text: str, start: int = 0) -> int:
     for i in range(start, len(text)):
         char = text[i]
 
-        if char == '{':
+        if char == "{":
             depth += 1
-        elif char == '}':
+        elif char == "}":
             depth -= 1
-        elif char == '|' and depth == 0:
+        elif char == "|" and depth == 0:
             # Found separator at top level (not inside nested {})
             return i
 
@@ -387,15 +397,15 @@ def split_expressions_with_depth(text: str) -> list[str]:
     depth = 0
 
     for char in text:
-        if char == '{':
+        if char == "{":
             if depth == 0:
                 # Save text before expression (even if empty)
-                result.append(''.join(current))
-                current = ['{']
+                result.append("".join(current))
+                current = ["{"]
             else:
                 current.append(char)
             depth += 1
-        elif char == '}':
+        elif char == "}":
             depth -= 1
             if depth < 0:
                 # Found } without matching {
@@ -403,7 +413,7 @@ def split_expressions_with_depth(text: str) -> list[str]:
             current.append(char)
             if depth == 0:
                 # Complete expression
-                result.append(''.join(current))
+                result.append("".join(current))
                 current = []
         else:
             current.append(char)
@@ -413,8 +423,8 @@ def split_expressions_with_depth(text: str) -> list[str]:
         raise ValueError(f"Unclosed expression in: {text}")
 
     # Add remaining text (even if empty)
-    if current or (result and not text.endswith('}')):
-        result.append(''.join(current))
+    if current or (result and not text.endswith("}")):
+        result.append("".join(current))
 
     return result
 
@@ -449,7 +459,7 @@ def parse_inline_conditional(expr: str) -> Optional[dict]:
     """
     # Check if this looks like an inline conditional
     # Must have both ? and | to be unambiguous
-    if '?' not in expr:
+    if "?" not in expr:
         return None
 
     # Find the ? (condition separator)
@@ -457,11 +467,11 @@ def parse_inline_conditional(expr: str) -> Optional[dict]:
     q_idx = -1
     depth = 0
     for i, char in enumerate(expr):
-        if char == '{':
+        if char == "{":
             depth += 1
-        elif char == '}':
+        elif char == "}":
             depth -= 1
-        elif char == '?' and depth == 0:
+        elif char == "?" and depth == 0:
             q_idx = i
             break
 
@@ -470,7 +480,7 @@ def parse_inline_conditional(expr: str) -> Optional[dict]:
 
     # Split at the ?
     condition = expr[:q_idx].strip()
-    rest = expr[q_idx + 1:]  # Everything after ?
+    rest = expr[q_idx + 1 :]  # Everything after ?
 
     # Find the | separator (accounting for nested {})
     pipe_idx = find_pipe_separator(rest)
@@ -480,7 +490,7 @@ def parse_inline_conditional(expr: str) -> Optional[dict]:
 
     # Split at the |
     truthy_text = rest[:pipe_idx].strip()
-    falsy_text = rest[pipe_idx + 1:].strip()
+    falsy_text = rest[pipe_idx + 1 :].strip()
 
     # Tokenize the truthy and falsy branches to support mixed text + expressions
     # e.g., "HP: {health}" should become [{"type": "text", "value": "HP: "}, {"type": "expression", "code": "health"}]
@@ -491,7 +501,7 @@ def parse_inline_conditional(expr: str) -> Optional[dict]:
         "type": "inline_conditional",
         "condition": condition,
         "truthy": truthy_tokens,
-        "falsy": falsy_tokens
+        "falsy": falsy_tokens,
     }
 
 
@@ -500,7 +510,7 @@ def parse_content_line(
     line_num: int = 0,
     lines: Optional[list[str]] = None,
     filename: Optional[str] = None,
-    line_map: Optional[list] = None
+    line_map: Optional[list] = None,
 ) -> list[dict]:
     """
     Parse a content line with {variable} interpolation and optional tags.
@@ -536,16 +546,18 @@ def parse_content_line(
     except ValueError as e:
         # Convert to SyntaxError with proper formatting
         if lines is not None and line_num > 0:
-            raise SyntaxError(format_error(
-                error_type="Expression Error",
-                line_num=line_num,
-                lines=lines,
-                message=str(e),
-                pointer_length=len(line.strip()),
-                suggestion="Check that all { have matching } braces",
-                filename=filename,
-                line_map=line_map
-            ))
+            raise SyntaxError(
+                format_error(
+                    error_type="Expression Error",
+                    line_num=line_num,
+                    lines=lines,
+                    message=str(e),
+                    pointer_length=len(line.strip()),
+                    suggestion="Check that all { have matching } braces",
+                    filename=filename,
+                    line_map=line_map,
+                )
+            )
         else:
             # Fallback if context not available
             raise SyntaxError(str(e))

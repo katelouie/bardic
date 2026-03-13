@@ -4,9 +4,11 @@ Runtime tests for augmented assignment operators.
 """
 
 import sys
-sys.path.insert(0, '/Users/katelouie/code/bardic')
+
+sys.path.insert(0, "/Users/katelouie/code/bardic")
 
 from bardic.runtime.engine import BardEngine
+
 
 def test_basic_operators():
     """Test all 7 augmented assignment operators."""
@@ -24,10 +26,10 @@ def test_basic_operators():
     # price: 100.0 -> /4=25.0
 
     expected = {
-        "count": 0,          # (0 + 1) // 2 = 0
-        "health": 5,         # (100 - 25) % 10 = 5
-        "multiplier": 36,    # (2 * 3) ** 2 = 36
-        "price": 25.0        # 100.0 / 4 = 25.0
+        "count": 0,  # (0 + 1) // 2 = 0
+        "health": 5,  # (100 - 25) % 10 = 5
+        "multiplier": 36,  # (2 * 3) ** 2 = 36
+        "price": 25.0,  # 100.0 / 4 = 25.0
     }
 
     print("\nFinal state:")
@@ -40,6 +42,7 @@ def test_basic_operators():
     all_match = all(engine.state.get(var) == val for var, val in expected.items())
     print(f"\n{'✓ ALL TESTS PASSED' if all_match else '✗ SOME TESTS FAILED'}")
     return all_match
+
 
 def test_complex_expressions():
     """Test augmented assignment with complex expressions."""
@@ -55,11 +58,7 @@ def test_complex_expressions():
     # bonus: 5
     # penalty: 3
 
-    expected = {
-        "base": 75,
-        "bonus": 5,
-        "penalty": 3
-    }
+    expected = {"base": 75, "bonus": 5, "penalty": 3}
 
     print("\nFinal state:")
     for var, expected_val in expected.items():
@@ -70,6 +69,7 @@ def test_complex_expressions():
     all_match = all(engine.state.get(var) == val for var, val in expected.items())
     print(f"\n{'✓ ALL TESTS PASSED' if all_match else '✗ SOME TESTS FAILED'}")
     return all_match
+
 
 def test_multiline():
     """Test augmented assignment with multiline expressions."""
@@ -92,6 +92,7 @@ def test_multiline():
     all_match = actual_total == expected_total
     print(f"\n{'✓ ALL TESTS PASSED' if all_match else '✗ SOME TESTS FAILED'}")
     return all_match
+
 
 def main():
     """Run all tests."""
@@ -116,6 +117,7 @@ def main():
     else:
         print("\n✗ SOME TESTS FAILED")
         return 1
+
 
 if __name__ == "__main__":
     sys.exit(main())

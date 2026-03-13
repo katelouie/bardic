@@ -1,7 +1,7 @@
 """Block extraction: conditionals, loops, and Python code blocks."""
 
 import re
-from typing import Tuple, Optional, List
+from typing import Optional, List
 
 from .errors import format_error, SourceLocation
 from .indentation import detect_and_strip_indentation
@@ -238,19 +238,13 @@ def extract_conditional_block(
                     if line.rstrip().endswith("<>"):
                         # Remove <> and parse (glue: no newline after)
                         content_line = line.rstrip()[:-2]
-                        content_tokens = parse_content_line(
-                            content_line, 0, None, filename, None
-                        )
+                        content_tokens = parse_content_line(content_line, 0, None, filename, None)
                         current_branch["content"].extend(content_tokens)
                     else:
                         # Normal: add newline after content
-                        content_tokens = parse_content_line(
-                            line, 0, None, filename, None
-                        )
+                        content_tokens = parse_content_line(line, 0, None, filename, None)
                         current_branch["content"].extend(content_tokens)
-                        current_branch["content"].append(
-                            {"type": "text", "value": "\n"}
-                        )
+                        current_branch["content"].append({"type": "text", "value": "\n"})
             # Always append branch (even if it only has directives, no text)
             conditional["branches"].append(current_branch)
 
@@ -275,9 +269,7 @@ def extract_conditional_block(
             if current_branch_lines:
                 dedented = detect_and_strip_indentation(current_branch_lines)
                 for dedented_line in dedented:
-                    content_tokens = parse_content_line(
-                        dedented_line, 0, None, filename, None
-                    )
+                    content_tokens = parse_content_line(dedented_line, 0, None, filename, None)
                     current_branch["content"].extend(content_tokens)
                     current_branch["content"].append({"type": "text", "value": "\n"})
                 current_branch_lines = []  # Reset
@@ -295,9 +287,7 @@ def extract_conditional_block(
             if current_branch_lines:
                 dedented = detect_and_strip_indentation(current_branch_lines)
                 for dedented_line in dedented:
-                    content_tokens = parse_content_line(
-                        dedented_line, 0, None, filename, None
-                    )
+                    content_tokens = parse_content_line(dedented_line, 0, None, filename, None)
                     current_branch["content"].extend(content_tokens)
                     current_branch["content"].append({"type": "text", "value": "\n"})
                 current_branch_lines = []  # Reset
@@ -315,9 +305,7 @@ def extract_conditional_block(
             if current_branch_lines:
                 dedented = detect_and_strip_indentation(current_branch_lines)
                 for dedented_line in dedented:
-                    content_tokens = parse_content_line(
-                        dedented_line, 0, None, filename, None
-                    )
+                    content_tokens = parse_content_line(dedented_line, 0, None, filename, None)
                     current_branch["content"].extend(content_tokens)
                     current_branch["content"].append({"type": "text", "value": "\n"})
                 current_branch_lines = []  # Reset
@@ -335,9 +323,7 @@ def extract_conditional_block(
             if current_branch_lines:
                 dedented = detect_and_strip_indentation(current_branch_lines)
                 for dedented_line in dedented:
-                    content_tokens = parse_content_line(
-                        dedented_line, 0, None, filename, None
-                    )
+                    content_tokens = parse_content_line(dedented_line, 0, None, filename, None)
                     current_branch["content"].extend(content_tokens)
                     current_branch["content"].append({"type": "text", "value": "\n"})
                 current_branch_lines = []  # Reset
@@ -363,9 +349,7 @@ def extract_conditional_block(
             if current_branch_lines:
                 dedented = detect_and_strip_indentation(current_branch_lines)
                 for dedented_line in dedented:
-                    content_tokens = parse_content_line(
-                        dedented_line, 0, None, filename, None
-                    )
+                    content_tokens = parse_content_line(dedented_line, 0, None, filename, None)
                     current_branch["content"].extend(content_tokens)
                     current_branch["content"].append({"type": "text", "value": "\n"})
                 current_branch_lines = []  # Reset
@@ -391,9 +375,7 @@ def extract_conditional_block(
             if current_branch_lines:
                 dedented = detect_and_strip_indentation(current_branch_lines)
                 for dedented_line in dedented:
-                    content_tokens = parse_content_line(
-                        dedented_line, 0, None, filename, None
-                    )
+                    content_tokens = parse_content_line(dedented_line, 0, None, filename, None)
                     current_branch["content"].extend(content_tokens)
                     current_branch["content"].append({"type": "text", "value": "\n"})
                 current_branch_lines = []  # Reset
@@ -408,30 +390,22 @@ def extract_conditional_block(
             complete_code, lines_consumed = extract_multiline_expression(lines, i, code)
 
             # Add as Python statement token
-            current_branch["content"].append(
-                {"type": "python_statement", "code": complete_code}
-            )
+            current_branch["content"].append({"type": "python_statement", "code": complete_code})
 
             i += lines_consumed
             continue
 
         # Check for nested <<if>> or @if: (not the opening one)
-        if (
-            stripped.startswith("<<if ") or stripped.startswith("@if ")
-        ) and i != start_index:
+        if (stripped.startswith("<<if ") or stripped.startswith("@if ")) and i != start_index:
             # This is a nested conditional - recursively extract it
             if current_branch is not None:
                 # Dedent lines collected so far before adding nested structure
                 if current_branch_lines:
                     dedented = detect_and_strip_indentation(current_branch_lines)
                     for dedented_line in dedented:
-                        content_tokens = parse_content_line(
-                            dedented_line, 0, None, filename, None
-                        )
+                        content_tokens = parse_content_line(dedented_line, 0, None, filename, None)
                         current_branch["content"].extend(content_tokens)
-                        current_branch["content"].append(
-                            {"type": "text", "value": "\n"}
-                        )
+                        current_branch["content"].append({"type": "text", "value": "\n"})
                     current_branch_lines = []  # Reset
 
                 # Now extract nested conditional
@@ -450,9 +424,7 @@ def extract_conditional_block(
             if current_branch_lines:
                 dedented = detect_and_strip_indentation(current_branch_lines)
                 for dedented_line in dedented:
-                    content_tokens = parse_content_line(
-                        dedented_line, 0, None, filename, None
-                    )
+                    content_tokens = parse_content_line(dedented_line, 0, None, filename, None)
                     current_branch["content"].extend(content_tokens)
                     current_branch["content"].append({"type": "text", "value": "\n"})
                 current_branch_lines = []  # Reset
@@ -464,9 +436,7 @@ def extract_conditional_block(
             continue
 
         # Check for opening <<if>> or @if: (only at start_index)
-        if (
-            stripped.startswith("<<if ") or stripped.startswith("@if ")
-        ) and i == start_index:
+        if (stripped.startswith("<<if ") or stripped.startswith("@if ")) and i == start_index:
             if stripped.startswith("@if "):
                 # Strip inline comment first
                 stripped, _ = strip_inline_comment(stripped)
@@ -545,9 +515,7 @@ def extract_conditional_block(
                                     dedented_line, 0, None, filename, None
                                 )
                                 current_branch["content"].extend(content_tokens)
-                                current_branch["content"].append(
-                                    {"type": "text", "value": "\n"}
-                                )
+                                current_branch["content"].append({"type": "text", "value": "\n"})
                     # Always append branch (even if it only has directives, no text)
                     conditional["branches"].append(current_branch)
                 found_closer = True
@@ -555,9 +523,7 @@ def extract_conditional_block(
                 break
 
         # Check for <<elif condition>> or @elif condition: at our level
-        if (
-            stripped.startswith("<<elif ") or stripped.startswith("@elif ")
-        ) and nesting_level == 0:
+        if (stripped.startswith("<<elif ") or stripped.startswith("@elif ")) and nesting_level == 0:
             if stripped.startswith("@elif "):
                 # Strip inline comment first
                 stripped, _ = strip_inline_comment(stripped)
@@ -589,9 +555,7 @@ def extract_conditional_block(
             continue
 
         # Check for <<else>> or @else: at our level
-        if (
-            stripped.startswith("<<else>>") or stripped.startswith("@else")
-        ) and nesting_level == 0:
+        if (stripped.startswith("<<else>>") or stripped.startswith("@else")) and nesting_level == 0:
             if stripped.startswith("@else"):
                 # Strip inline comment first
                 stripped, _ = strip_inline_comment(stripped)
@@ -623,24 +587,18 @@ def extract_conditional_block(
             continue
 
         # Check for choices inside conditional
-        if (
-            stripped.startswith("+") or stripped.startswith("*")
-        ) and current_branch is not None:
+        if (stripped.startswith("+") or stripped.startswith("*")) and current_branch is not None:
             # Dedent lines collected so far before adding choice
             if current_branch_lines:
                 dedented = detect_and_strip_indentation(current_branch_lines)
                 for dedented_line in dedented:
-                    content_tokens = parse_content_line(
-                        dedented_line, 0, None, filename, None
-                    )
+                    content_tokens = parse_content_line(dedented_line, 0, None, filename, None)
                     current_branch["content"].extend(content_tokens)
                     current_branch["content"].append({"type": "text", "value": "\n"})
                 current_branch_lines = []  # Reset
 
             # Parse choice and add to conditional's branch
-            choice = parse_choice_line(
-                stripped, {}
-            )  # Use stripped line (no indentation)
+            choice = parse_choice_line(stripped, {})  # Use stripped line (no indentation)
             if choice:
                 if "choices" not in current_branch:
                     current_branch["choices"] = []
@@ -662,9 +620,7 @@ def extract_conditional_block(
                 line_num=start_index,
                 lines=lines,
                 message="@if block never closed",
-                pointer_length=len(lines[start_index].strip())
-                if start_index < len(lines)
-                else 1,
+                pointer_length=len(lines[start_index].strip()) if start_index < len(lines) else 1,
                 suggestion="Every @if must have a matching @endif before the end of the passage",
                 filename=filename,
                 line_map=line_map,
@@ -708,9 +664,7 @@ def extract_loop_block(
         stripped = line.strip()
 
         # Check for opening <<for>> or @for: (only at start_index)
-        if (
-            stripped.startswith("<<for ") or stripped.startswith("@for ")
-        ) and i == start_index:
+        if (stripped.startswith("<<for ") or stripped.startswith("@for ")) and i == start_index:
             if stripped.startswith("@for "):
                 # Strip inline comment first
                 stripped, _ = strip_inline_comment(stripped)
@@ -774,9 +728,7 @@ def extract_loop_block(
             )
 
         # Track nested loops: increment depth when we see another @for/@for
-        if loop_started and (
-            stripped.startswith("<<for ") or stripped.startswith("@for ")
-        ):
+        if loop_started and (stripped.startswith("<<for ") or stripped.startswith("@for ")):
             depth += 1
             loop_raw_lines.append(line)
             i += 1
@@ -822,9 +774,7 @@ def extract_loop_block(
                 # Extract Python block and add it to loop content
                 # It will be executed during rendering (for each iteration)
                 # Note: Pass None for line_map since dedented_lines is a subset
-                code, lines_consumed = extract_python_block(
-                    dedented_lines, j, filename, None
-                )
+                code, lines_consumed = extract_python_block(dedented_lines, j, filename, None)
                 loop["content"].append({"type": "python_block", "code": code})
                 j += lines_consumed
                 continue
@@ -890,9 +840,7 @@ def extract_loop_block(
                 )
 
                 # Add as Python statement token
-                loop["content"].append(
-                    {"type": "python_statement", "code": complete_code}
-                )
+                loop["content"].append({"type": "python_statement", "code": complete_code})
 
                 j += lines_consumed
                 continue
@@ -930,9 +878,7 @@ def extract_loop_block(
 
             # Check for choices inside loop
             if stripped.startswith("+") or stripped.startswith("*"):
-                choice = parse_choice_line(
-                    stripped, {}
-                )  # Use stripped line (no indentation)
+                choice = parse_choice_line(stripped, {})  # Use stripped line (no indentation)
                 if choice:
                     if "choices" not in loop:
                         loop["choices"] = []
@@ -946,9 +892,7 @@ def extract_loop_block(
             if line.rstrip().endswith("<>"):
                 # Remove <> and parse (glue: no newline after)
                 content_line = line.rstrip()[:-2]
-                content_tokens = parse_content_line(
-                    content_line, 0, None, filename, None
-                )
+                content_tokens = parse_content_line(content_line, 0, None, filename, None)
                 loop["content"].extend(content_tokens)
             else:
                 # Normal: add newline after content
@@ -965,9 +909,7 @@ def extract_loop_block(
                 line_num=start_index,
                 lines=lines,
                 message="@for block never closed",
-                pointer_length=len(lines[start_index].strip())
-                if start_index < len(lines)
-                else 1,
+                pointer_length=len(lines[start_index].strip()) if start_index < len(lines) else 1,
                 suggestion="Every @for must have a matching @endfor before the end of the passage",
                 filename=filename,
                 line_map=line_map,

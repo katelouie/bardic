@@ -151,9 +151,7 @@ async def start_story(request: StartStoryRequest):
     story_path = STORIES_DIR / f"{request.story_id}.json"
 
     if not story_path.exists():
-        raise HTTPException(
-            status_code=404, detail=f"Story {request.story_id} not found"
-        )
+        raise HTTPException(status_code=404, detail=f"Story {request.story_id} not found")
 
     try:
         # Load the JSON
@@ -166,10 +164,7 @@ async def start_story(request: StartStoryRequest):
         engine = BardEngine(story_data, context=context)
 
         # Store the engine AND story_id in our sessions dict
-        sessions[request.session_id] = {
-            "engine": engine,
-            "story_id": request.story_id
-        }
+        sessions[request.session_id] = {"engine": engine, "story_id": request.story_id}
 
         # Get the first passage
         output = engine.current()
@@ -186,8 +181,7 @@ async def start_story(request: StartStoryRequest):
         return {
             "content": output.content,
             "choices": [
-                {"index": i, "text": choice["text"]}
-                for i, choice in enumerate(output.choices)
+                {"index": i, "text": choice["text"]} for i, choice in enumerate(output.choices)
             ],
             "passage_id": output.passage_id,
             "is_end": engine.is_end(),
@@ -231,8 +225,7 @@ async def make_choice(request: MakeChoiceRequest):
         return {
             "content": output.content,
             "choices": [
-                {"index": i, "text": choice["text"]}
-                for i, choice in enumerate(output.choices)
+                {"index": i, "text": choice["text"]} for i, choice in enumerate(output.choices)
             ],
             "passage_id": output.passage_id,
             "is_end": engine.is_end(),
@@ -322,9 +315,7 @@ async def load_game(request: LoadGameRequest):
     save_path = SAVES_DIR / f"{request.save_id}.json"
 
     if not save_path.exists():
-        raise HTTPException(
-            status_code=404, detail=f"Save file not found: {request.save_id}"
-        )
+        raise HTTPException(status_code=404, detail=f"Save file not found: {request.save_id}")
 
     try:
         # Read save data
@@ -335,9 +326,7 @@ async def load_game(request: LoadGameRequest):
         story_path = STORIES_DIR / f"{request.story_id}.json"
 
         if not story_path.exists():
-            raise HTTPException(
-                status_code=404, detail=f"Story not found: {request.story_id}"
-            )
+            raise HTTPException(status_code=404, detail=f"Story not found: {request.story_id}")
 
         with open(story_path) as f:
             story_data = json.load(f)
@@ -350,10 +339,7 @@ async def load_game(request: LoadGameRequest):
         engine.load_state(save_data)
 
         # Store in sessions with story_id
-        sessions[request.session_id] = {
-            "engine": engine,
-            "story_id": request.story_id
-        }
+        sessions[request.session_id] = {"engine": engine, "story_id": request.story_id}
 
         # Get current passage
         output = engine.current()
@@ -362,8 +348,7 @@ async def load_game(request: LoadGameRequest):
             "success": True,
             "content": output.content,
             "choices": [
-                {"index": i, "text": choice["text"]}
-                for i, choice in enumerate(output.choices)
+                {"index": i, "text": choice["text"]} for i, choice in enumerate(output.choices)
             ],
             "passage_id": output.passage_id,
             "is_end": engine.is_end(),
@@ -376,16 +361,18 @@ async def load_game(request: LoadGameRequest):
 
     except ValueError as e:
         # Invalid save data
-        print(f"\n=== LOAD ERROR (ValueError) ===")
+        print("\n=== LOAD ERROR (ValueError) ===")
         print(f"Error: {e}")
         import traceback
+
         traceback.print_exc()
         print("=== END ERROR ===\n")
         raise HTTPException(status_code=400, detail=f"Invalid save file: {str(e)}")
     except Exception as e:
-        print(f"\n=== LOAD ERROR (Exception) ===")
+        print("\n=== LOAD ERROR (Exception) ===")
         print(f"Error: {e}")
         import traceback
+
         traceback.print_exc()
         print("=== END ERROR ===\n")
         raise HTTPException(status_code=500, detail=f"Failed to load: {str(e)}")

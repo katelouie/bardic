@@ -140,21 +140,21 @@ def strip_inline_comment(line: str) -> tuple[str, str]:
 
     while i < len(line):
         # Check for escaped \\//
-        if i < len(line) - 2 and line[i:i+3] == '\\//':
+        if i < len(line) - 2 and line[i : i + 3] == "\\//":
             # Escaped: add literal //
-            result.append('//')
+            result.append("//")
             i += 3
             continue
 
         # Check for //= operator (NOT a comment!)
-        if i < len(line) - 2 and line[i:i+3] == '//=':
+        if i < len(line) - 2 and line[i : i + 3] == "//=":
             # Floor division assignment operator - not a comment
-            result.append('//=')
+            result.append("//=")
             i += 3
             continue
 
         # Check for comment start //
-        if i < len(line) - 1 and line[i:i+2] == '//':
+        if i < len(line) - 1 and line[i : i + 2] == "//":
             # Found comment - rest of line is comment
             comment = line[i:]
             break
@@ -163,7 +163,7 @@ def strip_inline_comment(line: str) -> tuple[str, str]:
         result.append(line[i])
         i += 1
 
-    content = ''.join(result)
+    content = "".join(result)
     return content, comment
 
 
@@ -213,30 +213,36 @@ def resolve_includes(
             # Validate that file path is provided
             if not include_path:
                 from .errors import format_error
-                raise SyntaxError(format_error(
-                    error_type="Syntax Error",
-                    line_num=line_idx + 1,
-                    lines=lines,
-                    message="@include directive missing file path",
-                    pointer_length=len("@include"),
-                    suggestion="Specify a file to include. Example: @include shared.bard",
-                    filename=base_path,
-                    line_map=None  # No line_map yet at this stage
-                ))
+
+                raise SyntaxError(
+                    format_error(
+                        error_type="Syntax Error",
+                        line_num=line_idx + 1,
+                        lines=lines,
+                        message="@include directive missing file path",
+                        pointer_length=len("@include"),
+                        suggestion="Specify a file to include. Example: @include shared.bard",
+                        filename=base_path,
+                        line_map=None,  # No line_map yet at this stage
+                    )
+                )
 
             # Validate no multiple files (space-separated would be ambiguous)
             if " " in include_path.strip():
                 from .errors import format_error
-                raise SyntaxError(format_error(
-                    error_type="Syntax Error",
-                    line_num=line_idx + 1,
-                    lines=lines,
-                    message="@include can only include one file at a time",
-                    pointer_length=len(line.strip()),
-                    suggestion="Use separate @include directives for each file",
-                    filename=base_path,
-                    line_map=None
-                ))
+
+                raise SyntaxError(
+                    format_error(
+                        error_type="Syntax Error",
+                        line_num=line_idx + 1,
+                        lines=lines,
+                        message="@include can only include one file at a time",
+                        pointer_length=len(line.strip()),
+                        suggestion="Use separate @include directives for each file",
+                        filename=base_path,
+                        line_map=None,
+                    )
+                )
 
             # Resolve relative to the current file
             base_dir = Path(base_path).parent
@@ -268,9 +274,11 @@ def resolve_includes(
         else:
             # Regular line -- keep it and track its source location
             result.append(line)
-            line_map.append(SourceLocation(
-                file_path=base_path,
-                line_num=line_idx  # 0-indexed
-            ))
+            line_map.append(
+                SourceLocation(
+                    file_path=base_path,
+                    line_num=line_idx,  # 0-indexed
+                )
+            )
 
     return "\n".join(result), line_map

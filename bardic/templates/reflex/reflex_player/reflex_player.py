@@ -55,9 +55,7 @@ def index() -> rx.Component:
                 # Title
                 rx.heading("Locked Room Escape", size="8"),
                 # Passage text
-                rx.text(
-                    StoryState.current_passage["text"], size="5", color_scheme="gray"
-                ),
+                rx.text(StoryState.current_passage["text"], size="5", color_scheme="gray"),
                 # Choices or THE END
                 rx.cond(
                     StoryState.current_choices.length() > 0,
@@ -67,9 +65,7 @@ def index() -> rx.Component:
                             StoryState.current_choices,
                             lambda choice: rx.button(
                                 choice["text"],
-                                on_click=lambda: StoryState.navigate_to(
-                                    choice["target"]
-                                ),
+                                on_click=lambda: StoryState.navigate_to(choice["target"]),
                                 size="3",
                             ),
                         ),

@@ -65,9 +65,7 @@ class DirectiveProcessor:
 
                 # Parse and evaluate arguments
                 if args_str:
-                    args_dict = self.parse_directive_args(
-                        args_str, eval_context, safe_builtins
-                    )
+                    args_dict = self.parse_directive_args(args_str, eval_context, safe_builtins)
                 else:
                     args_dict = {}
 
@@ -112,9 +110,7 @@ class DirectiveProcessor:
 
             return result
 
-    def parse_directive_args(
-        self, args_str: str, eval_context: dict, safe_builtins: dict
-    ) -> dict:
+    def parse_directive_args(self, args_str: str, eval_context: dict, safe_builtins: dict) -> dict:
         """Parse directive arguments into a dictionary.
 
         Supports both positional and keyword arguments:
@@ -225,9 +221,7 @@ class DirectiveProcessor:
             React-optimized data structure
         """
         # Convert snake_case to PascalCase for component name
-        suggested_component = "".join(
-            word.capitalize() for word in component_name.split("_")
-        )
+        suggested_component = "".join(word.capitalize() for word in component_name.split("_"))
 
         # Clean up props
         props = {}

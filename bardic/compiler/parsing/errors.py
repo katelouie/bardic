@@ -7,8 +7,9 @@ from typing import List, Optional
 @dataclass
 class SourceLocation:
     """Maps a line in concatenated source to its original file location."""
-    file_path: str          # Original file path
-    line_num: int          # Line number in original file (0-indexed)
+
+    file_path: str  # Original file path
+    line_num: int  # Line number in original file (0-indexed)
 
 
 def format_error(
@@ -20,7 +21,7 @@ def format_error(
     pointer_length: int = None,
     suggestion: str = None,
     filename: str = None,
-    line_map: Optional[List[SourceLocation]] = None
+    line_map: Optional[List[SourceLocation]] = None,
 ) -> str:
     """
     Format a beautiful error message with context.

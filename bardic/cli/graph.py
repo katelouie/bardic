@@ -102,10 +102,7 @@ def extract_connections(story_data: dict) -> Tuple[Dict[str, List[str]], Set[str
 
 
 def generate_graph(
-    story_file: Path,
-    output_file: Path,
-    format: str = "png",
-    show_tags: bool = True
+    story_file: Path, output_file: Path, format: str = "png", show_tags: bool = True
 ) -> None:
     """Generate a visual graph of the story structure.
 
@@ -116,7 +113,7 @@ def generate_graph(
         show_tags: Whether to show passage tags
     """
     # Load story
-    with open(story_file, 'r') as f:
+    with open(story_file, "r") as f:
         story_data = json.load(f)
 
     # Extract connections
@@ -126,9 +123,9 @@ def generate_graph(
     missing = referenced - defined
 
     # Create graph
-    dot = graphviz.Digraph(comment='Bardic Story Graph')
-    dot.attr(rankdir='TB')  # Top to bottom layout
-    dot.attr('node', shape='box', style='rounded,filled', fillcolor='lightblue')
+    dot = graphviz.Digraph(comment="Bardic Story Graph")
+    dot.attr(rankdir="TB")  # Top to bottom layout
+    dot.attr("node", shape="box", style="rounded,filled", fillcolor="lightblue")
 
     # Get start passage
     start_passage = story_data.get("initial_passage", "Start")
@@ -146,28 +143,27 @@ def generate_graph(
             label = f"{passage_id}\\n{tags_str}"
 
         # Color code
-        fillcolor = 'lightblue'
+        fillcolor = "lightblue"
         if passage_id == start_passage:
-            fillcolor = 'lightgreen'
+            fillcolor = "lightgreen"
         elif passage_data.get("tags"):
             if "CLIENT" in passage_data["tags"]:
-                fillcolor = 'lightcoral'
+                fillcolor = "lightcoral"
             elif "SPECIAL" in passage_data["tags"]:
-                fillcolor = 'gold'
+                fillcolor = "gold"
 
         dot.node(passage_id, label, fillcolor=fillcolor)
 
     # Add missing passage nodes (in red)
     for passage_id in missing:
-        dot.node(passage_id, f"{passage_id}\\n[MISSING]",
-                fillcolor='red', fontcolor='white')
+        dot.node(passage_id, f"{passage_id}\\n[MISSING]", fillcolor="red", fontcolor="white")
 
     # Add connections
     for source, targets in connections.items():
         for target, label, is_jump in targets:
             # Different style for jumps vs choices
             if is_jump:
-                dot.edge(source, target, label=label, style='dashed', color='gray')
+                dot.edge(source, target, label=label, style="dashed", color="gray")
             else:
                 dot.edge(source, target, label=label)
 

@@ -104,8 +104,7 @@ class QuestJournal:
     def __init__(self):
         self._quests: dict[str, Quest] = {}
 
-    def add(self, quest_id: str, title: str, description: str = "",
-            stage: str = "active") -> Quest:
+    def add(self, quest_id: str, title: str, description: str = "", stage: str = "active") -> Quest:
         """Add a new quest to the journal.
 
         Args:
@@ -122,8 +121,7 @@ class QuestJournal:
         """
         if quest_id in self._quests:
             raise ValueError(f"Quest '{quest_id}' already exists in journal")
-        quest = Quest(quest_id=quest_id, title=title,
-                      description=description, stage=stage)
+        quest = Quest(quest_id=quest_id, title=title, description=description, stage=stage)
         self._quests[quest_id] = quest
         return quest
 
@@ -262,9 +260,7 @@ class QuestJournal:
 
     def to_dict(self) -> dict:
         """Serialize for save/load."""
-        return {
-            "quests": {qid: q.to_dict() for qid, q in self._quests.items()}
-        }
+        return {"quests": {qid: q.to_dict() for qid, q in self._quests.items()}}
 
     @classmethod
     def from_dict(cls, data: dict) -> "QuestJournal":

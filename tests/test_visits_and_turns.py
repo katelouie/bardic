@@ -1,6 +1,5 @@
 """Tests for the _visits passage counter and _turns choice counter."""
 
-import pytest
 from bardic.compiler.compiler import BardCompiler
 from bardic.runtime.engine import BardEngine
 

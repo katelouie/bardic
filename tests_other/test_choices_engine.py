@@ -57,7 +57,7 @@ print("\nExpected 2 choices: 'Look around', 'Leave' (NOT 'Search dark corner')")
 print("\n" + "=" * 60)
 print("TEST 6: Mixed with condition TRUE")
 print("=" * 60)
-engine.state['has_flashlight'] = True
+engine.state["has_flashlight"] = True
 output = engine.goto("TestMixed")
 print(f"Passage: {output.passage_id}")
 print(f"Choices: {len(output.choices)}")

@@ -1,7 +1,8 @@
 """Test that @ syntax and << >> syntax produce identical runtime behavior."""
 
 import sys
-sys.path.insert(0, '/Users/katelouie/code/bardic')
+
+sys.path.insert(0, "/Users/katelouie/code/bardic")
 
 from bardic.runtime.engine import BardEngine
 

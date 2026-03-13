@@ -1,7 +1,5 @@
 """Tests for bardic.runtime.hooks — HookManager in isolation."""
 
-import pytest
-
 from bardic.runtime.hooks import HookManager
 
 
@@ -163,9 +161,11 @@ class TestImportPaths:
     def test_import_from_hooks_module(self):
         """HookManager is importable from bardic.runtime.hooks."""
         from bardic.runtime.hooks import HookManager as HM
+
         assert HM is HookManager
 
     def test_import_from_runtime_package(self):
         """HookManager is importable from bardic.runtime."""
         from bardic.runtime import HookManager as HM
+
         assert HM is HookManager

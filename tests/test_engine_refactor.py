@@ -1,6 +1,5 @@
 """Test that the engine's execute/render separation works correctly."""
 
-import pytest
 from bardic.runtime.engine import BardEngine
 
 
@@ -59,9 +58,7 @@ class TestExecuteOnce:
             "passages": {
                 "Start": {
                     "id": "Start",
-                    "execute": [
-                        {"type": "set_var", "var": "counter", "expression": "0"}
-                    ],
+                    "execute": [{"type": "set_var", "var": "counter", "expression": "0"}],
                     "content": [],
                     "choices": [{"text": "Next", "target": "Increment"}],
                 },

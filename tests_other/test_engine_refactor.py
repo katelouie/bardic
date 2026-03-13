@@ -1,7 +1,6 @@
 # test_engine_refactor.py
 
 from bardic import BardEngine
-import json
 
 
 def test_no_double_execution():
@@ -60,9 +59,7 @@ def test_goto_executes_once():
             },
             "Increment": {
                 "id": "Increment",
-                "execute": [
-                    {"type": "set_var", "var": "counter", "expression": "counter + 1"}
-                ],
+                "execute": [{"type": "set_var", "var": "counter", "expression": "counter + 1"}],
                 "content": [
                     {"type": "text", "value": "Counter: "},
                     {"type": "expression", "code": "counter"},

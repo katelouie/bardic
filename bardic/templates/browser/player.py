@@ -91,6 +91,7 @@ def render_passage():
                 def make_handler(idx):
                     def handler(event):
                         make_choice(idx)
+
                     return create_proxy(handler)
 
                 btn.onclick = make_handler(i)
@@ -161,7 +162,7 @@ def load_game():
         return
 
     # Create a simple selection
-    saves_str = "\n".join(f"  {i+1}. {s}" for i, s in enumerate(saves))
+    saves_str = "\n".join(f"  {i + 1}. {s}" for i, s in enumerate(saves))
     choice = window.prompt(f"Available saves:\n{saves_str}\n\nEnter save name to load:", saves[0])
 
     if choice:
@@ -211,24 +212,24 @@ def render_markdown(text: str) -> str:
     text = text.replace(">", "&gt;")
 
     # Images: ![alt](src)
-    text = re.sub(r'!\[([^\]]*)\]\(([^)]+)\)', r'<img src="\2" alt="\1" class="story-image">', text)
+    text = re.sub(r"!\[([^\]]*)\]\(([^)]+)\)", r'<img src="\2" alt="\1" class="story-image">', text)
 
     # Bold: **text**
-    text = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', text)
+    text = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", text)
 
     # Italic: *text*
-    text = re.sub(r'\*(.+?)\*', r'<em>\1</em>', text)
+    text = re.sub(r"\*(.+?)\*", r"<em>\1</em>", text)
 
     # Paragraphs: split on double newlines
-    paragraphs = text.split('\n\n')
+    paragraphs = text.split("\n\n")
 
     # Convert single newlines to <br> within paragraphs
-    paragraphs = [p.replace('\n', '<br>') for p in paragraphs]
+    paragraphs = [p.replace("\n", "<br>") for p in paragraphs]
 
     # Wrap each paragraph
-    html_paragraphs = [f'<p>{p}</p>' for p in paragraphs if p.strip()]
+    html_paragraphs = [f"<p>{p}</p>" for p in paragraphs if p.strip()]
 
-    return '\n'.join(html_paragraphs)
+    return "\n".join(html_paragraphs)
 
 
 def show_notification(message: str):

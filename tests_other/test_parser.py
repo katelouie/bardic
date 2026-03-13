@@ -14,4 +14,5 @@ This is the second passage.
 
 result = parse(test_story)
 import json
+
 print(json.dumps(result, indent=2))

@@ -4,7 +4,7 @@ import re
 from typing import Dict, Any, Optional, List
 
 from .errors import format_error, SourceLocation
-from .preprocessing import extract_imports, extract_metadata, strip_inline_comment
+from .preprocessing import strip_inline_comment
 from .blocks import (
     extract_join_choice_block,
     extract_python_block,
@@ -39,12 +39,21 @@ from .validation import (
 # All recognized @-directives that the parser handles.
 # Lines starting with @ that don't match any of these are flagged as typos.
 _KNOWN_DIRECTIVES = {
-    "@if", "@elif", "@else", "@endif",
-    "@for", "@endfor",
-    "@py", "@endpy",
-    "@render", "@input",
-    "@hook", "@unhook",
-    "@join", "@start", "@metadata",
+    "@if",
+    "@elif",
+    "@else",
+    "@endif",
+    "@for",
+    "@endfor",
+    "@py",
+    "@endpy",
+    "@render",
+    "@input",
+    "@hook",
+    "@unhook",
+    "@join",
+    "@start",
+    "@metadata",
     "@include",  # handled in preprocessing, but recognized here
     "@prev",  # navigation target, not a directive, but starts with @
 }
@@ -73,8 +82,11 @@ _DIRECTIVE_TYPOS = {
 
 
 def _check_unknown_directive(
-    stripped: str, line_idx: int, lines: list[str],
-    filename: str | None, line_map: list | None,
+    stripped: str,
+    line_idx: int,
+    lines: list[str],
+    filename: str | None,
+    line_map: list | None,
 ) -> None:
     """
     Check if a line starting with @ matches a known directive.
@@ -154,9 +166,7 @@ def parse(
     block_stack = BlockStack()  # Track open control blocks
 
     # State for inline preprocessing
-    in_imports_section = (
-        True  # True at start, becomes False after first non-import line
-    )
+    in_imports_section = True  # True at start, becomes False after first non-import line
     in_metadata_block = False  # True when we see @metadata, False when block ends
 
     i = 0
@@ -224,9 +234,7 @@ def parse(
 
             # Extract parameters from passage name (before parsing tags)
             # Format: PassageName(param1, param2=default) ^tag1 ^tag2
-            passage_name_with_params, params_str = extract_passage_params(
-                passage_header
-            )
+            passage_name_with_params, params_str = extract_passage_params(passage_header)
 
             # Extract tags from passage name (tags can appear after params)
             passage_name, passage_tags = parse_tags(passage_name_with_params)
@@ -278,9 +286,7 @@ def parse(
 
         # Conditional block: <<if or @if:
         if line.strip().startswith("<<if ") or line.strip().startswith("@if "):
-            conditional, lines_consumed = extract_conditional_block(
-                lines, i, filename, line_map
-            )
+            conditional, lines_consumed = extract_conditional_block(lines, i, filename, line_map)
             current_passage["content"].append(conditional)
             i += lines_consumed
             continue
@@ -377,9 +383,7 @@ def parse(
             current_passage["content"].append({"type": "join_marker", "id": join_id})
 
             # Increment section counter for subsequent choices
-            current_passage["current_section"] = (
-                current_passage.get("current_section", 0) + 1
-            )
+            current_passage["current_section"] = current_passage.get("current_section", 0) + 1
             i += 1
             continue
 
@@ -431,9 +435,7 @@ def parse(
                 )
 
             # Store as Python statement (executed via exec)
-            current_passage["execute"].append(
-                {"type": "python_statement", "code": complete_code}
-            )
+            current_passage["execute"].append({"type": "python_statement", "code": complete_code})
             i += lines_consumed
             continue
 
@@ -457,14 +459,12 @@ def parse(
                     # Get indendation of this choice line
                     choice_indent = len(line) - len(line.lstrip())
                     # Look ahead for block content
-                    block_content, block_execute, lines_consumed = (
-                        extract_join_choice_block(
-                            lines,
-                            i + 1,  # Start looking at next line
-                            choice_indent,
-                            filename,
-                            line_map,
-                        )
+                    block_content, block_execute, lines_consumed = extract_join_choice_block(
+                        lines,
+                        i + 1,  # Start looking at next line
+                        choice_indent,
+                        filename,
+                        line_map,
                     )
                     # Attach to choice
                     if block_content:
@@ -502,15 +502,11 @@ def parse(
             if line.rstrip().endswith("<>"):
                 # Remove <> and parse (glue: no newline after)
                 content_line = line.rstrip()[:-2]
-                content_tokens = parse_content_line(
-                    content_line, i + 1, lines, filename, line_map
-                )
+                content_tokens = parse_content_line(content_line, i + 1, lines, filename, line_map)
                 current_passage["content"].extend(content_tokens)
             else:
                 # Normal: add newline after content
-                content_tokens = parse_content_line(
-                    line, i + 1, lines, filename, line_map
-                )
+                content_tokens = parse_content_line(line, i + 1, lines, filename, line_map)
                 current_passage["content"].extend(content_tokens)
                 current_passage["content"].append({"type": "text", "value": "\n"})
             i += 1

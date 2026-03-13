@@ -1,8 +1,5 @@
 """Tests for bardic.runtime.types — PassageOutput and GameSnapshot."""
 
-import copy
-import pytest
-
 from bardic.runtime.types import PassageOutput, GameSnapshot
 from bardic.runtime.engine import BardEngine
 from bardic.compiler.compiler import BardCompiler
@@ -61,24 +58,25 @@ class TestPassageOutput:
 
     def test_jump_target(self):
         """Jump target field works."""
-        output = PassageOutput(
-            content="", choices=[], passage_id="X", jump_target="Death"
-        )
+        output = PassageOutput(content="", choices=[], passage_id="X", jump_target="Death")
         assert output.jump_target == "Death"
 
     def test_import_from_engine_module(self):
         """PassageOutput is importable from its original location."""
         from bardic.runtime.engine import PassageOutput as PO
+
         assert PO is PassageOutput
 
     def test_import_from_runtime_package(self):
         """PassageOutput is importable from the runtime package."""
         from bardic.runtime import PassageOutput as PO
+
         assert PO is PassageOutput
 
     def test_import_from_top_level(self):
         """PassageOutput is importable from the top-level bardic package."""
         from bardic import PassageOutput as PO
+
         assert PO is PassageOutput
 
 
@@ -174,9 +172,11 @@ class TestGameSnapshot:
     def test_import_from_top_level(self):
         """GameSnapshot is importable from the top-level bardic package."""
         from bardic import GameSnapshot as GS
+
         assert GS is GameSnapshot
 
     def test_import_from_runtime_package(self):
         """GameSnapshot is importable from the runtime package."""
         from bardic.runtime import GameSnapshot as GS
+
         assert GS is GameSnapshot

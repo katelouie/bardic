@@ -40,9 +40,11 @@ def _get_storage():
     """
     try:
         from js import localStorage
+
         return localStorage
     except ImportError:
         from pyscript import window
+
         return window.localStorage
 
 

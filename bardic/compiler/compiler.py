@@ -46,4 +46,5 @@ class BardCompiler:
             Compiled story as dictionary
         """
         from .parser import parse
+
         return parse(source)

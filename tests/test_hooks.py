@@ -24,7 +24,9 @@ def hook_story():
                 "id": "RegisterHook",
                 "content": [{"type": "text", "value": "Hook registered."}],
                 "choices": [{"text": "Continue", "target": "Room"}],
-                "execute": [{"type": "hook", "action": "add", "event": "turn_end", "target": "CounterHook"}],
+                "execute": [
+                    {"type": "hook", "action": "add", "event": "turn_end", "target": "CounterHook"}
+                ],
             },
             "CounterHook": {
                 "id": "CounterHook",
@@ -45,7 +47,14 @@ def hook_story():
                 "id": "Unregister",
                 "content": [{"type": "text", "value": "Hook removed."}],
                 "choices": [{"text": "Continue", "target": "Room"}],
-                "execute": [{"type": "hook", "action": "remove", "event": "turn_end", "target": "CounterHook"}],
+                "execute": [
+                    {
+                        "type": "hook",
+                        "action": "remove",
+                        "event": "turn_end",
+                        "target": "CounterHook",
+                    }
+                ],
             },
         },
     }

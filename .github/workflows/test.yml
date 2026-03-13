@@ -8,33 +8,50 @@ on:
     branches: [ main ]
 
 jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install ruff
+        run: pip install ruff
+
+      - name: Run ruff check
+        run: ruff check bardic/
+
+      - name: Run ruff format check
+        run: ruff format --check bardic/
+
   test:
     name: Test on Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
+    needs: lint
 
     strategy:
       matrix:
-        # Test on multiple Python versions
-        python-version: ["3.12"]
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
 
     steps:
-      # Check out the code
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      # Set up Python
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
-      # Install dependencies
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -e .
           pip install pytest pytest-cov
 
-      # Run tests
       - name: Run tests
         run: |
           pytest --cov=bardic --cov-report=xml --cov-report=term

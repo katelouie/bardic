@@ -10,7 +10,7 @@ try:
     output = engine.current()
     print("FULL CONTENT:")
     print(repr(output.content))
-    print("\n" + "="*70 + "\n")
+    print("\n" + "=" * 70 + "\n")
     print(output.content)
 except Exception as e:
     print(f"ERROR: {e}")

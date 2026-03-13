@@ -103,9 +103,7 @@ class Shop:
     Integrates with Wallet and Inventory for transactions.
     """
 
-    def __init__(
-        self, items: list[dict], sell_back_rate: float = 0.5, discount: float = 1.0
-    ):
+    def __init__(self, items: list[dict], sell_back_rate: float = 0.5, discount: float = 1.0):
         """Create a shop with inventory.
 
         Args:

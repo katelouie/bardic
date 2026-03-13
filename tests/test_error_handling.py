@@ -202,9 +202,7 @@ ERROR_CASES = {
 }
 
 
-@pytest.mark.parametrize(
-    "filename,expected", ERROR_CASES.items(), ids=list(ERROR_CASES.keys())
-)
+@pytest.mark.parametrize("filename,expected", ERROR_CASES.items(), ids=list(ERROR_CASES.keys()))
 def test_parser_error_is_caught(filename, expected):
     """
     Test that parser errors are caught and have helpful messages.
@@ -230,6 +228,5 @@ def test_parser_error_is_caught(filename, expected):
     import re
 
     assert re.search(expected["error_pattern"], error_message), (
-        f"Error message should mention {expected['error_pattern']}, "
-        f"but got: {error_message}"
+        f"Error message should mention {expected['error_pattern']}, but got: {error_message}"
     )

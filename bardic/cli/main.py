@@ -129,9 +129,7 @@ def play(story_file: str, no_color: bool):
             click.echo(click.style("✓", fg="green") + " Compiled successfully")
             click.echo()
         except Exception as e:
-            click.echo(
-                click.style("✗ Compile Error: ", fg="red", bold=True) + str(e), err=True
-            )
+            click.echo(click.style("✗ Compile Error: ", fg="red", bold=True) + str(e), err=True)
             sys.exit(1)
     else:
         # Load pre-compiled JSON
@@ -146,8 +144,7 @@ def play(story_file: str, no_color: bool):
             sys.exit(1)
         except Exception as e:
             click.echo(
-                click.style("✗ Error: ", fg="red", bold=True)
-                + f"Could not load story: {e}",
+                click.style("✗ Error: ", fg="red", bold=True) + f"Could not load story: {e}",
                 err=True,
             )
             sys.exit(1)
@@ -157,8 +154,7 @@ def play(story_file: str, no_color: bool):
         engine = BardEngine(story)
     except Exception as e:
         click.echo(
-            click.style("✗ Error: ", fg="red", bold=True)
-            + f"Could not initialize story: {e}",
+            click.style("✗ Error: ", fg="red", bold=True) + f"Could not initialize story: {e}",
             err=True,
         )
         sys.exit(1)
@@ -173,9 +169,7 @@ def play(story_file: str, no_color: bool):
     # Show story info
     info = engine.get_story_info()
     click.echo(click.style("Story: ", fg="white", dim=True) + f"{info['version']}")
-    click.echo(
-        click.style("Passages: ", fg="white", dim=True) + f"{info['passage_count']}"
-    )
+    click.echo(click.style("Passages: ", fg="white", dim=True) + f"{info['passage_count']}")
     click.echo()
     click.echo(click.style("Press Ctrl+C to quit at any time", fg="white", dim=True))
     click.echo()
@@ -201,9 +195,11 @@ def play(story_file: str, no_color: bool):
                 if line.strip():
                     # Replace markdown images with terminal-friendly text
                     line = re.sub(
-                        r'!\[([^\]]*)\]\([^)]+\)',
-                        lambda m: click.style(f"[Image: {m.group(1)}]", fg="cyan", dim=True) if m.group(1) else click.style("[Image]", fg="cyan", dim=True),
-                        line
+                        r"!\[([^\]]*)\]\([^)]+\)",
+                        lambda m: click.style(f"[Image: {m.group(1)}]", fg="cyan", dim=True)
+                        if m.group(1)
+                        else click.style("[Image]", fg="cyan", dim=True),
+                        line,
                     )
                     click.echo(click.style("  ", fg="white") + line)
                 else:
@@ -234,9 +230,7 @@ def play(story_file: str, no_color: bool):
             click.echo()
 
             for i, choice in enumerate(output.choices, 1):
-                click.echo(
-                    f"  {click.style(str(i), fg='cyan', bold=True)}. {choice['text']}"
-                )
+                click.echo(f"  {click.style(str(i), fg='cyan', bold=True)}. {choice['text']}")
 
             click.echo()
 
@@ -260,9 +254,7 @@ def play(story_file: str, no_color: bool):
                             + f"Please enter a number between 1 and {len(output.choices)}"
                         )
                 except ValueError:
-                    click.echo(
-                        click.style("  ⚠ ", fg="yellow") + "Please enter a valid number"
-                    )
+                    click.echo(click.style("  ⚠ ", fg="yellow") + "Please enter a valid number")
                 except EOFError:
                     # Ctrl+D pressed
                     raise KeyboardInterrupt
@@ -340,8 +332,7 @@ def init(project_name: str, template: str, path: str):
 
     if not template_dir.exists():
         click.echo(
-            click.style("✗ Error: ", fg="red", bold=True)
-            + f"Template not found: {template}",
+            click.style("✗ Error: ", fg="red", bold=True) + f"Template not found: {template}",
             err=True,
         )
         sys.exit(1)
@@ -349,39 +340,26 @@ def init(project_name: str, template: str, path: str):
     try:
         # Create project directory
         project_dir.mkdir(parents=True)
-        click.echo(
-            click.style("✓", fg="green", bold=True)
-            + f" Created directory: {project_dir}"
-        )
+        click.echo(click.style("✓", fg="green", bold=True) + f" Created directory: {project_dir}")
 
         # Create compiled_stories directory if not web template (web uses frontend/public/stories/)
         if template != "web":
             (project_dir / "compiled_stories").mkdir()
-            click.echo(
-                click.style("✓", fg="green", bold=True) + " Created compiled_stories/"
-            )
+            click.echo(click.style("✓", fg="green", bold=True) + " Created compiled_stories/")
 
         # Copy template files and directories
         for item in template_dir.iterdir():
             dest = project_dir / item.name
             if item.is_file():
                 shutil.copy2(item, dest)
-                click.echo(
-                    click.style("✓", fg="green", bold=True) + f" Created {item.name}"
-                )
+                click.echo(click.style("✓", fg="green", bold=True) + f" Created {item.name}")
             elif item.is_dir():
                 shutil.copytree(item, dest)
-                click.echo(
-                    click.style("✓", fg="green", bold=True) + f" Created {item.name}/"
-                )
+                click.echo(click.style("✓", fg="green", bold=True) + f" Created {item.name}/")
 
         click.echo()
         click.echo("=" * 60)
-        click.echo(
-            click.style(
-                f"✓ Project '{project_name}' initialized!", fg="green", bold=True
-            )
-        )
+        click.echo(click.style(f"✓ Project '{project_name}' initialized!", fg="green", bold=True))
         click.echo("=" * 60)
         click.echo()
         click.echo(click.style("Next steps:", fg="cyan", bold=True))
@@ -391,15 +369,11 @@ def init(project_name: str, template: str, path: str):
         if template == "nicegui":
             click.echo(f"  1. cd {project_name}")
             click.echo("  2. pip install -r requirements.txt")
-            click.echo(
-                "  3. bardic compile example.bard -o compiled_stories/example.json"
-            )
+            click.echo("  3. bardic compile example.bard -o compiled_stories/example.json")
             click.echo("  4. python player.py")
             click.echo()
             click.echo(
-                click.style(
-                    "Your game will be running at http://localhost:8080", fg="yellow"
-                )
+                click.style("Your game will be running at http://localhost:8080", fg="yellow")
             )
             click.echo()
             click.echo(
@@ -416,9 +390,7 @@ def init(project_name: str, template: str, path: str):
             click.echo(f"  1. cd {project_name}")
             click.echo("  2. pip install -r requirements.txt  # Backend dependencies")
             click.echo("  3. cd frontend && npm install && cd ..")
-            click.echo(
-                "  4. bardic compile example.bard -o frontend/public/stories/example.json"
-            )
+            click.echo("  4. bardic compile example.bard -o frontend/public/stories/example.json")
             click.echo("  5. cd backend && python main.py  # Terminal 1")
             click.echo("  6. cd frontend && npm run dev     # Terminal 2")
             click.echo()
@@ -434,20 +406,14 @@ def init(project_name: str, template: str, path: str):
             click.echo(f"  1. cd {project_name}")
             click.echo("  2. pip install -r requirements.txt")
             click.echo("  3. mkdir -p compiled_stories")
-            click.echo(
-                "  4. bardic compile example.bard -o compiled_stories/example.json"
-            )
+            click.echo("  4. bardic compile example.bard -o compiled_stories/example.json")
             click.echo("  5. reflex run")
             click.echo()
             click.echo(
-                click.style(
-                    "Your game will be running at http://localhost:3000", fg="yellow"
-                )
+                click.style("Your game will be running at http://localhost:3000", fg="yellow")
             )
             click.echo()
-            click.echo(
-                click.style("Note:", fg="cyan") + " Save/load feature coming soon"
-            )
+            click.echo(click.style("Note:", fg="cyan") + " Save/load feature coming soon")
 
         click.echo()
 
@@ -464,7 +430,9 @@ def init(project_name: str, template: str, path: str):
 @click.option("--verbose", "-v", is_flag=True, help="Show info-level diagnostics and hints")
 @click.option("--errors-only", "-e", is_flag=True, help="Only show errors, not warnings")
 @click.option("--json-output", is_flag=True, help="Output diagnostics as JSON")
-@click.option("--no-plugins", is_flag=True, help="Skip project-specific lint plugins from linter/ directory")
+@click.option(
+    "--no-plugins", is_flag=True, help="Skip project-specific lint plugins from linter/ directory"
+)
 def lint(input_file, verbose, errors_only, json_output, no_plugins):
     """
     Lint a .bard story for structural issues.
@@ -521,6 +489,7 @@ def lint(input_file, verbose, errors_only, json_output, no_plugins):
     # JSON output mode
     if json_output:
         import json as json_mod
+
         output = {
             "summary": {
                 "files": report.file_count,
@@ -705,9 +674,7 @@ def serve(port, frontend_port, no_browser):
         click.echo(click.style("✗ Backend failed to start", fg="red"))
         sys.exit(1)
 
-    click.echo(
-        click.style("✓ Backend running", fg="green") + f" on http://127.0.0.1:{port}"
-    )
+    click.echo(click.style("✓ Backend running", fg="green") + f" on http://127.0.0.1:{port}")
 
     # Start frontend
     click.echo(click.style("Starting frontend server...", fg="yellow"))
@@ -716,9 +683,7 @@ def serve(port, frontend_port, no_browser):
     # Check if node_modules exist
     if not (frontend_dir / "node_modules").exists():
         click.echo(click.style("Installing frontend dependencies...", fg="yellow"))
-        npm_install = subprocess.run(
-            ["npm", "install"], cwd=frontend_dir, capture_output=True
-        )
+        npm_install = subprocess.run(["npm", "install"], cwd=frontend_dir, capture_output=True)
         if npm_install.returncode != 0:
             click.echo(click.style("X npm install failed", fg="red"))
             backend_process.terminate()
@@ -739,8 +704,7 @@ def serve(port, frontend_port, no_browser):
         sys.exit(1)
 
     click.echo(
-        click.style("✓ Frontend running", fg="green")
-        + f" on http://localhost:{frontend_port}"
+        click.style("✓ Frontend running", fg="green") + f" on http://localhost:{frontend_port}"
     )
 
     # Open browser
@@ -788,9 +752,7 @@ def serve(port, frontend_port, no_browser):
 
 @cli.command()
 @click.argument("story_file", type=click.Path(exists=True))
-@click.option(
-    "--output", "-o", default="./dist", help="Output directory for the bundle"
-)
+@click.option("--output", "-o", default="./dist", help="Output directory for the bundle")
 @click.option("--name", "-n", help="Game name (uses metadata title if not specified)")
 @click.option(
     "--theme",
@@ -799,18 +761,14 @@ def serve(port, frontend_port, no_browser):
     type=click.Choice(["dark", "light", "retro"]),
     help="Visual theme for the game",
 )
-@click.option(
-    "--zip", "-z", is_flag=True, help="Create a ZIP file ready for upload to itch.io"
-)
+@click.option("--zip", "-z", is_flag=True, help="Create a ZIP file ready for upload to itch.io")
 @click.option(
     "--minimal",
     "-m",
     is_flag=True,
     help="Minimal bundle with only Python core (~6 MB instead of ~17 MB)",
 )
-def bundle(
-    story_file: str, output: str, name: str, theme: str, zip: bool, minimal: bool
-):
+def bundle(story_file: str, output: str, name: str, theme: str, zip: bool, minimal: bool):
     """
     Bundle a Bardic game for browser distribution.
 
@@ -866,24 +824,16 @@ def bundle(
             click.echo()
             click.echo("To upload to itch.io:")
             click.echo(
-                click.style(
-                    f"  Upload {zip_path} and mark as 'playable in browser'", fg="cyan"
-                )
+                click.style(f"  Upload {zip_path} and mark as 'playable in browser'", fg="cyan")
             )
         else:
             click.echo()
             click.echo("To test locally:")
-            click.echo(
-                click.style(
-                    f"  cd {output_path} && python -m http.server 8000", fg="cyan"
-                )
-            )
+            click.echo(click.style(f"  cd {output_path} && python -m http.server 8000", fg="cyan"))
             click.echo()
             click.echo("To create a ZIP for itch.io:")
             click.echo(
-                click.style(
-                    "  Re-run with --zip flag, or manually zip the folder", fg="cyan"
-                )
+                click.style("  Re-run with --zip flag, or manually zip the folder", fg="cyan")
             )
 
     except Exception as e:

@@ -2,12 +2,10 @@
 Runtime engine for executing compiled Bardic stories.
 """
 
-import copy
 import json
-import traceback
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
-from bardic.runtime.types import PassageOutput, GameSnapshot
+from bardic.runtime.types import PassageOutput
 from bardic.runtime.hooks import HookManager
 from bardic.runtime.state import StateManager
 from bardic.runtime.directives import DirectiveProcessor
@@ -56,9 +54,7 @@ class BardEngine:
         self.environment = environment
         self._current_output = None  # Cache for current passage output
         # Key: passage_id, Val: current section 0-index
-        self._join_section_index: dict[
-            str, int
-        ] = {}  # @join section tracking (which one we're in)
+        self._join_section_index: dict[str, int] = {}  # @join section tracking (which one we're in)
 
         # State management (undo/redo, save/load, serialization)
         self.state_manager = StateManager(self, max_undo=50)
@@ -99,6 +95,7 @@ class BardEngine:
         # Browser-specific: attach localStorage adapter
         if self.environment == "browser":
             from bardic.runtime.browser import BrowserStorageAdapter
+
             self._browser_storage = BrowserStorageAdapter(self.state_manager)
             self.save_to_browser = self._browser_storage.save
             self.load_from_browser = self._browser_storage.load
@@ -218,9 +215,7 @@ class BardEngine:
                         break
 
             if paren_end == -1:
-                raise ValueError(
-                    f"Unclosed parenthesis in passage spec: {passage_spec}"
-                )
+                raise ValueError(f"Unclosed parenthesis in passage spec: {passage_spec}")
 
             args_str = passage_spec[paren_start + 1 : paren_end]
         else:
@@ -309,9 +304,7 @@ class BardEngine:
 
                     # Combine accumulated content with jump result
                     if accumulated_content:
-                        combined = "\n\n".join(
-                            accumulated_content + [jump_output.content]
-                        )
+                        combined = "\n\n".join(accumulated_content + [jump_output.content])
                         jump_output = PassageOutput(
                             content=combined,
                             choices=jump_output.choices,
@@ -426,9 +419,7 @@ class BardEngine:
 
         # Track this choice if it's one-time (not sticky)
         # Must happen BEFORE @join check so one-time @join choices are tracked too
-        if not chosen_choice.get(
-            "sticky", True
-        ):  # Default to True for backwards compatability
+        if not chosen_choice.get("sticky", True):  # Default to True for backwards compatability
             # Create a unique ID for this choice based on passage + choice index + target
             choice_id = f"{current_output.passage_id}:{chosen_choice['text']}:{target}"
             self.used_choices.add(choice_id)
@@ -454,9 +445,7 @@ class BardEngine:
         if hook_output:
             # Append hook output to the passage content
             result = PassageOutput(
-                content=result.content + "\n\n" + hook_output
-                if result.content
-                else hook_output,
+                content=result.content + "\n\n" + hook_output if result.content else hook_output,
                 choices=result.choices,
                 passage_id=result.passage_id,
                 render_directives=result.render_directives,
@@ -520,9 +509,7 @@ class BardEngine:
         hook_output = self.trigger_event("turn_end")
         if hook_output:
             result = PassageOutput(
-                content=result.content + "\n\n" + hook_output
-                if result.content
-                else hook_output,
+                content=result.content + "\n\n" + hook_output if result.content else hook_output,
                 choices=result.choices,
                 passage_id=result.passage_id,
                 render_directives=result.render_directives,
@@ -566,9 +553,7 @@ class BardEngine:
         """Build evaluation context with state, local scope, and special variables."""
         return self.executor.get_eval_context()
 
-    def _render_content(
-        self, content_tokens: list[dict]
-    ) -> tuple[str, Optional[str], list[dict]]:
+    def _render_content(self, content_tokens: list[dict]) -> tuple[str, Optional[str], list[dict]]:
         """Render content tokens — delegates to ContentRenderer."""
         return self.renderer.render_content(content_tokens)
 
@@ -576,9 +561,7 @@ class BardEngine:
         """Render a for-loop — delegates to ContentRenderer."""
         return self.renderer.render_loop(loop)
 
-    def _render_conditional(
-        self, conditional: dict
-    ) -> tuple[str, Optional[str], list[dict]]:
+    def _render_conditional(self, conditional: dict) -> tuple[str, Optional[str], list[dict]]:
         """Render a conditional block — delegates to ContentRenderer."""
         return self.renderer.render_conditional(conditional)
 

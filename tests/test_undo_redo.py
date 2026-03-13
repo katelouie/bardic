@@ -186,7 +186,9 @@ class TestUndoRedoWithHooks:
                     "id": "Register",
                     "content": [{"type": "text", "value": "Hook registered."}],
                     "choices": [{"text": "Continue", "target": "Room"}],
-                    "execute": [{"type": "hook", "action": "add", "event": "turn_end", "target": "Counter"}],
+                    "execute": [
+                        {"type": "hook", "action": "add", "event": "turn_end", "target": "Counter"}
+                    ],
                 },
                 "Counter": {
                     "id": "Counter",
@@ -208,7 +210,10 @@ class TestUndoRedoWithHooks:
         engine = BardEngine(hook_undo_story)
 
         # Initially no hooks
-        assert "turn_end" not in engine.hook_manager.hooks or len(engine.hook_manager.hooks.get("turn_end", [])) == 0
+        assert (
+            "turn_end" not in engine.hook_manager.hooks
+            or len(engine.hook_manager.hooks.get("turn_end", [])) == 0
+        )
 
         # Register hook
         engine.choose(0)  # Go to Register
@@ -227,7 +232,7 @@ class TestUndoStackLimit:
         engine = BardEngine(undo_story)
 
         # The default limit is 50, but we'll just verify the deque has maxlen
-        assert hasattr(engine.undo_stack, 'maxlen')
+        assert hasattr(engine.undo_stack, "maxlen")
         assert engine.undo_stack.maxlen == 50
 
 

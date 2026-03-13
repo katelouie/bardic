@@ -161,9 +161,7 @@ class CommandExecutor:
             # Sync any new/modified variables back to state
             # Skip private vars (starting with _), context vars (read-only), and local params
             local_param_names = (
-                set(self._local_scope_stack[-1].keys())
-                if self._local_scope_stack
-                else set()
+                set(self._local_scope_stack[-1].keys()) if self._local_scope_stack else set()
             )
             for key, value in eval_context.items():
                 if (
@@ -297,9 +295,7 @@ class CommandExecutor:
             # Only update variables that were changed or added
             # Update state but not context -- context is read-only!!
             for key, value in exec_context.items():
-                if (
-                    not key.startswith("_") and key not in self.context
-                ):  # Skip internal variables
+                if not key.startswith("_") and key not in self.context:  # Skip internal variables
                     self.state[key] = value
 
         except SyntaxError as e:
@@ -362,6 +358,7 @@ class CommandExecutor:
                 # Browser: modules should already be in sys.modules (pre-bundled)
                 # Use real builtins since modules are pre-loaded
                 import builtins
+
                 import_namespace = {"__builtins__": builtins}
                 exec(import_code, import_namespace)
 
@@ -384,10 +381,7 @@ class CommandExecutor:
                 else "Make sure the modules are bundled with the game."
             )
             raise RuntimeError(
-                f"Failed to import modules:\n"
-                f"  {e}\n\n"
-                f"Import code:\n{import_code}\n\n"
-                f"{error_hint}"
+                f"Failed to import modules:\n  {e}\n\nImport code:\n{import_code}\n\n{error_hint}"
             )
 
         except Exception as e:

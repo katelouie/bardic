@@ -337,9 +337,7 @@ def _extract_class_definitions(
         # Scan class body (direct children only — not nested methods)
         for item in node.body:
             # Annotated field: name: type = default
-            if isinstance(item, ast.AnnAssign) and isinstance(
-                item.target, ast.Name
-            ):
+            if isinstance(item, ast.AnnAssign) and isinstance(item.target, ast.Name):
                 name = item.target.id
                 attrs.add(name)
                 # _private → public (bounded property pattern)
@@ -594,7 +592,9 @@ def _extract_from_content(tokens: list, ctx: str, results: list):
                 results.append((expr, f"{ctx} render"))
 
 
-def parse_attribute_access(code: str) -> tuple[set[tuple[str, str]], set[tuple[str, str]], set[tuple[str, str]]]:
+def parse_attribute_access(
+    code: str,
+) -> tuple[set[tuple[str, str]], set[tuple[str, str]], set[tuple[str, str]]]:
     """
     Parse a Python code string and extract attribute writes, reads, and method calls.
 
@@ -662,21 +662,63 @@ def parse_attribute_access(code: str) -> tuple[set[tuple[str, str]], set[tuple[s
 # Objects whose attributes we should NOT track (builtins, framework internals)
 _IGNORE_OBJECTS = {
     # Python builtins and common modules
-    "len", "range", "str", "int", "float", "bool", "list", "dict", "set",
-    "print", "type", "isinstance", "hasattr", "getattr", "setattr",
-    "math", "random", "json", "os", "sys", "re",
+    "len",
+    "range",
+    "str",
+    "int",
+    "float",
+    "bool",
+    "list",
+    "dict",
+    "set",
+    "print",
+    "type",
+    "isinstance",
+    "hasattr",
+    "getattr",
+    "setattr",
+    "math",
+    "random",
+    "json",
+    "os",
+    "sys",
+    "re",
     # Common attribute access patterns that aren't game state
-    "self", "cls",
+    "self",
+    "cls",
 }
 
 # Attributes that are too common / generic to track meaningfully
 _IGNORE_ATTRIBUTES = {
     # Python dunder/special
-    "__init__", "__str__", "__repr__", "__dict__", "__class__",
+    "__init__",
+    "__str__",
+    "__repr__",
+    "__dict__",
+    "__class__",
     # Common method names that could be on anything
-    "append", "extend", "pop", "remove", "get", "items", "keys", "values",
-    "copy", "clear", "update", "add", "format", "join", "split", "strip",
-    "lower", "upper", "replace", "startswith", "endswith", "count",
+    "append",
+    "extend",
+    "pop",
+    "remove",
+    "get",
+    "items",
+    "keys",
+    "values",
+    "copy",
+    "clear",
+    "update",
+    "add",
+    "format",
+    "join",
+    "split",
+    "strip",
+    "lower",
+    "upper",
+    "replace",
+    "startswith",
+    "endswith",
+    "count",
 }
 
 
@@ -719,9 +761,9 @@ def check_attribute_consistency(
     # Build per-object known attribute/method sets
     obj_known_attrs: dict[str, set[str]] = defaultdict(set)
     obj_known_methods: dict[str, set[str]] = defaultdict(set)
-    for (obj, attr) in all_writes:
+    for obj, attr in all_writes:
         obj_known_attrs[obj].add(attr)
-    for (obj, method) in all_methods:
+    for obj, method in all_methods:
         obj_known_methods[obj].add(method)
 
     # Level 2: Add class-defined attributes from Python source files
@@ -765,6 +807,7 @@ def check_attribute_consistency(
 
         # Check for close matches (typo detection)
         import difflib
+
         # Search both written attrs AND methods for close matches
         all_known = known_attrs + sorted(methods)
         close = difflib.get_close_matches(attr, all_known, n=1, cutoff=0.7)
@@ -855,10 +898,7 @@ def lint_story(
     # Gather metadata
     passages = story_data.get("passages", {})
     report.passage_count = len(passages)
-    report.choice_count = sum(
-        len(p.get("choices", []))
-        for p in passages.values()
-    )
+    report.choice_count = sum(len(p.get("choices", [])) for p in passages.values())
     report.word_count = _count_story_words(passages)
 
     # Run structural checks
@@ -933,9 +973,7 @@ def _discover_plugins(
 
             # Collect check_* functions
             for attr_name in sorted(dir(module)):
-                if attr_name.startswith("check_") and callable(
-                    getattr(module, attr_name)
-                ):
+                if attr_name.startswith("check_") and callable(getattr(module, attr_name)):
                     checks.append((getattr(module, attr_name), module_name))
 
         except Exception as e:

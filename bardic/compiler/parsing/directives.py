@@ -12,7 +12,7 @@ def parse_render_line(
     line_num: int = 0,
     lines: Optional[List[str]] = None,
     filename: Optional[str] = None,
-    line_map: Optional[List[SourceLocation]] = None
+    line_map: Optional[List[SourceLocation]] = None,
 ) -> Optional[dict]:
     """
     Parse a complete @render line including framwork hint detection.
@@ -50,32 +50,36 @@ def parse_render_line(
             directive_str = match.group(2)
         else:
             if lines is not None and line_num > 0:
-                raise SyntaxError(format_error(
-                    error_type="Invalid Directive",
-                    line_num=line_num,
-                    lines=lines,
-                    message="Invalid @render:framework syntax",
-                    pointer_length=len(line.strip()),
-                    suggestion="Use: @render:framework directive_name(args)",
-                    filename=filename,
-                    line_map=line_map
-                ))
+                raise SyntaxError(
+                    format_error(
+                        error_type="Invalid Directive",
+                        line_num=line_num,
+                        lines=lines,
+                        message="Invalid @render:framework syntax",
+                        pointer_length=len(line.strip()),
+                        suggestion="Use: @render:framework directive_name(args)",
+                        filename=filename,
+                        line_map=line_map,
+                    )
+                )
             return None
     elif after_render.strip():
         # No framework hint, just the directive
         directive_str = after_render.strip()
     else:
         if lines is not None and line_num > 0:
-            raise SyntaxError(format_error(
-                error_type="Syntax Error",
-                line_num=line_num,
-                lines=lines,
-                message="@render directive missing directive name",
-                pointer_length=len("@render"),
-                suggestion="Specify a directive to render. Example: @render render_card(card)",
-                filename=filename,
-                line_map=line_map
-            ))
+            raise SyntaxError(
+                format_error(
+                    error_type="Syntax Error",
+                    line_num=line_num,
+                    lines=lines,
+                    message="@render directive missing directive name",
+                    pointer_length=len("@render"),
+                    suggestion="Specify a directive to render. Example: @render render_card(card)",
+                    filename=filename,
+                    line_map=line_map,
+                )
+            )
         return None
 
     # Parse the directive string and arguments
@@ -200,7 +204,7 @@ def parse_input_line(
     line_num: int = 0,
     lines: Optional[List[str]] = None,
     filename: Optional[str] = None,
-    line_map: Optional[List[SourceLocation]] = None
+    line_map: Optional[List[SourceLocation]] = None,
 ) -> Optional[dict]:
     """
     Parse an @input directive for text input.
@@ -229,16 +233,18 @@ def parse_input_line(
 
     if not after_input:
         if lines is not None and line_num > 0:
-            raise SyntaxError(format_error(
-                error_type="Syntax Error",
-                line_num=line_num,
-                lines=lines,
-                message="@input directive missing parameters",
-                pointer_length=len("@input"),
-                suggestion='Specify input parameters. Example: @input name="player_name"',
-                filename=filename,
-                line_map=line_map
-            ))
+            raise SyntaxError(
+                format_error(
+                    error_type="Syntax Error",
+                    line_num=line_num,
+                    lines=lines,
+                    message="@input directive missing parameters",
+                    pointer_length=len("@input"),
+                    suggestion='Specify input parameters. Example: @input name="player_name"',
+                    filename=filename,
+                    line_map=line_map,
+                )
+            )
         return None
 
     # Parse name="value" style attributes
@@ -253,26 +259,28 @@ def parse_input_line(
         input_spec[key] = value
 
     # Validate that 'name' is present (required)
-    if 'name' not in input_spec:
+    if "name" not in input_spec:
         if lines is not None and line_num > 0:
-            raise SyntaxError(format_error(
-                error_type="Syntax Error",
-                line_num=line_num,
-                lines=lines,
-                message="@input directive missing required 'name' attribute",
-                pointer_length=len(line.strip()),
-                suggestion='Add name attribute. Example: @input name="player_name"',
-                filename=filename,
-                line_map=line_map
-            ))
+            raise SyntaxError(
+                format_error(
+                    error_type="Syntax Error",
+                    line_num=line_num,
+                    lines=lines,
+                    message="@input directive missing required 'name' attribute",
+                    pointer_length=len(line.strip()),
+                    suggestion='Add name attribute. Example: @input name="player_name"',
+                    filename=filename,
+                    line_map=line_map,
+                )
+            )
         return None
 
     # Set defaults
-    if 'label' not in input_spec:
+    if "label" not in input_spec:
         # Default label to capitalized name
-        input_spec['label'] = input_spec['name'].replace('_', ' ').title()
+        input_spec["label"] = input_spec["name"].replace("_", " ").title()
 
-    if 'placeholder' not in input_spec:
-        input_spec['placeholder'] = ''
+    if "placeholder" not in input_spec:
+        input_spec["placeholder"] = ""
 
     return input_spec

@@ -81,6 +81,7 @@ class TestSerializeValue:
         class Inventory:
             def __init__(self, items):
                 self.items = items
+
             def to_save_dict(self):
                 return {"items": self.items}
 
@@ -92,11 +93,14 @@ class TestSerializeValue:
 
     def test_custom_from_save_dict_roundtrip(self):
         """Objects with both to_save_dict and from_save_dict roundtrip."""
+
         class Wallet:
             def __init__(self, gold):
                 self.gold = gold
+
             def to_save_dict(self):
                 return {"gold": self.gold}
+
             @classmethod
             def from_save_dict(cls, data):
                 return cls(data["gold"])
@@ -151,9 +155,7 @@ class TestSaveLoadState:
 
     def test_save_load_roundtrip(self):
         """Full save/load cycle restores state."""
-        engine = _make_engine(
-            ":: Start\n~ x = 10\nHello\n+ [Go] -> End\n\n:: End\n~ x = 99\nDone"
-        )
+        engine = _make_engine(":: Start\n~ x = 10\nHello\n+ [Go] -> End\n\n:: End\n~ x = 99\nDone")
         assert engine.state["x"] == 10
 
         # Save at Start
@@ -178,17 +180,17 @@ class TestSaveLoadState:
         """load_state() rejects data referencing nonexistent passages."""
         engine = _make_engine(":: Start\nHello")
         with pytest.raises(ValueError, match="unknown passage"):
-            engine.load_state({
-                "version": "0.1.0",
-                "current_passage_id": "NonExistent",
-                "state": {},
-            })
+            engine.load_state(
+                {
+                    "version": "0.1.0",
+                    "current_passage_id": "NonExistent",
+                    "state": {},
+                }
+            )
 
     def test_load_clears_undo_redo_stacks(self):
         """Loading a save clears both undo and redo stacks."""
-        engine = _make_engine(
-            ":: Start\nHello\n+ [Go] -> End\n\n:: End\nDone\n+ [Back] -> Start"
-        )
+        engine = _make_engine(":: Start\nHello\n+ [Go] -> End\n\n:: End\nDone\n+ [Back] -> Start")
         engine.choose(0)  # creates undo entry
         assert engine.can_undo()
 
@@ -206,9 +208,7 @@ class TestUndoRedoStateManager:
 
     def test_snapshot_enables_undo(self):
         """After snapshot + state change, undo restores."""
-        engine = _make_engine(
-            ":: Start\n~ x = 1\nHello\n+ [Go] -> End\n\n:: End\n~ x = 99\nDone"
-        )
+        engine = _make_engine(":: Start\n~ x = 1\nHello\n+ [Go] -> End\n\n:: End\n~ x = 99\nDone")
         assert engine.state["x"] == 1
         engine.choose(0)  # auto-snapshots
         assert engine.state["x"] == 99
@@ -217,9 +217,7 @@ class TestUndoRedoStateManager:
 
     def test_undo_then_redo(self):
         """Undo followed by redo restores the undone state."""
-        engine = _make_engine(
-            ":: Start\n~ x = 1\nHello\n+ [Go] -> End\n\n:: End\n~ x = 99\nDone"
-        )
+        engine = _make_engine(":: Start\n~ x = 1\nHello\n+ [Go] -> End\n\n:: End\n~ x = 99\nDone")
         engine.choose(0)
         engine.undo()
         assert engine.state["x"] == 1
@@ -248,9 +246,11 @@ class TestImportPaths:
     def test_import_from_state_module(self):
         """StateManager is importable from bardic.runtime.state."""
         from bardic.runtime.state import StateManager as SM
+
         assert SM is StateManager
 
     def test_import_from_runtime_package(self):
         """StateManager is importable from bardic.runtime."""
         from bardic.runtime import StateManager as SM
+
         assert SM is StateManager

@@ -102,9 +102,7 @@ class TestExecuteCommands:
         results = []
         state = {"results": results}
         ex = _make_executor(state=state)
-        ex.execute_commands([
-            {"type": "expression_statement", "code": "results.append(1)"}
-        ])
+        ex.execute_commands([{"type": "expression_statement", "code": "results.append(1)"}])
         assert results == [1]
 
     def test_python_block(self):
@@ -118,17 +116,15 @@ class TestExecuteCommands:
         state = {}
         hm = HookManager()
         ex = CommandExecutor(state=state, context={}, local_scope_stack=[], hook_manager=hm)
-        ex.execute_commands([
-            {"type": "hook", "action": "add", "event": "turn_end", "target": "Ticker"}
-        ])
+        ex.execute_commands(
+            [{"type": "hook", "action": "add", "event": "turn_end", "target": "Ticker"}]
+        )
         assert hm.get_handlers("turn_end") == ["Ticker"]
 
     def test_set_var_with_expression(self):
         state = {"base": 10}
         ex = _make_executor(state=state)
-        ex.execute_commands([
-            {"type": "set_var", "var": "result", "expression": "base * 3"}
-        ])
+        ex.execute_commands([{"type": "set_var", "var": "result", "expression": "base * 3"}])
         assert state["result"] == 30
 
 
@@ -191,8 +187,10 @@ class TestImportPaths:
 
     def test_import_from_executor_module(self):
         from bardic.runtime.executor import CommandExecutor as CE
+
         assert CE is CommandExecutor
 
     def test_import_from_runtime_package(self):
         from bardic.runtime import CommandExecutor as CE
+
         assert CE is CommandExecutor

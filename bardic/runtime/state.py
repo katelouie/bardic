@@ -67,9 +67,7 @@ class StateManager:
         previous.restore_to(self.engine)
 
         # Re-render the restored passage (updates _current_output cache)
-        self.engine._current_output = self.engine._render_passage(
-            self.engine.current_passage_id
-        )
+        self.engine._current_output = self.engine._render_passage(self.engine.current_passage_id)
 
         return True
 
@@ -91,9 +89,7 @@ class StateManager:
         next_state.restore_to(self.engine)
 
         # Re-render the restored passage
-        self.engine._current_output = self.engine._render_passage(
-            self.engine.current_passage_id
-        )
+        self.engine._current_output = self.engine._render_passage(self.engine.current_passage_id)
 
         return True
 
@@ -369,9 +365,7 @@ class StateManager:
             obj = cls.__new__(cls)
             if hasattr(obj, "__dict__"):
                 # Recursively deserialize nested values in obj_data
-                deserialized_data = {
-                    k: self._deserialize_value(v) for k, v in obj_data.items()
-                }
+                deserialized_data = {k: self._deserialize_value(v) for k, v in obj_data.items()}
                 obj.__dict__.update(deserialized_data)
             return obj
         except Exception as e:

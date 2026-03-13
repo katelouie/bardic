@@ -14,6 +14,7 @@ from bardic.stdlib.quest import Quest, QuestJournal
 # Dice Module
 # ──────────────────────────────────────────────
 
+
 class TestRoll:
     def test_simple_d6(self):
         result = roll("1d6")
@@ -264,6 +265,7 @@ class TestInventorySerialization:
 # Economy Module
 # ──────────────────────────────────────────────
 
+
 class TestWallet:
     def test_starting_gold(self):
         w = Wallet(gold=100)
@@ -378,6 +380,7 @@ class TestShop:
 # Relationship Module
 # ──────────────────────────────────────────────
 
+
 class TestRelationshipBasics:
     def test_name_assigned(self):
         """Regression: name was a type annotation, not an assignment."""
@@ -483,11 +486,26 @@ class TestRelationshipProperties:
         assert r.is_defensive is True
 
     def test_relationship_quality_levels(self):
-        assert Relationship(name="X", trust=85, comfort=50, openness=0).relationship_quality == "close_confidant"
-        assert Relationship(name="X", trust=65, comfort=50, openness=0).relationship_quality == "trusted_guide"
-        assert Relationship(name="X", trust=45, comfort=50, openness=0).relationship_quality == "professional"
-        assert Relationship(name="X", trust=25, comfort=50, openness=0).relationship_quality == "cautious"
-        assert Relationship(name="X", trust=10, comfort=50, openness=0).relationship_quality == "guarded"
+        assert (
+            Relationship(name="X", trust=85, comfort=50, openness=0).relationship_quality
+            == "close_confidant"
+        )
+        assert (
+            Relationship(name="X", trust=65, comfort=50, openness=0).relationship_quality
+            == "trusted_guide"
+        )
+        assert (
+            Relationship(name="X", trust=45, comfort=50, openness=0).relationship_quality
+            == "professional"
+        )
+        assert (
+            Relationship(name="X", trust=25, comfort=50, openness=0).relationship_quality
+            == "cautious"
+        )
+        assert (
+            Relationship(name="X", trust=10, comfort=50, openness=0).relationship_quality
+            == "guarded"
+        )
 
 
 class TestRelationshipSerialization:
@@ -510,6 +528,7 @@ class TestRelationshipSerialization:
 # ──────────────────────────────────────────────
 # Quest Module
 # ──────────────────────────────────────────────
+
 
 class TestQuestBasics:
     def test_quest_dataclass(self):

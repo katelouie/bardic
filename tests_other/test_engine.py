@@ -3,11 +3,12 @@
 import json
 from bardic.runtime.engine import BardEngine
 
+
 def test_basic_navigation():
     """Test basic story navigation"""
 
     # Load the compiled story
-    with open('test_story.json') as f:
+    with open("test_story.json") as f:
         story = json.load(f)
 
     # Create engine
@@ -46,7 +47,7 @@ def test_basic_navigation():
 
     # Navigate manually
     print("Navigating to ExamineScratches...")
-    engine.goto('ExamineScratches')
+    engine.goto("ExamineScratches")
     output = engine.current()
     print()
 
@@ -58,14 +59,14 @@ def test_basic_navigation():
 def test_error_handling():
     """Test error handling"""
 
-    with open('test_story.json') as f:
+    with open("test_story.json") as f:
         story = json.load(f)
 
     engine = BardEngine(story)
 
     # Test invalid passage
     try:
-        engine.goto('NonExistentPassage')
+        engine.goto("NonExistentPassage")
         print("ERROR: Should have raised ValueError")
     except ValueError as e:
         print(f"✓ Caught expected error: {e}")
@@ -78,7 +79,7 @@ def test_error_handling():
         print(f"✓ Caught expected error: {e}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     print("=" * 60)
     print("Testing Basic Navigation")
     print("=" * 60)

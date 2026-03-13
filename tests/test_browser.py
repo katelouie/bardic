@@ -1,6 +1,5 @@
 """Tests for bardic.runtime.browser — BrowserStorageAdapter and environment parameter."""
 
-import pytest
 from unittest.mock import MagicMock, patch
 
 from bardic.runtime.executor import CommandExecutor
@@ -47,9 +46,7 @@ class TestEnvironmentParameter:
         assert builtins["getattr"] is getattr
 
     def test_default_environment_is_desktop(self):
-        ex = CommandExecutor(
-            state={}, context={}, local_scope_stack=[], hook_manager=HookManager()
-        )
+        ex = CommandExecutor(state={}, context={}, local_scope_stack=[], hook_manager=HookManager())
         assert ex.environment == "desktop"
         builtins = ex.get_safe_builtins()
         assert "__import__" in builtins
@@ -187,8 +184,10 @@ class TestImportPaths:
 
     def test_import_from_browser_module(self):
         from bardic.runtime.browser import BrowserStorageAdapter as BSA
+
         assert BSA is BrowserStorageAdapter
 
     def test_import_from_runtime_package(self):
         from bardic.runtime import BrowserStorageAdapter as BSA
+
         assert BSA is BrowserStorageAdapter

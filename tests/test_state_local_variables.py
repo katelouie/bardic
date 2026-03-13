@@ -17,6 +17,7 @@ from bardic.runtime.engine import BardEngine
 @pytest.fixture
 def compile_and_run():
     """Helper to compile and run a story string."""
+
     def _compile_and_run(source):
         # Dedent to handle triple-quoted strings with indentation
         source = dedent(source).strip()
@@ -24,6 +25,7 @@ def compile_and_run():
         story = compiler.compile_string(source)
         engine = BardEngine(story)
         return engine
+
     return _compile_and_run
 
 

@@ -1,6 +1,5 @@
 """Test the Bardic parser with basic stories."""
 
-import pytest
 from bardic.compiler.parser import parse
 
 

@@ -40,9 +40,9 @@ print(f"   ✓ Story version: {save_data['story_version']}")
 print(f"   ✓ Current passage: {save_data['current_passage_id']}")
 
 # Verify metadata fields match
-assert save_data['story_name'] == "Metadata Test Story", "story_name mismatch!"
-assert save_data['story_id'] == "test_metadata", "story_id mismatch!"
-assert save_data['story_version'] == "1.0.0", "story_version mismatch!"
+assert save_data["story_name"] == "Metadata Test Story", "story_name mismatch!"
+assert save_data["story_id"] == "test_metadata", "story_id mismatch!"
+assert save_data["story_version"] == "1.0.0", "story_version mismatch!"
 
 print("\n4. Testing load_state()...")
 
@@ -52,7 +52,7 @@ print(f"   Navigated to: {engine.current_passage_id}")
 
 # Save state from this position
 save_data_2 = engine.save_state()
-assert save_data_2['current_passage_id'] == "CheckMetadata", "Should be at CheckMetadata"
+assert save_data_2["current_passage_id"] == "CheckMetadata", "Should be at CheckMetadata"
 
 # Create a fresh engine and load the save
 engine_2 = BardEngine(story_data)
@@ -69,8 +69,8 @@ print("\n5. Testing story compatibility checking...")
 
 # Try loading a save from the "wrong" story (simulate with modified save_data)
 fake_save = save_data_2.copy()
-fake_save['story_id'] = "different_story"
-fake_save['story_name'] = "Different Story"
+fake_save["story_id"] = "different_story"
+fake_save["story_name"] = "Different Story"
 
 print("   Attempting to load save from different story_id...")
 engine_3 = BardEngine(story_data)

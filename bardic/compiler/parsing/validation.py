@@ -90,7 +90,6 @@ def validate_choice_syntax(
     # Check 4: Check for conditionals FIRST (to handle nested brackets like {cards[0]})
     # A conditional is { } that appears BEFORE the [ bracket
     # If conditional present, find its boundaries first
-    cond_start = -1
     cond_end = -1
 
     # Look for conditional { } by doing proper brace matching FIRST
@@ -112,7 +111,6 @@ def validate_choice_syntax(
                 elif choice_part[i] == "}":
                     depth -= 1
                     if depth == 0:
-                        cond_start = first_brace
                         cond_end = i
                         found_closing = True
                         break
@@ -436,11 +434,7 @@ def _cleanup_whitespace(passage: dict[str, Any]) -> None:
             and content[i + 1].get("type") == "conditional"
         ):
             # Skip this newline if there's already a newline before it
-            if (
-                cleaned
-                and cleaned[-1].get("type") == "text"
-                and cleaned[-1].get("value") == "\n"
-            ):
+            if cleaned and cleaned[-1].get("type") == "text" and cleaned[-1].get("value") == "\n":
                 i += 1
                 continue
 
@@ -561,9 +555,7 @@ def check_duplicate_passages(
     """
     # Find all duplicates (passages defined more than once)
     duplicates = {
-        name: locations
-        for name, locations in passage_locations.items()
-        if len(locations) > 1
+        name: locations for name, locations in passage_locations.items() if len(locations) > 1
     }
 
     if not duplicates:
@@ -580,9 +572,7 @@ def check_duplicate_passages(
 
     # List each duplicate with all its locations
     for passage_name, locations in sorted(duplicates.items()):
-        error_parts.append(
-            f"  Passage '{passage_name}' defined {len(locations)} times:\n"
-        )
+        error_parts.append(f"  Passage '{passage_name}' defined {len(locations)} times:\n")
         for i, line_num in enumerate(locations):
             # line_num is 1-indexed, convert to 0-indexed for line_map lookup
             line_idx = line_num - 1
@@ -610,9 +600,7 @@ def check_duplicate_passages(
         error_parts.append("\n")
 
     error_parts.append("  Hint: Each passage must have a unique name.\n")
-    error_parts.append(
-        "        Consider renaming duplicates or removing redundant definitions.\n"
-    )
+    error_parts.append("        Consider renaming duplicates or removing redundant definitions.\n")
 
     raise ValueError("".join(error_parts))
 
@@ -641,7 +629,6 @@ def validate_passage_arguments(
     Raises:
         SyntaxError: If any passage call is invalid
     """
-    import ast
 
     for passage_id, passage in passages.items():
         # Check all choices
@@ -705,9 +692,7 @@ def _validate_single_call(
         # Find similar passage names for helpful suggestion
         similar = _find_similar_passages(target, passages)
         suggestion = (
-            f"Did you mean: {', '.join(similar)}?"
-            if similar
-            else "Check passage name spelling"
+            f"Did you mean: {', '.join(similar)}?" if similar else "Check passage name spelling"
         )
 
         raise SyntaxError(

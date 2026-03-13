@@ -39,11 +39,11 @@ import MyComponent from './MyComponent'
 
 const componentRegistry = {
   // ... existing components ...
-  
+
   // Add your component
   'my_component': MyComponent,
   'MyComponent': MyComponent,  // PascalCase (for React hint)
-  
+
   'default': DefaultDirective
 }
 ```
@@ -105,7 +105,7 @@ function MyComponent({ data, arg1, arg2, ...props }) {
   // Handle both patterns
   const actualArg1 = arg1 || data?.arg1
   const actualArg2 = arg2 || data?.arg2
-  
+
   return <div>{actualArg1} - {actualArg2}</div>
 }
 ```
@@ -124,7 +124,7 @@ function AlertBox({ message, type = 'info' }) {
     error: '#ff6b6b',
     success: '#51cf66'
   }
-  
+
   return (
     <div style={{
       padding: '20px',
@@ -150,7 +150,7 @@ function AlertBox({ message, type = 'info' }) {
 ```jsx
 function ProgressBar({ label, value, max = 100 }) {
   const percentage = (value / max) * 100
-  
+
   return (
     <div style={{ margin: '20px 0' }}>
       <div style={{ marginBottom: '8px', color: '#a855f7' }}>
@@ -189,7 +189,7 @@ import { useState } from 'react'
 
 function DiceRoller({ num_dice = 1, sides = 6 }) {
   const [results, setResults] = useState([])
-  
+
   const roll = () => {
     const newResults = Array.from(
       { length: num_dice },
@@ -197,7 +197,7 @@ function DiceRoller({ num_dice = 1, sides = 6 }) {
     )
     setResults(newResults)
   }
-  
+
   return (
     <div style={{
       padding: '30px',
@@ -205,7 +205,7 @@ function DiceRoller({ num_dice = 1, sides = 6 }) {
       borderRadius: '12px',
       textAlign: 'center'
     }}>
-      <button 
+      <button
         onClick={roll}
         style={{
           padding: '15px 30px',
@@ -219,9 +219,9 @@ function DiceRoller({ num_dice = 1, sides = 6 }) {
       >
         Roll {num_dice}d{sides}
       </button>
-      
+
       {results.length > 0 && (
-        <div style={{ 
+        <div style={{
           marginTop: '20px',
           fontSize: '2rem',
           color: '#a855f7'
