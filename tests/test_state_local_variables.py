@@ -486,6 +486,132 @@ def test_state_always_available(compile_and_run):
     assert "Can get values: True" in output.content
 
 
+def test_params_accessible_in_python_block(compile_and_run):
+    """Test that passage params are accessible inside <<py>> blocks (issue #5)."""
+    source = """
+    :: Start
+    ~ gold = 200
+
+    + [Buy] -> BuyItem(100)
+
+    :: BuyItem(price)
+
+    @py:
+    gold = gold - price
+    @endpy
+
+    Gold remaining: {gold}
+
+    + [Done] -> End
+
+    :: End
+    Complete
+    """
+
+    engine = compile_and_run(source)
+    engine.choose(0)
+    output = engine.current()
+
+    assert "Gold remaining: 100" in output.content
+
+
+def test_state_accessible_in_python_block(compile_and_run):
+    """Test that _state is accessible inside <<py>> blocks."""
+    source = """
+    :: Start
+    ~ hp = 100
+
+    @py:
+    safe_hp = _state.get('hp', 0)
+    has_hp = 'hp' in _state
+    @endpy
+
+    Safe HP: {safe_hp}
+    Has HP: {has_hp}
+
+    + [Done] -> End
+
+    :: End
+    Complete
+    """
+
+    engine = compile_and_run(source)
+    output = engine.current()
+
+    assert "Safe HP: 100" in output.content
+    assert "Has HP: True" in output.content
+
+
+def test_local_accessible_in_python_block(compile_and_run):
+    """Test that _local is accessible inside <<py>> blocks."""
+    source = """
+    :: Start
+
+    + [Go] -> Target(42, "hello")
+
+    :: Target(x, y)
+
+    @py:
+    local_x = _local.get('x')
+    local_y = _local.get('y')
+    has_x = 'x' in _local
+    @endpy
+
+    X: {local_x}
+    Y: {local_y}
+    Has X: {has_x}
+
+    + [Done] -> End
+
+    :: End
+    Complete
+    """
+
+    engine = compile_and_run(source)
+    engine.choose(0)
+    output = engine.current()
+
+    assert "X: 42" in output.content
+    assert "Y: hello" in output.content
+    assert "Has X: True" in output.content
+
+
+def test_params_dont_leak_from_python_block(compile_and_run):
+    """Test that passage params used in <<py>> blocks don't leak to global state."""
+    source = """
+    :: Start
+    ~ gold = 200
+
+    + [Buy] -> BuyItem(50)
+
+    :: BuyItem(price)
+
+    @py:
+    gold = gold - price
+    @endpy
+
+    + [Check] -> CheckState
+
+    :: CheckState
+
+    Gold: {gold}
+    Has price: {'price' in _state}
+
+    + [Done] -> End
+
+    :: End
+    Complete
+    """
+
+    engine = compile_and_run(source)
+    engine.choose(0)  # Buy
+    engine.choose(0)  # Check
+    output = engine.current()
+
+    assert "Gold: 150" in output.content
+    assert "Has price: False" in output.content
+
+
 def test_local_always_available(compile_and_run):
     """Test that _local is always available (empty if no params)."""
     source = """

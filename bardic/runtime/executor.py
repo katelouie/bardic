@@ -291,14 +291,31 @@ class CommandExecutor:
             # on Python <3.12 (PEP 709 inlined comprehensions in 3.12)
             exec_context = {"__builtins__": safe_builtins, **self.context, **self.state}
 
+            # Add _state and _local for consistency with ~ statements
+            exec_context["_state"] = self.state
+            if self._local_scope_stack:
+                local_scope = self._local_scope_stack[-1]
+                exec_context.update(local_scope)
+                exec_context["_local"] = local_scope
+            else:
+                exec_context["_local"] = {}
+
             # Execute the python code
             exec(code, exec_context)
 
             # Update state with any new/modified variables
             # Only update variables that were changed or added
             # Update state but not context -- context is read-only!!
+            # Skip local params so passage parameters don't leak into global state
+            local_param_names = (
+                set(self._local_scope_stack[-1].keys()) if self._local_scope_stack else set()
+            )
             for key, value in exec_context.items():
-                if not key.startswith("_") and key not in self.context:  # Skip internal variables
+                if (
+                    not key.startswith("_")
+                    and key not in self.context
+                    and key not in local_param_names
+                ):
                     self.state[key] = value
 
         except SyntaxError as e:

@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - **`@py:` block functions invisible to comprehensions on Python <3.12** — functions defined inside `@py:` blocks (via `exec()`) couldn't be seen by dict/list/set comprehensions on Python 3.10-3.11 due to comprehension scoping rules. Fixed by using a single namespace for `exec()` instead of separate globals/locals. This was a silent compatibility issue that would cause `NameError` at runtime.
+- **Passage parameters, `_state`, and `_local` now accessible in `@py:` blocks** (fixes [#5](https://github.com/katelouie/bardic/issues/5)) — `@py:` blocks were building their execution context separately from `~` statements, so passage parameters and the `_state`/`_local` special variables were only available in `~` lines. All three are now consistently available in both `~` statements and `@py:` blocks. Passage parameters are properly scoped and don't leak into global state.
 
 ## [0.9.1] - 2026-03-12
 
