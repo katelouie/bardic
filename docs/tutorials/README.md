@@ -142,6 +142,7 @@ If you want to leverage Python's full capabilities:
 
 ## Optional Materials
 
+- **[Standard Library Reference](../stdlib.md)** - Full docs for dice, inventory, economy, relationships, and quests
 - **[Custom Classes Deep Dive](../cookbook/custom-classes.md)** - Advanced guide to serialization and best practices
 - **[Lint Plugins](../lint-plugins.md)** - Write custom lint checks for your game's mechanics
 - **[Language Specification](../spec.md)** - Complete syntax reference

@@ -4,22 +4,27 @@ Reusable game logic modules for common patterns in interactive fiction.
 
 ## Available Modules
 
-- `relationship.py` - Trust, comfort, openness tracking for NPCs
-- `dice.py` - Dice rolls, skill checks, weighted choices
-- `inventory.py` - Item management with weight/categories
-- `economy.py` - Currency, shops, bartering
-- `quest.py` - Quest journal and objectives with stages and statuses
+| Module | What it does |
+|--------|-------------|
+| **`dice`** | Dice rolls (`3d6+5`), skill checks, advantage/disadvantage |
+| **`inventory`** | Weight-limited item management with add/remove/filter |
+| **`economy`** | Wallets, shops, buying/selling with automatic refunds |
+| **`relationship`** | NPC trust/comfort/openness with threshold events |
+| **`quest`** | Quest tracking with custom stages, journal entries, completion |
 
-## Usage
+## Quick Start
 
 ```python
 # In your .bard story
-from bardic.stdlib.relationship import Relationship
 from bardic.stdlib.dice import roll, skill_check
-
-# Then use in @py: blocks or ~ lines
+from bardic.stdlib.inventory import Inventory
+from bardic.stdlib.economy import Wallet, Shop
+from bardic.stdlib.relationship import Relationship
+from bardic.stdlib.quest import QuestJournal
 ```
 
-## Installation
-
 These modules are included with Bardic. No extra installation needed.
+
+## Full Documentation
+
+See the **[Standard Library Reference](../../docs/stdlib.md)** for complete API docs, usage examples in `.bard` syntax, and patterns for combining modules.
