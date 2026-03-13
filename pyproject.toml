@@ -43,7 +43,7 @@ Documentation = "https://github.com/katelouie/bardic/blob/main/docs/spec.md"
 nicegui = ["nicegui", "markdown"]
 web = ["fastapi", "uvicorn[standard]"]
 reflex = ["reflex", "markdown"]
-dev = ["black", "ruff", "mypy", "pytest", "pytest-cov"]
+dev = ["black", "ruff==0.13.2", "mypy", "pytest", "pytest-cov"]
 
 [project.scripts]
 bardic = "bardic.cli.main:cli"
