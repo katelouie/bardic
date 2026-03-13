@@ -11,9 +11,12 @@ stats = {
     'intelligence': random.randint(8, 18),
 }
 
-# Calculate modifiers (inlined to avoid exec() scoping issues on Python <3.12)
+# Calculate modifiers
+def modifier(stat):
+    return (stat - 10) // 2
+
 modifiers = {
-    key: (value - 10) // 2
+    key: modifier(value)
     for key, value in stats.items()
 }
 

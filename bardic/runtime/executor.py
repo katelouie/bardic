@@ -286,10 +286,13 @@ class CommandExecutor:
             # Create execution context with safe builtins
             safe_builtins = self.get_safe_builtins()
             # Merge state and context for execution
-            exec_context = {**self.context, **self.state}
+            # Use a single namespace (not separate globals/locals) so that
+            # functions defined in @py: blocks are visible inside comprehensions
+            # on Python <3.12 (PEP 709 inlined comprehensions in 3.12)
+            exec_context = {"__builtins__": safe_builtins, **self.context, **self.state}
 
             # Execute the python code
-            exec(code, {"__builtins__": safe_builtins}, exec_context)
+            exec(code, exec_context)
 
             # Update state with any new/modified variables
             # Only update variables that were changed or added
