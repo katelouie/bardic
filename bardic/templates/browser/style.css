@@ -43,6 +43,9 @@
     --shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
     --transition: 0.2s ease;
 
+    /* Header height (used to offset fixed sidebar) */
+    --header-height: 3.5rem;
+
     /* Image rendering — set to 'pixelated' in custom.css for pixel art games */
     --image-rendering: auto;
 }
@@ -170,6 +173,11 @@ header {
     flex-wrap: wrap;
     gap: var(--spacing-md);
     box-shadow: var(--shadow);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 60;
 }
 
 header h1 {
@@ -225,9 +233,13 @@ header h1 {
    ========================================================================= */
 
 .game-layout {
-    display: flex;
     flex: 1;
-    overflow: hidden;
+    padding-top: var(--header-height);
+    transition: margin-left 0.3s ease;
+}
+
+.game-layout.sidebar-open {
+    margin-left: 280px;
 }
 
 
@@ -241,12 +253,17 @@ header h1 {
     border-right: 1px solid rgba(255, 255, 255, 0.1);
     padding: var(--spacing-lg) var(--spacing-md);
     overflow-y: auto;
-    transition: margin-left 0.3s ease, opacity 0.3s ease;
     flex-shrink: 0;
+    position: fixed;
+    top: var(--header-height);
+    bottom: 0;
+    left: 0;
+    z-index: 50;
+    transition: transform 0.3s ease, opacity 0.3s ease;
 }
 
 .sidebar.collapsed {
-    margin-left: -280px;
+    transform: translateX(-100%);
     opacity: 0;
     pointer-events: none;
 }
@@ -588,20 +605,9 @@ footer a:hover {
         font-size: 0.85rem;
     }
 
-    /* Sidebar becomes full-width overlay on mobile */
-    .sidebar {
-        position: fixed;
-        top: 0;
-        left: 0;
-        bottom: 0;
-        width: 280px;
-        z-index: 100;
-        box-shadow: var(--shadow);
-    }
-
-    .sidebar.collapsed {
+    /* On mobile, sidebar overlays without pushing content */
+    .game-layout.sidebar-open {
         margin-left: 0;
-        transform: translateX(-100%);
     }
 }
 

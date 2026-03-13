@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Render directive system** — `renderPassage()` now extracts `render_directives` and `input_directives` from engine output. Built-in renderers for `image`, `html`, `text_block`, `sidebar`, and `modal`. Custom `_serialize` function handles stdlib objects crossing the Pyodide bridge. Fallback renderer shows directive name + JSON data for unregistered directives (dev aid).
   - **Modal system** — reusable overlay for book views, inventory, card details. `Bardic.openModal(html)` / `Bardic.closeModal()`. Escape key and backdrop click to dismiss. ARIA attributes for accessibility.
   - **`Bardic` JavaScript API** — clean namespace object replacing scattered `window.*` globals. Registration methods: `Bardic.directive()`, `Bardic.sidebar()`, `Bardic.backgrounds()`, `Bardic.on()`. Lifecycle hooks: `start`, `passageRender`, `beforeChoice`. Typo detection warns on unknown event names with suggestions.
+  - **Fixed header and sidebar** — header stays pinned at the top when scrolling, sidebar is fixed full-height below it. Sidebar respects player toggle (doesn't re-open on navigation after manually closing).
 
 - **`bardic init --template browser`** — new project template for browser bundle games. Includes starter `example.bard`, `custom.css`, `custom.js` (with working Bardic API examples), `assets/`, `game_logic/`, and `linter/` directories.
 

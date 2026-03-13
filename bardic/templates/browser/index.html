@@ -307,6 +307,10 @@ engine = BardEngine(game_data, environment="browser")
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('game').style.display = 'block';
 
+                // Measure actual header height for fixed sidebar offset
+                const headerHeight = document.querySelector('header').offsetHeight;
+                document.documentElement.style.setProperty('--header-height', headerHeight + 'px');
+
                 // Set up event listeners (before first render so modal dismiss works)
                 setupEventListeners();
 
@@ -450,7 +454,11 @@ json.dumps(dict(engine.state), default=_serialize)
                     const sidebarHtml = Bardic._sidebar(state);
                     if (sidebarHtml) {
                         document.getElementById('sidebar-content').innerHTML = sidebarHtml;
-                        document.getElementById('sidebar').classList.remove('collapsed');
+                        // Only auto-open if the player hasn't manually toggled it
+                        if (!sidebarManuallyToggled) {
+                            document.getElementById('sidebar').classList.remove('collapsed');
+                            document.querySelector('.game-layout').classList.add('sidebar-open');
+                        }
                     }
                 } catch (e) {
                     console.warn('Bardic.sidebar() renderer error:', e);
@@ -607,8 +615,11 @@ engine = BardEngine(game_data, environment="browser")
             'sidebar': (data) => {
                 const sidebar = document.getElementById('sidebar-content');
                 sidebar.innerHTML = data.content || data.arg_0 || '';
-                // Show sidebar if it was collapsed
-                document.getElementById('sidebar').classList.remove('collapsed');
+                // Auto-open only if player hasn't manually toggled
+                if (!sidebarManuallyToggled) {
+                    document.getElementById('sidebar').classList.remove('collapsed');
+                    document.querySelector('.game-layout').classList.add('sidebar-open');
+                }
                 return null;  // Don't add to main content area
             },
 
@@ -685,9 +696,16 @@ engine = BardEngine(game_data, environment="browser")
             }, 3000);
         }
 
+        // Track whether the player has manually toggled the sidebar
+        let sidebarManuallyToggled = false;
+
         // Toggle sidebar visibility
         function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('collapsed');
+            sidebarManuallyToggled = true;
+            const sidebar = document.getElementById('sidebar');
+            const layout = document.querySelector('.game-layout');
+            sidebar.classList.toggle('collapsed');
+            layout.classList.toggle('sidebar-open');
         }
 
         // Set up button event listeners
