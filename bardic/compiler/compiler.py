@@ -29,6 +29,9 @@ class BardCompiler:
             input_path_obj = Path(input_path)
             output_path = str(input_path_obj.with_suffix(".json"))
 
+        # Create parent directories if needed
+        Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+
         # Write JSON output
         with open(output_path, "w", encoding="utf-8") as f:
             json.dump(result, f, indent=2)

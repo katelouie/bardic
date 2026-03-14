@@ -171,7 +171,7 @@ inv = Inventory()
 @render component_name(arg1, arg2=val)  # Render directive (frontend component)
 @input input_name(prompt="Enter name")  # Input directive
 
-@include "other_file.bard"              # File inclusion
+@include other_file.bard                # File inclusion
 
 ^tag                                    # Passage tag
 // Comment                              # Line comment

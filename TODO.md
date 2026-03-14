@@ -71,42 +71,42 @@ The big push: make all templates actually nice out of the box.
 
 ### Browser Bundle (`bardic bundle`)
 
-**Layer 1: Asset Pipeline**
-- [ ] Bundler copies `assets/` directory (images, fonts, audio)
-- [ ] Bundler copies `custom.css` if present (auto-injected into HTML)
-- [ ] Bundler copies `custom.js` if present (directive renderers, hooks)
-- [ ] `--assets-dir` CLI flag for non-standard layouts
+**Layer 1: Asset Pipeline** ✅ (v0.10.0)
+- [x] Bundler copies `assets/` directory (images, fonts, audio)
+- [x] Bundler copies `custom.css` if present (auto-injected into HTML)
+- [x] Bundler copies `custom.js` if present (directive renderers, hooks)
+- [x] `--assets-dir` CLI flag for non-standard layouts
 
-**Layer 2: Image & Asset Support**
-- [ ] Markdown image syntax in content: `![alt](path)` → `<img>` tag
-- [ ] CSS support for pixel art (`image-rendering: pixelated` via variable)
-- [ ] Per-passage backgrounds (convention-based via `custom.js`)
+**Layer 2: Image & Asset Support** ✅ (v0.10.0)
+- [x] Markdown image syntax in content: `![alt](path)` → `<img>` tag
+- [x] CSS support for pixel art (`image-rendering: pixelated` via variable)
+- [x] Per-passage backgrounds (convention-based via `custom.js`)
 
-**Layer 3: Passage Transitions**
-- [ ] Fade in/out between passages (subtle, fast, CSS-based)
-- [ ] Configurable duration via CSS variables
+**Layer 3: Passage Transitions** ✅ (v0.10.0)
+- [x] Fade in/out between passages (subtle, fast, CSS-based)
+- [x] Configurable duration via CSS variables
 
-**Layer 4: Sidebar & Panels**
-- [ ] Collapsible sidebar with toggle button
-- [ ] `window.renderSidebar(state)` hook for game authors
-- [ ] Sidebar updates after each passage render
+**Layer 4: Sidebar & Panels** ✅ (v0.10.0)
+- [x] Collapsible sidebar with toggle button
+- [x] `Bardic.sidebar()` hook for game authors
+- [x] Sidebar updates after each passage render
 
-**Layer 5: Render Directive Support**
-- [ ] Extract `render_directives` from engine output in `renderPassage()`
-- [ ] `directiveRenderers` registry (built-in + custom via `custom.js`)
-- [ ] Built-in renderers: image, html, sidebar
-- [ ] Fallback display for unhandled directives (dev mode)
+**Layer 5: Render Directive Support** ✅ (v0.10.0)
+- [x] Extract `render_directives` from engine output in `renderPassage()`
+- [x] `Bardic.directive()` registry (built-in + custom via `custom.js`)
+- [x] Built-in renderers: image, html, text_block, sidebar, modal
+- [x] Fallback display for unhandled directives (dev mode)
 
-**Layer 6: Modal System**
-- [ ] Reusable modal overlay (for book views, inventory, card detail, settings)
-- [ ] Close on overlay click or Escape
+**Layer 6: Modal System** ✅ (v0.10.0)
+- [x] Reusable modal overlay (for book views, inventory, card detail, settings)
+- [x] Close on overlay click or Escape
 - [ ] Settings menu (text size, fullscreen)
 
-**Layer 7: Author Customization Hooks**
-- [ ] `window.onPassageRender(passageId, state)` callback
-- [ ] `window.onBeforeChoice(choiceIndex, choiceData)` callback
-- [ ] `window.onGameStart()` callback
-- [ ] `window.GAME_BACKGROUNDS` mapping
+**Layer 7: Author Customization Hooks** ✅ (v0.10.0)
+- [x] `Bardic.on('passageRender', fn)` callback
+- [x] `Bardic.on('beforeChoice', fn)` callback
+- [x] `Bardic.on('start', fn)` callback
+- [x] `Bardic.backgrounds(mapping)` per-passage backgrounds
 
 ### NiceGUI Template (`bardic init nicegui`)
 - [ ] Add undo/redo buttons
@@ -208,7 +208,12 @@ The big push: make all templates actually nice out of the box.
 
 ## 🧪 Testing & Quality
 
-- [ ] **Bundler tests** — `create_browser_bundle()`, module detection, theme application
+- [x] **CLI tests for `compile`** — 12 tests via Click CliRunner (basic, output path, metadata, includes, errors)
+- [x] **CLI tests for `lint`** — 13 tests (clean story, W001/E002 diagnostics, JSON output, flags, includes, word count)
+- [x] **CLI tests for `init`** — 10 tests (all 4 templates, custom paths, error cases, file creation)
+- [x] **CLI tests for `graph`** — 8 CLI tests + 8 `extract_connections()` unit tests (PNG/SVG/PDF, connections, conditionals, loops)
+- [ ] **CLI tests for `bundle`** — `create_browser_bundle()`, module detection, theme application
+- [ ] **CLI tests for `play`** — interactive input, hard to test with CliRunner
 - [ ] **Integration tests** — compile `.bard` → run engine → make choices → verify output
 - [ ] **Coverage goals** — set target percentage, identify untested paths
 - [ ] **Performance benchmarks** — compilation speed for large stories, runtime rendering profiling

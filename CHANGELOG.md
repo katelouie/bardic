@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **CLI test suite** — 51 tests for CLI commands using Click's `CliRunner`:
+  - `bardic compile` — 12 tests (basic compilation, custom output paths, metadata preservation, `@include` resolution, parent directory creation, error handling)
+  - `bardic lint` — 13 tests (clean stories, W001/E002 diagnostics, compile-time vs lint-time error boundary, `--json-output`, `--errors-only`, `--verbose` flags, `@include` following, word count)
+  - `bardic init` — 10 tests (all 4 templates: nicegui/web/browser/reflex, custom `--path`, error cases, file creation verification)
+  - `bardic graph` — 8 CLI tests (PNG/SVG/PDF output, custom paths, passage/connection count reporting) + 8 `extract_connections()` unit tests (choice targets, jump targets, conditional branches, for-loops, text truncation, empty stories)
+  - Total test count: 584 (up from 545)
+
 ### Changed
 
 ### Fixed
