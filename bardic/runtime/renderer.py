@@ -295,17 +295,10 @@ class ContentRenderer:
                     code = token["code"]
 
                     # Check for format specifier (e.g., "average:.1f")
-                    if ":" in code and not any(op in code for op in ["==", "!=", "<=", ">=", "::"]):
-                        # Split expression and format spec
-                        # Find the first : that's not part of an operator
-                        colon_idx = code.find(":")
-                        expr = code[:colon_idx].strip()
-                        format_spec = code[colon_idx + 1 :].strip()
-
-                        # Evaluate the expression
+                    expr, format_spec = self.split_format_spec(code)
+                    if format_spec is not None:
+                        # Evaluate the expression and apply format spec
                         value = eval(expr, {"__builtins__": safe_builtins}, eval_context)
-
-                        # Apply format spec
                         result.append(format(value, format_spec))
                     else:
                         # No format spec, just evaluate and convert to string
@@ -356,18 +349,11 @@ class ContentRenderer:
                             branch_expr = branch[1:-1]  # Remove { }
 
                             # Check for format spec in the branch expression
-                            if ":" in branch_expr and not any(
-                                op in branch_expr for op in ["==", "!=", "<=", ">=", "::"]
-                            ):
-                                # Has format spec
-                                colon_idx = branch_expr.find(":")
-                                expr = branch_expr[:colon_idx].strip()
-                                format_spec = branch_expr[colon_idx + 1 :].strip()
-
+                            expr, fmt_spec = self.split_format_spec(branch_expr)
+                            if fmt_spec is not None:
                                 value = eval(expr, {"__builtins__": safe_builtins}, eval_context)
-                                result.append(format(value, format_spec))
+                                result.append(format(value, fmt_spec))
                             else:
-                                # No format spec
                                 value = eval(
                                     branch_expr,
                                     {"__builtins__": safe_builtins},

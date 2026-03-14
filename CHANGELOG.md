@@ -20,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Format specifier parsing inconsistency** — expression rendering and inline conditional branches used `find(":")` (leftmost colon) to split format specifiers, while the `split_format_spec()` utility used `rfind(":")` (rightmost). Both paths now use `split_format_spec()`, fixing potential issues with dict literals and slice notation containing colons.
+
 ## [0.10.0] - 2026-03-13
 
 ### Added
