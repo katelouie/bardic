@@ -126,8 +126,9 @@ def _extract_py_new_syntax(
     while i < len(lines):
         line = lines[i]
         if line.strip() == "@endpy":
-            # Found closer
-            code = "\n".join(code_lines)
+            # Found closer — dedent uniformly before joining
+            dedented_lines = detect_and_strip_indentation(code_lines)
+            code = "\n".join(dedented_lines)
             lines_consumed = i - start_index + 1
             return code, lines_consumed
         else:
