@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+### Changed
+
+### Fixed
+
+## [0.10.1] - 2026-05-02
+
+### Added
+
 - **CLI test suite** — 51 tests for CLI commands using Click's `CliRunner`:
   - `bardic compile` — 12 tests (basic compilation, custom output paths, metadata preservation, `@include` resolution, parent directory creation, error handling)
   - `bardic lint` — 13 tests (clean stories, W001/E002 diagnostics, compile-time vs lint-time error boundary, `--json-output`, `--errors-only`, `--verbose` flags, `@include` following, word count)
@@ -21,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - **Format specifier parsing inconsistency** — expression rendering and inline conditional branches used `find(":")` (leftmost colon) to split format specifiers, while the `split_format_spec()` utility used `rfind(":")` (rightmost). Both paths now use `split_format_spec()`, fixing potential issues with dict literals and slice notation containing colons.
+- Added `detect_and_strip_indentation(code_lines)` before joining the Python block into a string, allowing for indented `@py` blocks in scripts.
 
 ## [0.10.0] - 2026-03-13
 
