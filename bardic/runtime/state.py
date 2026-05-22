@@ -273,8 +273,18 @@ class StateManager:
             # Store tuples as lists (JSON doesn't have tuples)
             return [self._serialize_value(v) for v in value]
         elif isinstance(value, dict):
-            # Recurse through dict values
-            return {k: self._serialize_value(v) for k, v in value.items()}
+            # Recurse through dict values AND handle non-primitive keys
+            # JSON requires keys to be str/int/float/bool/None
+            serialized_dict = {}
+            for k, v in value.items():
+                if isinstance(k, (str, int, float, bool, type(None))):
+                    serialized_dict[k] = self._serialize_value(v)
+                else:
+                    # Serialize the key object, then JSON-encode it as a string
+                    # Mark with prefix so deserialization can reconstruct it
+                    serialized_key = json.dumps(self._serialize_value(k), separators=(",", ":"))
+                    serialized_dict[f"__objkey__:{serialized_key}"] = self._serialize_value(v)
+            return serialized_dict
 
         # Priority 4: Object with __dict__
         if hasattr(value, "__dict__"):
@@ -331,9 +341,19 @@ class StateManager:
 
         # Priority 3-5: Objects with _type metadata
         if not isinstance(value, dict) or "_type" not in value:
-            # Plain dict without _type - recurse through values
+            # Plain dict without _type - recurse through values and keys
             if isinstance(value, dict):
-                return {k: self._deserialize_value(v) for k, v in value.items()}
+                deserialized_dict = {}
+                for k, v in value.items():
+                    if isinstance(k, str) and k.startswith("__objkey__:"):
+                        # Reconstruct serialized object key
+                        key_json = k[len("__objkey__:") :]
+                        key_data = json.loads(key_json)
+                        deserialized_key = self._deserialize_value(key_data)
+                        deserialized_dict[deserialized_key] = self._deserialize_value(v)
+                    else:
+                        deserialized_dict[k] = self._deserialize_value(v)
+                return deserialized_dict
             return value
 
         obj_type = value["_type"]

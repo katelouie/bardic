@@ -13,6 +13,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+## [0.10.2] - 2026-05-22
+
+### Added
+
+### Changed
+
+### Fixed
+
+- **Save/load crash with non-primitive dict keys** — `_serialize_value()` now handles dicts where keys are custom objects (e.g., `Card` objects used as dict keys in game state). Non-primitive keys are serialized via `_serialize_value()`, JSON-encoded into `__objkey__:`-prefixed strings for JSON compatibility, and fully reconstructed on load via `_deserialize_value()`. Previously, saving a game state containing such dicts would raise `TypeError: keys must be str, int, float, bool or None`.
+
 ## [0.10.1] - 2026-05-02
 
 ### Added
